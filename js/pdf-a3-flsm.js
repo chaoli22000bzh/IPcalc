@@ -122,6 +122,10 @@ function buildA3(base,plan,corrected){
     text('Broadcast',xR+380,y+12,8,true);
     if(corrected)text(sn.broadcast||'-',xR+443,y+12,8.2,true);
     fill(xR,y+head,subLab,rowHeight*4,'0.977 0.984 0.992');
+    // Corrigé : plage des bits empruntés très pâle, tracée AVANT les cases.
+    if(corrected&&plan.prefix>base.prefix) {
+      fill(bitX+base.prefix*bitW,y+head,(plan.prefix-base.prefix)*bitW,4*rowHeight,'0.978 0.978 0.978');
+    }
     line(xR+subLab,y+head,xR+subLab,y+head+4*rowHeight,.9);
     for(let j=1;j<4;j++)line(xR,y+head+j*rowHeight,xR+wR,y+head+j*rowHeight,.35);
     for(let j=1;j<32;j++)line(bitX+j*bitW,y+head,bitX+j*bitW,y+head+4*rowHeight,.23);
