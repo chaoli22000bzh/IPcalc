@@ -77,92 +77,213 @@ function draw() {
   return {c,text,line,fill,box,circle,section,digitsGrid};
 }
 
-function buildA3(base,plan,corrected){
-  if(!plan||plan.base.prefix!==base.prefix||plan.base.address!==base.address)throw new Error('Découpage FLSM manquant ou incohérent.');
-  if(plan.prefix===31||base.prefix===31)throw new Error('Les fiches scolaires nécessitent des sous-réseaux IPv4 avec broadcast (préfixe inférieur à /31).');
-  const {c,text,line,fill,box,section,digitsGrid}=draw();
-  const xL=24,wL=481,xR=517,wR=649;
-  fill(24,21,1142,39);box(24,21,1142,39,9);
-  text("Fiche d'adressage IPv4 & Sous-réseaux FLSM",38,48,19,true);
-  text('Note : ........ /20',1049,46,10,true);
-  box(24,69,1142,49,7);
-  text('Nom :',36,89,9.5,true);line(74,93,341,93);
-  text('Prénom :',365,89,9.5,true);line(420,93,696,93);
-  text('Classe :',725,89,9.5,true);line(776,93,917,93);
-  text('Date :',940,89,9.5,true);line(977,93,1147,93);
-  fill(24,128,1142,43);box(24,128,1142,43,8);
-  text('Adresse IPv4 :',39,154,11,true);text(base.inputAddress+'/'+base.prefix,152,154,15.5,true);
-  text('Découpage demandé :',550,154,10.5,true);
-  const count=plan.concernedCount;
-  text(count.toLocaleString('fr-FR')+' sous-réseaux ('+Math.min(count,6)+' affichés)',702,154,11,true);
-  section(xL,197,wL,'A','Analyse du réseau initial','____ /10');
-  const initialFirst=numberToIPv4(base.network+1),initialLast=numberToIPv4(base.network+base.blockSize-2);
-  digitsGrid(xL,222,114,wL,['Adresse de l’hôte','CIDR','Adresse réseau','Première adresse','Dernière adresse','Broadcast'],[base.inputAddress,base.mask,base.address,initialFirst,initialLast,base.broadcast],base.prefix,corrected,{rowH:24,pepette:true,font:8});
-  text('Compléter le tableau en décimal ci-dessous',xL+6,449,10,true);
-  const dy=460,dh=40,lab=164;
-  fill(xL,dy,lab,dh*5,'0.979 0.986 0.993');box(xL,dy,wL,dh*5,5);line(xL+lab,dy,xL+lab,dy+dh*5,.9);
-  const fields=['Masque décimal','Adresse réseau','Première adresse','Dernière adresse','Broadcast'];
-  const values=[base.mask,base.address,initialFirst,initialLast,base.broadcast];
-  for(let i=0;i<5;i++){if(i)line(xL,dy+i*dh,xL+wL,dy+i*dh);text(fields[i],xL+8,dy+i*dh+24,9);if(corrected)text(values[i],xL+lab+12,dy+i*dh+25,11.4,true)}
-  section(xR,197,wR,'B','Découpage en sous-réseaux FLSM','____ /9');
-  text('Préfixe initial :',xR+8,224,9,true);if(corrected)text('/'+base.prefix,xR+95,224,9.5,true);
-  text('Bits empruntés :',xR+176,224,9,true);if(corrected)text(String(plan.prefix-base.prefix),xR+283,224,9.5,true);
-  text('Préfixe de sous-réseau :',xR+348,224,9,true);if(corrected)text('/'+plan.prefix,xR+500,224,9.5,true);
-  const ids=summaryIndices(count);
-  const firstY=237,blockH=73,labels=['Réseau bin.','Réseau déc.','Broadcast bin.','Broadcast déc.'];
-  const rowHeight=12.3,head=17,subLab=105,bitX=xR+subLab,bitW=(wR-subLab)/32;
-  ids.forEach((index,slot)=>{
-    const sn=subnetAt(plan,index),y=firstY+slot*blockH;
-    fill(xR,y,wR,head,'0.965 0.978 0.989');box(xR,y,wR,head+rowHeight*4,4);
-    text('Sous-réseau',xR+7,y+12,8,true);
-    box(xR+74,y+2,29,13,3);
-    text(String(index),xR+81-(String(index).length-1)*2.2,y+12,8,true);
-    text('Réseau',xR+118,y+12,8,true);
-    if(corrected)text(sn.address+'/'+sn.prefix,xR+163,y+12,8.2,true);
-    text('Broadcast',xR+380,y+12,8,true);
-    if(corrected)text(sn.broadcast||'-',xR+443,y+12,8.2,true);
-    fill(xR,y+head,subLab,rowHeight*4,'0.977 0.984 0.992');
-    // Corrigé : plage des bits empruntés très pâle, tracée AVANT les cases.
-    if(corrected&&plan.prefix>base.prefix) {
-      fill(bitX+base.prefix*bitW,y+head,(plan.prefix-base.prefix)*bitW,4*rowHeight,'0.978 0.978 0.978');
+function buildA3(base,plan,corrected) {
+  if (!plan || plan.base.prefix!==base.prefix || plan.base.address!==base.address) {
+    throw new Error('Découpage FLSM manquant ou incohérent.');
+  }
+  if (plan.prefix>=31 || base.prefix>=31) {
+    throw new Error('La fiche pédagogique FLSM nécessite un broadcast (préfixe inférieur à /31).');
+  }
+  const {c,text,line,fill,box}=draw();
+
+  // A3 asymétrique : 40 % gauche / 60 % droite, marges d'impression 17-20 pt.
+  // Toutes les tables binaires de droite partagent strictement la même grille.
+  const L={x:17,w:462}, R={x:490,w:681}, bottomY=752, bottomH=62;
+  const count=plan.concernedCount,ids=summaryIndices(count);
+  const leftCol=112,leftBitX=L.x+leftCol,leftBitW=(L.w-leftCol)/32;
+  const labelW=116,bitX=R.x+labelW,bitWidth=(R.w-labelW)/32;
+  const gridRight=bitX+32*bitWidth;
+  const octetX=oct=>bitX+oct*8*bitWidth;
+  const centerBit=j=>bitX+(j+0.5)*bitWidth;
+  const ink='0.968 0.980 0.990';
+
+  // Bloc identitaire réservé à gauche : jamais de bandeau à cheval sur A et B.
+  fill(L.x,19,L.w,38);box(L.x,19,L.w,38,8);
+  text("Fiche d'adressage IPv4 & Sous-réseaux FLSM",L.x+10,44,13.6,true);
+  box(L.x,64,L.w,75,7);
+  text('Nom :',L.x+10,84,9,true);line(L.x+49,88,L.x+217,88);
+  text('Prénom :',L.x+237,84,9,true);line(L.x+291,88,L.x+L.w-10,88);
+  text('Classe :',L.x+10,111,9,true);line(L.x+56,115,L.x+145,115);
+  text('Date :',L.x+160,111,9,true);line(L.x+198,115,L.x+283,115);
+  text('Note : ........ /20',L.x+321,111,9,true);
+  fill(L.x,145,L.w,43);box(L.x,145,L.w,43,7);
+  text('Adresse IPv4 :',L.x+10,171,10,true);
+  text(base.inputAddress+'/'+base.prefix,L.x+119,171,14,true);
+
+  // A : garder la lecture, les exercices, les gris Pépette et l'absence
+  // de traits d'octet lourds dans les lignes de réponse.
+  fill(L.x,199,L.w,27);box(L.x,199,L.w,27,5);
+  text('A. Analyse du réseau initial',L.x+9,217,11,true);
+  text('/10',L.x+L.w-27,217,10,true);
+  text('Compléter le tableau en binaire ci-dessous',L.x+5,240,9.4,true);
+  text('/5',L.x+L.w-22,240,9.4,true);
+  const yA=249,hA=18,rowA=23,labelsA=[
+    "Adresse de l'hôte",'CIDR (masque binaire)',
+    'Adresse réseau','Première adresse','Dernière adresse','Broadcast'
+  ];
+  const first=numberToIPv4(base.network+1),
+    last=numberToIPv4(base.network+base.blockSize-2);
+  const valuesA=[base.inputAddress,base.mask,base.address,first,last,base.broadcast];
+  fill(L.x,yA,L.w,hA*3,ink);
+  fill(L.x,yA+hA*3,leftCol,rowA*6,'0.980 0.987 0.994');
+  for(let k=2;k<6;k++)fill(leftBitX+30*leftBitW,yA+3*hA+k*rowA,2*leftBitW,rowA,'0.975 0.975 0.975');
+  box(L.x,yA,L.w,3*hA+6*rowA,4);
+  line(leftBitX,yA,leftBitX,yA+3*hA+6*rowA,.9);
+  for(let k=1;k<3;k++)line(L.x,yA+k*hA,L.x+L.w,yA+k*hA);
+  line(L.x,yA+3*hA,L.x+L.w,yA+3*hA);
+  for(let k=1;k<6;k++)line(L.x,yA+3*hA+k*rowA,L.x+L.w,yA+3*hA+k*rowA);
+  for(let j=1;j<32;j++)line(leftBitX+j*leftBitW,yA+hA,leftBitX+j*leftBitW,yA+3*hA+6*rowA,.24);
+  for(let j=1;j<4;j++)line(leftBitX+8*j*leftBitW,yA,leftBitX+8*j*leftBitW,yA+3*hA,1.1,true);
+  text('OCTETS',L.x+5,yA+13,7.5,true);
+  text('Puissances de 2',L.x+5,yA+hA+12,6.9,true);
+  text('Poids décimaux',L.x+5,yA+2*hA+12,7,true);
+  for(let oct=0;oct<4;oct++)text('Octet '+(oct+1),leftBitX+(oct*8+2)*leftBitW,yA+12,7,true);
+  for(let j=0;j<32;j++){
+    const x=leftBitX+(j+0.5)*leftBitW,p=7-j%8,v=String(2**p);
+    text(String(p),x-2,yA+hA+12,6);
+    text(v,x-v.length*1.67,yA+2*hA+12,5.7,true);
+  }
+  labelsA.forEach((label,k)=>{
+    const yy=yA+3*hA+k*rowA+15;
+    text(label,L.x+5,yy,k===1?7.3:8);
+    if(corrected) {
+      const bits=binaryOctets(valuesA[k]).join('');
+      for(let j=0;j<32;j++)if(bits[j]==='1'||(k>=2&&j>=30))
+        text(bits[j],leftBitX+(j+.5)*leftBitW-2.6,yy,7.8,true);
     }
-    line(xR+subLab,y+head,xR+subLab,y+head+4*rowHeight,.9);
-    for(let j=1;j<4;j++)line(xR,y+head+j*rowHeight,xR+wR,y+head+j*rowHeight,.35);
-    for(let j=1;j<32;j++)line(bitX+j*bitW,y+head,bitX+j*bitW,y+head+4*rowHeight,.23);
-    if(corrected&&plan.prefix>base.prefix){
-      const bx1=bitX+base.prefix*bitW,bx2=bitX+plan.prefix*bitW;
-      // Le marquage des bits empruntés reste discret ; ne pas masquer la grille.
-      line(bx1,y+head,bx1,y+head+4*rowHeight,1.0,true);
-      line(bx2,y+head,bx2,y+head+4*rowHeight,1.0,true);
+  });
+  // Ne commence qu'à la ligne CIDR, jamais sur l'adresse de l'hôte.
+  if(corrected)line(leftBitX+base.prefix*leftBitW,yA+3*hA+rowA,
+    leftBitX+base.prefix*leftBitW,yA+3*hA+rowA*6,1.05,true);
+
+  text('Compléter le tableau en décimal ci-dessous',L.x+5,464,9.4,true);
+  text('/5',L.x+L.w-22,464,9.4,true);
+  const decY=472,decH=45,decLab=135;
+  fill(L.x,decY,decLab,5*decH,'0.980 0.987 0.994');
+  box(L.x,decY,L.w,5*decH,5);
+  line(L.x+decLab,decY,L.x+decLab,decY+5*decH,.75);
+  const decNames=['Masque de sous-réseau','Adresse réseau','Première adresse','Dernière adresse','Broadcast'];
+  const decValues=[base.mask,base.address,first,last,base.broadcast];
+  for(let k=0;k<5;k++){
+    if(k)line(L.x,decY+k*decH,L.x+L.w,decY+k*decH);
+    text(decNames[k],L.x+7,decY+k*decH+27,8.2);
+    if(corrected)text(decValues[k],L.x+decLab+11,decY+k*decH+27,10.8,true);
+  }
+
+  // B : le guide des octets et chaque bloc ont EXACTEMENT la même origine bitX.
+  text('Découpage demandé : '+count.toLocaleString('fr-FR')+
+    ' sous-réseaux ('+ids.length+' affichés)',R.x+5,38,11.2,true);
+  fill(R.x,45,R.w,29);box(R.x,45,R.w,29,5);
+  text('B. Découpage en sous-réseaux FLSM',R.x+10,64,11.5,true);
+  text('/9',R.x+R.w-25,64,10,true);
+  const itemWidth=R.w/3;
+  const fields=[
+    ['Préfixe initial','/'+base.prefix],
+    ['Bits empruntés',String(plan.prefix-base.prefix)],
+    ['Préfixe de sous-réseau','/'+plan.prefix]
+  ];
+  fields.forEach(([label,value],index)=>{
+    const x=R.x+index*itemWidth+4;
+    text(label,x,91,8.8,true);
+    box(x,97,itemWidth-13,29,4);
+    if(corrected)text(value,x+12,117,11,true);
+  });
+
+  const hY=138,headH=18,headTotal=3*headH;
+  fill(R.x,hY,R.w,headTotal,ink);box(R.x,hY,R.w,headTotal,4);
+  line(bitX,hY,bitX,hY+headTotal,.9);
+  line(R.x,hY+headH,R.x+R.w,hY+headH);
+  line(R.x,hY+2*headH,R.x+R.w,hY+2*headH);
+  text('OCTETS',R.x+7,hY+13,8,true);
+  text('Puissances de 2',R.x+7,hY+headH+13,8,true);
+  text('Poids décimaux',R.x+7,hY+2*headH+13,8,true);
+  for(let oct=0;oct<4;oct++){
+    const center=octetX(oct)+4*bitWidth;
+    text((oct+1)+(oct===0?'er':'e')+' octet',center-20,hY+13,8,true);
+  }
+  for(let j=1;j<32;j++)line(bitX+j*bitWidth,hY+headH,bitX+j*bitWidth,hY+headTotal,.25);
+  for(let j=1;j<4;j++)line(octetX(j),hY,octetX(j),hY+headTotal,1.25,true);
+  for(let j=0;j<32;j++){
+    const center=centerBit(j),p=7-j%8,value=String(2**p);
+    text(String(p),center-2,hY+headH+13,6.9);
+    // 128 et 64 ont la même origine mathématique que la case située dessous.
+    text(value,center-value.length*2.1,hY+2*headH+13,6.9,true);
+  }
+
+  const blockY=205,blockStep=89,subHead=17,rowH=15.5;
+  const subLabels=['Réseau (binaire)','Réseau (décimal)',
+    'Broadcast (binaire)','Broadcast (décimal)'];
+  ids.forEach((index,k)=>{
+    const subnet=subnetAt(plan,index),y=blockY+k*blockStep;
+    fill(R.x,y,R.w,subHead,ink);
+    box(R.x,y,R.w,subHead+4*rowH,4);
+    text('Sous-réseau',R.x+6,y+12,8,true);
+    box(R.x+74,y+2,32,13,3);
+    const id=String(index);
+    text(id,R.x+91-id.length*2.4,y+12,8.3,true);
+    fill(R.x,y+subHead,labelW,4*rowH,'0.982 0.988 0.994');
+    line(bitX,y+subHead,bitX,y+subHead+4*rowH,.8);
+    for(let row=1;row<4;row++)
+      line(R.x,y+subHead+row*rowH,R.x+R.w,y+subHead+row*rowH,.35);
+    // Début des 4 octets : identique pour tous les blocs et l'en-tête.
+    // Décimal : quatre grandes cases ; binaire : trente-deux petites cases.
+    for(let j=1;j<32;j++) {
+      const x=bitX+j*bitWidth;
+      line(x,y+subHead,x,y+subHead+rowH,.26);
+      line(x,y+subHead+2*rowH,x,y+subHead+3*rowH,.26);
     }
-    const addresses=[sn.address,sn.address,sn.broadcast,sn.broadcast];
-    labels.forEach((lab,i)=>{
-      const yy=y+head+i*rowHeight+9;
-      text(lab,xR+6,yy,7);
-      if(corrected){
-        if(i%2===0){
-          const bits=binaryOctets(addresses[i]).join('');
-          for(let j=0;j<32;j++)if(bits[j]==='1')text('1',bitX+(j+.5)*bitW-2.2,yy,6.7,true);
-        }else{
-          const octets=addresses[i].split('.');
-          for(let j=0;j<4;j++)text(octets[j],bitX+(j*8+2)*bitW,yy,8.3,true);
-        }
+    for(let j=1;j<4;j++){
+      const x=octetX(j);
+      line(x,y+subHead+rowH,x,y+subHead+2*rowH,.5);
+      line(x,y+subHead+3*rowH,x,y+subHead+4*rowH,.5);
+    }
+    if(corrected && plan.prefix>base.prefix) {
+      const left=bitX+base.prefix*bitWidth,right=bitX+plan.prefix*bitWidth;
+      for(const offset of [0,2*rowH]){
+        fill(left,y+subHead+offset,right-left,rowH,'0.976 0.976 0.976');
+        // Re-dessiner la grille devant le fond pâle.
+        for(let j=1;j<32;j++)line(bitX+j*bitWidth,y+subHead+offset,
+          bitX+j*bitWidth,y+subHead+offset+rowH,.26);
+        line(left,y+subHead+offset,left,y+subHead+offset+rowH,1,true);
+        line(right,y+subHead+offset,right,y+subHead+offset+rowH,1,true);
+      }
+    }
+    const addresses=[subnet.address,subnet.address,subnet.broadcast,subnet.broadcast];
+    subLabels.forEach((label,row)=>{
+      const yy=y+subHead+row*rowH+11;
+      text(label,R.x+6,yy,7.8);
+      if(!corrected)return;
+      if(row%2===0) {
+        const bits=binaryOctets(addresses[row]).join('');
+        for(let j=0;j<32;j++)if(bits[j]==='1')
+          text('1',centerBit(j)-2.25,yy,7.2,true);
+      } else {
+        const octets=addresses[row].split('.');
+        octets.forEach((value,oct)=>{
+          const center=octetX(oct)+4*bitWidth;
+          text(value,center-value.length*2.7,yy,9.3,true);
+        });
       }
     });
   });
-  if(count>6)text('Sous-réseaux affichés : 0, 1, 2 et les trois derniers (numérotation depuis 0).',xR+4,692,8.2);
-  const yC=714;
-  section(xR,yC,wR,'C','Hôtes utilisables par sous-réseau','____ /1');
-  fill(xL,687,wL,101);box(xL,687,wL,101,8);
-  text("Nombre d'hôtes utilisables pour le réseau initial",xL+12,710,10,true);
-  text('2',xL+15,747,16,true);text('(32 - CIDR)',xL+28,735,6.9,true);text('- 2 =',xL+68,747,12,true);
-  if(corrected)text(base.usableHosts.toLocaleString('fr-FR'),xL+122,747,13,true);
-  fill(xR,739,wR,49);box(xR,739,wR,49,8);
-  text('2',xR+12,770,16,true);text('(32 - préfixe sous-réseau)',xR+25,757,7,true);
-  text('- 2 =',xR+173,770,12,true);
-  if(corrected)text(plan.usableHosts.toLocaleString('fr-FR')+' hôtes utilisables',xR+226,770,12,true);
+
+  // Les deux cartouches du bas sont synchronisés en hauteur et en position.
+  fill(L.x,bottomY,L.w,bottomH,ink);box(L.x,bottomY,L.w,bottomH,7);
+  text("Nombre d'hôtes utilisables pour le réseau initial",L.x+10,bottomY+20,10,true);
+  text('2',L.x+15,bottomY+47,16,true);
+  text('(32 - CIDR)',L.x+28,bottomY+35,7,true);
+  text('- 2 =',L.x+79,bottomY+47,12,true);
+  if(corrected)text(base.usableHosts.toLocaleString('fr-FR'),L.x+131,bottomY+47,12.5,true);
+  fill(R.x,bottomY,R.w,bottomH,ink);box(R.x,bottomY,R.w,bottomH,7);
+  text("C. Nombre d'hôtes utilisables par sous-réseau",R.x+10,bottomY+20,10,true);
+  text('/1',R.x+R.w-25,bottomY+20,10,true);
+  text('2',R.x+15,bottomY+47,16,true);
+  text('(32 - préfixe SR)',R.x+28,bottomY+35,7,true);
+  text('- 2 =',R.x+111,bottomY+47,12,true);
+  if(corrected)text(plan.usableHosts.toLocaleString('fr-FR'),R.x+165,bottomY+47,12.5,true);
   return pdfDocument(c);
 }
+
 export function downloadFlsmA3(base,plan,corrected=false){
   const file=buildA3(base,plan,corrected),url=URL.createObjectURL(file),a=document.createElement('a');
   a.href=url;
