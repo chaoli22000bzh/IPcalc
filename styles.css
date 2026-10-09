@@ -107,30 +107,30 @@ input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--primary)
 .subnet-panel { margin-top: 20px; overflow: hidden; }
 .subnet-header { padding: 22px 23px 18px; }
 .subnet-header h3 { margin-bottom: 7px; }
-.subnet-header > p { font-size: 12px; color: var(--muted); margin: 0; }
+.subnet-header > p { font-size: 14px; color: var(--muted); margin: 0; }
 .subnet-metrics { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0 0; }
 .metric-chip { padding: 6px 9px; background: var(--surface-soft); border: 1px solid var(--line); border-radius: 5px; font-size: 11px; color: var(--muted); }
 .metric-chip strong { color: var(--ink); }
 .table-wrapper { overflow-x: auto; }
 .subnet-table { width: 100%; border-collapse: collapse; text-align: left; white-space: nowrap; }
-.subnet-table th { padding: 11px 10px; background: var(--surface-soft); font-size: 10px; font-weight: 550; color: var(--muted); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.subnet-table th { padding: 14px; white-space: normal; background: var(--surface-soft); font-size: 14px; font-weight: 600; color: var(--muted); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 .subnet-table th:first-child, .subnet-table td:first-child { padding-left: 23px; }
 .subnet-table th:last-child, .subnet-table td:last-child { padding-right: 23px; text-align: right; }
-.subnet-table td { padding: 13px 10px; font: 11px/1.5 ui-monospace, "Cascadia Code", "Consolas", monospace; border-bottom: 1px solid var(--line); }
+.subnet-table td { padding: 16px 14px; font: 16px/1.5 ui-monospace, "Cascadia Code", "Consolas", monospace; border-bottom: 1px solid var(--line); }
 .subnet-table tr:last-child td { border-bottom: 0; }
-.subnet-table td:first-child { color: var(--muted); font-size: 10px; }
+.subnet-table td:first-child { color: var(--ink); font-size: 16px; font-weight: 700; }
 .subnet-table td:nth-child(2) { color: var(--primary); font-weight: 600; }
-.subnet-table .binary { font-size: 9px; white-space: normal; max-width: 230px; }
-.ellipsis-row td { padding: 10px 23px !important; text-align: center !important; color: var(--muted) !important; font: 11px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important; background: var(--surface-soft); }
-.subnet-note { margin: 0; padding: 14px 23px; font-size: 11px; color: var(--muted); border-top: 1px solid var(--line); }
+.subnet-table .binary { font-size: 12px; white-space: normal; max-width: 230px; }
+.ellipsis-row td { padding: 14px 23px !important; text-align: center !important; color: var(--muted) !important; font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important; background: var(--surface-soft); }
+.subnet-note { margin: 0; padding: 14px 23px; font-size: 14px; color: var(--muted); border-top: 1px solid var(--line); }
 .subnet-note .button { margin-top: 10px; }
 .pages-details { border-top: 1px solid var(--line); }
-.pages-details > summary { min-height: 48px; padding: 15px 23px; color: var(--primary); font-size: 12px; font-weight: 600; }
+.pages-details > summary { min-height: 48px; padding: 15px 23px; color: var(--primary); font-size: 14px; font-weight: 600; }
 .pages-details > summary:hover { background: var(--surface-soft); }
-.pages-details p { font-size: 11px; color: var(--muted); padding: 0 23px; }
+.pages-details p { font-size: 14px; color: var(--muted); padding: 0 23px; }
 .pagination { display: flex; gap: 12px; justify-content: space-between; align-items: center; padding: 14px 23px; border-top: 1px solid var(--line); }
-.pagination span { font-size: 10px; color: var(--muted); text-align: center; }
-.pagination .button { min-width: 80px; }
+.pagination span { font-size: 14px; color: var(--muted); text-align: center; }
+.pagination .button { min-width: 80px; font-size: 14px; }
 .notice { font-size: 12px; padding: 12px 16px; color: var(--tint-ink); background: var(--tint); border: 1px solid var(--line); border-radius: 8px; margin: 0 0 18px; }
 .update-banner { display: flex; align-items: center; justify-content: space-between; gap: 15px; }
 @media (prefers-color-scheme: dark) {
@@ -142,7 +142,6 @@ input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--primary)
 @media (max-width: 1100px) {
   .workspace { gap: 20px; }
   .workspace { --panel-padding: 16px; }
-  .subnet-table th, .subnet-table td { padding-left: 6px; padding-right: 6px; }
 }
 
 @media (max-width: 900px) {
@@ -157,10 +156,10 @@ input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--primary)
   .network-data dd { font-size: 13px; }
   .subnet-table, .subnet-table tbody { display: block; white-space: normal; }
   .subnet-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-  .subnet-table tr { display: grid; grid-template-columns: 1fr 1fr; padding: 15px 19px; gap: 9px 12px; border-top: 1px solid var(--line); }
-  .subnet-table td { display: block; padding: 0 !important; border: 0; font-size: 12px; text-align: left !important; }
-  .subnet-table td::before { content: attr(data-label); display: block; color: var(--muted); font: 10px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin-bottom: 2px; font-weight: 400; }
-  .subnet-table td:first-child { grid-column: 1 / -1; font-size: 10px; }
+  .subnet-table tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 18px 19px; gap: 14px 20px; border-top: 1px solid var(--line); }
+  .subnet-table td { display: block; padding: 0 !important; border: 0; min-width: 0; font-size: 16px; text-align: left !important; }
+  .subnet-table td::before { content: attr(data-label); display: block; color: var(--muted); font: 14px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin-bottom: 2px; font-weight: 400; }
+  .subnet-table td:first-child { grid-column: 1 / -1; font-size: 16px; }
   .subnet-table td:first-child::before { display: none; }
   .subnet-table .ellipsis-row { display: block; background: var(--surface-soft); text-align: center; }
   .subnet-table .ellipsis-row td { background: transparent; }
@@ -241,4 +240,10 @@ input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--primary)
 @media (max-width: 370px) {
   .brand-group { gap: 6px 8px; }
   .cybernet-logo img { width: 136px; height: 41px; }
+}
+
+/* Une colonne par carte sur téléphone : les IPv4 restent entières à 16 px. */
+@media (max-width: 540px) {
+  .subnet-table tr { grid-template-columns: minmax(0, 1fr); }
+  .pagination { flex-wrap: wrap; }
 }

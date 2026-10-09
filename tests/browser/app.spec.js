@@ -248,16 +248,16 @@ test('bouton au-dessus de l’adresse, en-têtes alignés et navigation clavier'
 test('numérotation à zéro : huit réseaux, intermédiaires et tous les réseaux', async ({ page }) => {
   await subdivide(page, { count: '8' });
   const rows = page.locator('#subnet-result tr[data-subnet-number]');
-  await expect(rows.locator('td:first-child')).toHaveText(['#0', '#1', '#2', '#5', '#6', '#7']);
+  await expect(rows.locator('td:first-child')).toHaveText(['0', '1', '2', '5', '6', '7']);
   await expect(rows.first().locator('td').nth(1)).toHaveText('192.168.10.0');
   await expect(rows.last().locator('td').nth(1)).toHaveText('192.168.10.224');
   await page.locator('#middle-details > summary').click();
-  await expect(page.locator('#middle-details tr[data-subnet-number] td:first-child')).toHaveText(['#3', '#4']);
+  await expect(page.locator('#middle-details tr[data-subnet-number] td:first-child')).toHaveText(['3', '4']);
   await subdivide(page, { count: '4' });
-  await expect(rows.locator('td:first-child')).toHaveText(['#0', '#1', '#2', '#3']);
+  await expect(rows.locator('td:first-child')).toHaveText(['0', '1', '2', '3']);
   await expect(rows.last().locator('td').nth(1)).toHaveText('192.168.10.192');
   await subdivide(page, { count: '1' });
-  await expect(rows.locator('td:first-child')).toHaveText(['#0']);
+  await expect(rows.locator('td:first-child')).toHaveText(['0']);
   await expect(rows.first().locator('td').nth(1)).toHaveText('192.168.10.0');
 });
 
@@ -320,4 +320,58 @@ test('une véritable erreur de préparation PWA reste signalée', async ({ page 
   await page.reload();
   await expect(page.locator('#pwa-message')).toContainText('cache hors connexion n’a pas pu être préparé');
   await expect(page.locator('#network-result dd').first()).toHaveText('192.168.10.64');
+});
+
+test('FLSM lisible : 4, 8, 16 réseaux, tailles réelles et aucune valeur tronquée', async ({ page }) => {
+  for (const width of [1440, 1024, 900, 540, 430, 390, 360, 320]) {
+    await page.setViewportSize({ width, height: 900 });
+    for (const count of ['4', '8', '16']) {
+      await subdivide(page, { count });
+      const rows = page.locator('#subnet-result > .table-wrapper tr[data-subnet-number]');
+      const numbers = count === '4' ? ['0', '1', '2', '3'] : count === '8' ? ['0', '1', '2', '5', '6', '7'] : ['0', '1', '2', '13', '14', '15'];
+      await expect(rows.locator('td:first-child')).toHaveText(numbers);
+      await expect(page.locator('.subnet-header > p')).toHaveText(count === '4' ? 'Tous les sous-réseaux concernés sont affichés.' : 'Affichage des 3 premiers et des 3 derniers sous-réseaux.');
+      const measures = await rows.locator('td').evaluateAll(cells => cells.map(cell => {
+        const style = getComputedStyle(cell);
+        const range = document.createRange();
+        range.selectNodeContents(cell);
+        const text = range.getBoundingClientRect();
+        const box = cell.getBoundingClientRect();
+        return { font: style.fontSize, weight: style.fontWeight, fontFamily: style.fontFamily, height: box.height, fits: text.left >= box.left - 1 && text.right <= box.right + 1, scrollFits: cell.scrollWidth <= cell.clientWidth + 1 };
+      }));
+      expect(measures.every(cell => cell.font === '16px' && cell.fontFamily.includes('monospace') && cell.fits && cell.scrollFits)).toBe(true);
+      expect(measures.filter((_, index) => index % 6 === 0).every(cell => Number(cell.weight) >= 700)).toBe(true);
+      if (width > 900) {
+        expect(measures.every(cell => cell.height >= 55)).toBe(true);
+        expect(await page.locator('.subnet-table th').first().evaluate(cell => getComputedStyle(cell).fontSize)).toBe('14px');
+      }
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+      if (count !== '4') {
+        expect(await page.locator('.ellipsis-row td').evaluate(cell => getComputedStyle(cell).fontSize)).toBe('14px');
+        await page.locator('#middle-details > summary').click();
+        await expect(page.locator('#middle-details tr[data-subnet-number]')).toHaveCount(Number(count) - 6);
+      }
+    }
+    await page.getByLabel('Afficher le binaire').check();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await page.getByLabel('Afficher le binaire').uncheck();
+  }
+});
+
+test('numéros 48 et 128 sans dièse, adresses et pagination inchangées', async ({ page }) => {
+  await subdivide(page, { address: '10.0.0.0/16', count: '256' });
+  await page.locator('#middle-details > summary').click();
+  const row48 = page.locator('#middle-details tr[data-subnet-number="48"]');
+  await expect(row48.locator('td').first()).toHaveText('48');
+  await expect(row48.locator('td').nth(1)).toHaveText('10.0.48.0');
+  for (let i = 0; i < 2; i++) await page.getByRole('button', { name: 'Suivants : sous-réseaux intermédiaires' }).click();
+  const row128 = page.locator('#middle-details tr[data-subnet-number="128"]');
+  await expect(row128.locator('td').first()).toHaveText('128');
+  await expect(row128.locator('td').nth(1)).toHaveText('10.0.128.0');
+  await expect(row128.locator('td').nth(4)).toHaveText('10.0.128.255');
+  await page.getByRole('button', { name: 'Précédents : sous-réseaux intermédiaires' }).click();
+  await expect(page.locator('#middle-details tr[data-subnet-number]').first().locator('td').first()).toHaveText('53');
+  await expect(page.locator('.brand img')).toHaveCount(0);
+  await expect(page.locator('.brand')).toHaveText('IPcalc');
+  await expect(page.getByRole('img', { name: 'CyberNet', exact: true })).toHaveCount(1);
 });

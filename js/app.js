@@ -88,7 +88,7 @@ function networkTable(rows, omitted = 0) {
     }
     const row = element('tr');
     row.dataset.subnetNumber = String(network.index);
-    const values = [`#${format(network.index)}`, network.address, network.mask, `/${network.prefix}`, network.broadcast ?? 'Sans broadcast', format(network.usableHosts)];
+    const values = [format(network.index), network.address, network.mask, `/${network.prefix}`, network.broadcast ?? 'Sans broadcast', format(network.usableHosts)];
     values.forEach((value, column) => {
       const cell = element('td', '', value);
       cell.dataset.label = column === 0 ? 'Nº' : EXPORT_COLUMNS[column - 1];
@@ -149,7 +149,7 @@ function renderSubnets(plan) {
   if (!plan) return;
   const heading = element('div', 'subnet-header');
   heading.append(element('h3', '', `${format(plan.concernedCount)} sous-réseau${plan.concernedCount > 1 ? 'x' : ''} ${plan.requestedCount === null ? 'possibles' : 'demandés'}`));
-  heading.append(element('p', '', plan.concernedCount > 6 ? 'Les trois premiers et les trois derniers, comme sur la calculatrice papier.' : 'Tous les sous-réseaux concernés sont affichés.'));
+  heading.append(element('p', '', plan.concernedCount > 6 ? 'Affichage des 3 premiers et des 3 derniers sous-réseaux.' : 'Tous les sous-réseaux concernés sont affichés.'));
   const metrics = element('div', 'subnet-metrics');
   for (const [label, value] of [['Préfixe', `/${plan.prefix}`], ['Hôtes / réseau', format(plan.usableHosts)], ['Capacité totale', format(plan.capacity)]]) {
     const metric = element('span', 'metric-chip', `${label} `);
