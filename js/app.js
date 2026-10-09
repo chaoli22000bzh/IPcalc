@@ -195,6 +195,7 @@ function syncVisibleCount() {
 
 function render() {
   $('results').hidden = false;
+  $('network-result').hidden = false;
   $('result-title').textContent = current.plan ? 'Votre découpage FLSM' : 'Résultat du calcul';
   renderNetwork(current.base);
   renderSubnets(current.plan);
@@ -215,6 +216,8 @@ function calculate(focus = true) {
   clearErrors();
   $('export-feedback').hidden = true;
   try {
+    if (form.elements.mode.value === 'vlsm') throw new Error('VLSM indisponible : moteur non développé.');
+    if ($('protocol').value !== 'ipv4') throw new Error('IPv6 indisponible : moteur non développé.');
     const base = parseNetwork($('address').value, $('mask').value);
     const plan = form.elements.mode.value === 'subnets' ? planSubnets(base, { method: $('method').value, count: $('count').value, hosts: $('hosts').value }) : null;
     current = { base, plan };
@@ -228,7 +231,7 @@ function calculate(focus = true) {
     $('result-announcement').textContent = `Réseau ${base.address}/${base.prefix} calculé.${plan ? ` ${format(plan.concernedCount)} sous-réseaux /${plan.prefix}.` : ''}`;
     if (focus) $('result-title').focus({ preventScroll: true });
   } catch (error) {
-    current = null;
+    invalidateResults();
     $('results').hidden = true;
     $('calculation-error').textContent = error.message;
     $('calculation-error').hidden = false;
@@ -252,14 +255,30 @@ function syncSettings() {
   $('method-help').textContent = $('method').value === 'hosts' ? 'Sans nombre demandé, tous les sous-réseaux possibles sont concernés.' : 'Tous les sous-réseaux ont la même taille.';
 }
 
-function markStale() {
-  clearErrors();
-  if (!current) return;
+function invalidateResults() {
+  current = null;
   stale = true;
-  $('stale-notice').hidden = false;
+  pages = { middle: { open: false, page: 0 }, extra: { open: false, page: 0 } };
+  $('network-result').replaceChildren();
+  $('network-result').hidden = true;
+  $('subnet-result').replaceChildren();
+  $('subnet-result').hidden = true;
+  $('scope-field').hidden = true;
+  $('export-scope').value = 'visible';
+  $('export-scope').options[0].textContent = 'Sous-réseaux visibles';
+  $('result-title').textContent = 'Résultat du calcul';
+  $('result-announcement').textContent = '';
   $('copy-results').disabled = true;
   $('export-csv').disabled = true;
+  $('export-feedback').textContent = '';
   $('export-feedback').hidden = true;
+}
+
+function markStale() {
+  clearErrors();
+  invalidateResults();
+  $('results').hidden = false;
+  $('stale-notice').hidden = false;
 }
 
 form.addEventListener('submit', event => { event.preventDefault(); calculate(); });

@@ -1,0 +1,9 @@
+/* Impression navigateur existante ; futur module dédié indépendant du moteur. */
+@media print {
+  :root { --bg: #fff; --surface: #fff; --ink: #000; --muted: #444; --line: #aaa; --primary: #174b35; --tint: #fff; --tint-ink: #000; --host: #333; --host-bg: #fff; }
+  .input-panel, .header-actions, .export-panel, .help-panel, .binary-toggle, .pages-details, .notice { display: none !important; }
+  .workspace { display: block; }
+  .site-header { padding: 12px 0; }
+  main { padding: 0; }
+  .panel { box-shadow: none; }
+}

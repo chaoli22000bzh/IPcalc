@@ -14,7 +14,7 @@ test.afterEach(async ({ page }) => {
 
 async function subdivide(page, { address = '192.168.10.75/24', method = 'count', count = '10', hosts = '30' } = {}) {
   await page.getByLabel('Adresse IPv4').fill(address);
-  await page.getByLabel('Sous-réseaux', { exact: true }).check();
+  await page.getByRole('radio', { name: 'FLSM', exact: true }).check();
   await page.getByLabel('Méthode de découpage FLSM').selectOption(method);
   if (method !== 'hosts') await page.getByLabel('Sous-réseaux demandés', { exact: true }).fill(count);
   if (method !== 'count') await page.getByLabel('Hôtes utilisables minimum').fill(hosts);
@@ -120,6 +120,10 @@ test('copie et protection des résultats devenus obsolètes', async ({ page }) =
   expect(await page.evaluate(() => window.copiedResult)).toContain('Adresse réseau : 192.168.10.64');
   await page.getByLabel('Adresse IPv4').fill('10.1.2.3/8');
   await expect(page.locator('#stale-notice')).toBeVisible();
+  await expect(page.locator('#network-result')).toBeEmpty();
+  await expect(page.locator('#subnet-result')).toBeEmpty();
+  await page.getByLabel('Afficher le binaire').check();
+  await expect(page.locator('#network-result')).toBeEmpty();
   await expect(page.getByRole('button', { name: 'Copier', exact: true })).toBeDisabled();
   await expect(page.getByRole('button', { name: 'Export CSV' })).toBeDisabled();
   await page.getByRole('button', { name: 'Calculer le réseau' }).click();
@@ -180,4 +184,53 @@ test('ressources locales, thème automatique, portrait / paysage sans débordeme
   await page.setViewportSize({ width: 320, height: 640 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   expect(external).toEqual([]);
+});
+
+
+test('modes disponibles, emplacements futurs et disposition verticale', async ({ page }) => {
+  await expect(page.getByRole('radio', { name: 'VLSM — indisponible' })).toBeDisabled();
+  await expect(page.locator('#protocol option[value="ipv6"]')).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Imprimer — à venir' })).toBeDisabled();
+  await expect(page.locator('.intro')).toHaveCount(0);
+  const input = await page.locator('.input-panel').boundingBox();
+  const results = await page.locator('#results').boundingBox();
+  expect(results.y).toBeGreaterThanOrEqual(input.y + input.height);
+  expect(Math.abs(results.width - input.width)).toBeLessThan(2);
+  await subdivide(page);
+  await page.getByRole('radio', { name: 'Aucun découpage', exact: true }).check();
+  await expect(page.locator('#subnet-settings')).toBeHidden();
+  await expect(page.locator('#network-result')).toBeEmpty();
+  await expect(page.locator('#subnet-result')).toBeEmpty();
+  await page.getByRole('button', { name: 'Calculer le réseau' }).click();
+  await expect(page.locator('#network-result dd')).toHaveCount(5);
+  await expect(page.locator('#subnet-result')).toBeHidden();
+});
+
+test('chaque paramètre invalide immédiatement le résultat et les exports', async ({ page }) => {
+  for (const parameter of ['address', 'mask', 'method', 'count', 'hosts']) {
+    await subdivide(page, { method: 'combined', count: '3', hosts: '50' });
+    if (parameter === 'method') await page.locator('#method').selectOption('hosts');
+    else await page.locator(`#${parameter}`).fill({ address: '10.0.0.1/24', mask: '/24', count: '2', hosts: '20' }[parameter]);
+    await expect(page.locator('#network-result')).toBeEmpty();
+    await expect(page.locator('#subnet-result')).toBeEmpty();
+    await expect(page.locator('#scope-field')).toBeHidden();
+    await expect(page.locator('#result-announcement')).toBeEmpty();
+    await expect(page.locator('#copy-results')).toBeDisabled();
+    await expect(page.locator('#export-csv')).toBeDisabled();
+    await page.locator('#mask').fill('');
+  }
+});
+
+test('modifier un calcul avec pagination ouverte ne conserve aucun sous-réseau', async ({ page }) => {
+  await subdivide(page);
+  await page.locator('#middle-details > summary').click();
+  await page.locator('#extra-details > summary').click();
+  await page.getByLabel('Adresse IPv4').fill('10.0.0.0/16');
+  await expect(page.locator('#subnet-result')).toBeEmpty();
+  await page.getByLabel('Afficher le binaire').check();
+  await expect(page.locator('#network-result')).toBeEmpty();
+  await page.getByRole('button', { name: 'Calculer le réseau' }).click();
+  await expect(page.locator('#network-result')).toContainText('10.0.0.0');
+  await expect(page.locator('#middle-details')).not.toHaveAttribute('open');
+  await expect(page.locator('#extra-details')).not.toHaveAttribute('open');
 });

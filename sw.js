@@ -1,9 +1,9 @@
 // Incrémenter VERSION à chaque livraison modifiant une ressource de l’application.
-const VERSION = '1.0.0';
+const VERSION = '2.0.0-step1';
 const CACHE_PREFIX = `ipcalc:${self.registration.scope}:`;
 const CACHE_NAME = `${CACHE_PREFIX}${VERSION}`;
 const ASSETS = [
-  './', './index.html', './styles.css', './manifest.webmanifest',
+  './', './index.html', './styles.css', './print.css', './manifest.webmanifest',
   './js/ipv4.js', './js/exports.js', './js/app.js', './js/pwa.js',
   './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png',
 ];
