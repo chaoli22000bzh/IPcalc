@@ -42,11 +42,11 @@ function build(base,corrected){
  for(let k=0;k<32;k++){const x=bx+(k+.5)*bw,pow=7-k%8,wt=String(2**pow);font(String(pow),x-2,278,6);font(wt,x-wt.length*1.8,296,6,true)}
  const network=base.address,bcast=base.broadcast||base.address,first=numberToIPv4(base.network+(base.prefix===31?0:1)),last=numberToIPv4(base.network+(base.prefix===31?1:base.blockSize-2));
  const vals=[base.inputAddress,base.mask,network,first,last,bcast];
- const labels=["Adresse de l'hôte","Masque en binaire","Adresse réseau","Première adresse","Dernière adresse","Broadcast"];
+ const labels=["Adresse de l'hôte","CIDR","Adresse réseau","Première adresse","Dernière adresse","Broadcast"];
  for(let row=0;row<6;row++){font(labels[row],34,318+23*row,8);
  if(corrected){let bits=binaryOctets(vals[row]).join('');for(let j=0;j<32;j++)if(bits[j]==='1'||(row>=2&&j>=30))font(bits[j],bx+(j+.5)*bw-2.6,318+23*row,8,true)}
  }
- if(corrected)line(bx+base.prefix*bw,ys[3],bx+base.prefix*bw,ys.at(-1),1.6,true);
+ if(corrected)line(bx+base.prefix*bw,ys[4],bx+base.prefix*bw,ys.at(-1),1.6,true);
  section(2,473,'Compléter le tableau en décimal ci-dessous');
  const dy=497,dh=49;tint(left,dy,lab,5*dh,'0.977 0.983 0.990');rect(left,dy,width,5*dh);line(bx,dy,bx,dy+dh*5,.85);
  const names=['Masque de sous-réseau','Adresse réseau','Première adresse','Dernière adresse','Broadcast'];
