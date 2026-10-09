@@ -16,7 +16,7 @@ function build(base,corrected){
  const ys=[212,234,256,278,308,338,368,398,428,458];rect(left,ys[0],width,ys.at(-1)-ys[0]);line(bx,ys[0],bx,ys.at(-1),1);
  for(let k=1;k<ys.length-1;k++)line(left,ys[k],right,ys[k]);
  for(let k=1;k<32;k++)line(bx+k*bw,ys[1],bx+k*bw,ys.at(-1),k%8===0?1.2:.3);
- for(let k=1;k<4;k++)line(bx+k*8*bw,ys[0],bx+k*8*bw,1.2);
+ for(let k=1;k<4;k++)line(bx+k*8*bw,ys[0],bx+k*8*bw,ys[1],1.2);
  font('OCTETS',34,227,8,true);
  for(let k=0;k<4;k++)font(`Octet ${k+1}`,bx+(k*8+2)*bw,227,7,true);
  font('Puissances de 2',34,250,8,true);font('Poids décimaux',34,271,8,true);
