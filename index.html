@@ -29,18 +29,16 @@
   <body>
     <a class="skip-link" href="#calculator">Aller au calculateur</a>
     <header class="site-header">
-      <div class="brand-group">
-        <a class="brand" href="./" aria-label="IPcalc, accueil">
-          <span>IP<span class="brand-light">calc</span></span>
-        </a>
-        <picture class="cybernet-logo">
-          <source media="(prefers-color-scheme: dark)" srcset="./icons/Logo_CyberNet_blanc_transparent.svg">
-          <img src="./icons/Logo_CyberNet_bleu_marine_transparent.svg" width="1688" height="932" alt="CyberNet">
-        </picture>
-        <span class="version" title="2.0.0-step1.7">V2 · étape 1.7</span>
-      </div>
+      <picture class="cybernet-logo">
+        <source media="(prefers-color-scheme: dark)" srcset="./icons/Logo_CyberNet_blanc_transparent.svg">
+        <img src="./icons/Logo_CyberNet_bleu_marine_transparent.svg" width="1688" height="932" alt="CyberNet Los Angeles">
+      </picture>
+      <a class="brand" href="./" aria-label="IPcalc, accueil">
+        <span>IP<span class="brand-light">calc</span></span>
+      </a>
       <div class="header-actions">
-        <span id="connection-status" class="connection-status"><span class="status-dot"></span><span id="connection-label">Calcul local</span></span>
+        <span class="version" title="2.0.0-step1.8">V2 · étape 1.8</span>
+        <span id="connection-status" class="connection-status" aria-hidden="true" hidden><span class="status-dot"></span><span id="connection-label">Calcul local</span></span>
         <button id="install-app" class="button button-small button-outline" hidden>Installer l’application</button>
       </div>
     </header>
