@@ -1,3 +1,4 @@
+import { downloadAddressingA4 } from './pdf-a4.js';
 import { parseNetwork, planSubnets, subnetAt, summaryIndices, subnetPage, binaryOctets } from './ipv4.js';
 import { EXPORT_COLUMNS } from './exports.js';
 
@@ -192,6 +193,7 @@ function calculate(focus = true) {
     const base = parseNetwork($('address').value, $('mask').value);
     const plan = form.elements.mode.value === 'subnets' ? planSubnets(base, { method: $('method').value, count: $('count').value, hosts: $('hosts').value }) : null;
     current = { base, plan };
+    updatePdfAvailability();
     pages = { middle: { open: false, page: 0 }, extra: { open: false, page: 0 } };
     $('stale-notice').hidden = true;
     render();
@@ -224,6 +226,7 @@ function syncSettings() {
 
 function invalidateResults() {
   current = null;
+  updatePdfAvailability();
   pages = { middle: { open: false, page: 0 }, extra: { open: false, page: 0 } };
   $('network-result').replaceChildren();
   $('network-result').hidden = true;
@@ -246,3 +249,30 @@ form.addEventListener('change', () => { syncSettings(); markStale(); });
 $('show-binary').addEventListener('change', () => { if (current) render(); });
 syncSettings();
 calculate(false);
+
+function updatePdfAvailability() {
+  const button=$('print-results');
+  const available=Boolean(current && !current.plan);
+  button.disabled=!available;
+  button.setAttribute('aria-label',available?'Télécharger la fiche IPv4 A4':'Impression FLSM à venir');
+  button.title=available?'Télécharger une fiche IPv4 A4':'Impression FLSM à venir';
+  $('print-help').textContent=available?'PDF A4':'À venir';
+}
+$('print-results').addEventListener('click',()=>{
+  if (!current||current.plan)return;
+  $('pdf-a4-error').hidden=true;
+  $('pdf-a4-dialog').showModal();
+});
+function exportA4(corrected) {
+  if(!current||current.plan)return;
+  try {
+    downloadAddressingA4(current.base,corrected);
+    $('pdf-a4-dialog').close();
+  } catch(err) {
+    $('pdf-a4-error').textContent='Impossible de générer le PDF : '+err.message;
+    $('pdf-a4-error').hidden=false;
+  }
+}
+$('pdf-a4-student').addEventListener('click',()=>exportA4(false));
+$('pdf-a4-corrected').addEventListener('click',()=>exportA4(true));
+updatePdfAvailability();
