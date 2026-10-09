@@ -247,3 +247,25 @@ input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--primary)
   .subnet-table tr { grid-template-columns: minmax(0, 1fr); }
   .pagination { flex-wrap: wrap; }
 }
+
+/* V2 étape 1.8 : CyberNet à gauche, IPcalc centré sur la fenêtre, version à droite.
+   Trois colonnes équilibrées : le centre ne dépend pas de la largeur du logo. */
+.site-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+.site-header > .cybernet-logo { grid-column: 1; justify-self: start; min-width: 0; }
+.site-header > .brand { grid-column: 2; justify-self: center; white-space: nowrap; }
+.site-header > .header-actions { grid-column: 3; justify-self: end; gap: 8px; flex-wrap: nowrap; }
+.site-header .connection-status { display: none !important; }
+@media (max-width: 680px) {
+  .site-header { flex-wrap: nowrap; gap: 6px; padding-top: 8px; padding-bottom: 8px; }
+  .site-header > .brand { font-size: clamp(17px, 5.2vw, 24px); }
+  .site-header .cybernet-logo img { width: clamp(76px, 24vw, 136px); height: 37px; object-fit: contain; }
+  .site-header .version { white-space: nowrap; font-size: 9px; letter-spacing: 0; }
+  .site-header #install-app:not([hidden]) { position: absolute; top: 54px; right: 14px; z-index: 4; }
+}
