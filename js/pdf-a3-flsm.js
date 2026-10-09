@@ -47,7 +47,7 @@ function draw() {
     const xbit=x+labelWidth,bitW=(width-labelWidth)/32,header=19,rowH=opts.rowH??20;
     fill(x,y,width,header*3);
     fill(x,y+header*3,labelWidth,rowH*labels.length,'0.980 0.986 0.993');
-    if(opts.pepette)for(let row=2;row<labels.length;row++)fill(xbit+30*bitW,y+3*header+row*rowH,2*bitW,rowH,'0.978 g'.includes('foo')?'': '0.975 0.975 0.975');
+    if(opts.pepette)for(let row=2;row<labels.length;row++)fill(xbit+30*bitW,y+3*header+row*rowH,2*bitW,rowH,'0.975 0.975 0.975');
     box(x,y,width,header*3+labels.length*rowH,4);
     line(xbit,y,xbit,y+header*3+labels.length*rowH,.9);
     for(let i=1;i<3;i++)line(x,y+i*header,x+width,y+i*header);
@@ -127,7 +127,7 @@ function buildA3(base,plan,corrected){
     for(let j=1;j<32;j++)line(bitX+j*bitW,y+head,bitX+j*bitW,y+head+4*rowHeight,.23);
     if(corrected&&plan.prefix>base.prefix){
       const bx1=bitX+base.prefix*bitW,bx2=bitX+plan.prefix*bitW;
-      fill(bx1,y+head,bx2-bx1,4*rowHeight,'0.966 0.966 0.966');
+      // Le marquage des bits empruntés reste discret ; ne pas masquer la grille.
       line(bx1,y+head,bx1,y+head+4*rowHeight,1.0,true);
       line(bx2,y+head,bx2,y+head+4*rowHeight,1.0,true);
     }
