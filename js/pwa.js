@@ -77,8 +77,6 @@ if ('serviceWorker' in navigator && window.isSecureContext) {
   }).catch(() => {
     message('Les calculs fonctionnent, mais le cache hors connexion n’a pas pu être préparé. Rouvrez IPcalc en ligne pour réessayer.');
   });
-} else {
-  message('Les calculs fonctionnent. Pour installer IPcalc et préparer le mode hors connexion, ouvrez l’application en HTTPS ou sur localhost.');
 }
 
 updateConnection();

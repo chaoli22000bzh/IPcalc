@@ -1,11 +1,10 @@
 import { parseNetwork, planSubnets, subnetAt, summaryIndices, subnetPage, binaryOctets } from './ipv4.js';
-import { EXPORT_COLUMNS, exportSelection, toCSV, toText, copyText } from './exports.js';
+import { EXPORT_COLUMNS } from './exports.js';
 
 const $ = id => document.getElementById(id);
 const format = value => value.toLocaleString('fr-FR');
 const form = $('calculator-form');
 let current = null;
-let stale = false;
 let pages = { middle: { open: false, page: 0 }, extra: { open: false, page: 0 } };
 
 function element(tag, className, text) {
@@ -13,13 +12,6 @@ function element(tag, className, text) {
   if (className) node.className = className;
   if (text !== undefined) node.textContent = text;
   return node;
-}
-
-function showFeedback(message, error = false) {
-  const feedback = $('export-feedback');
-  feedback.textContent = message;
-  feedback.dataset.error = String(error);
-  feedback.hidden = false;
 }
 
 function binary(address, prefix) {
@@ -132,7 +124,6 @@ function pageDetails(kind, title, start, end) {
       button.addEventListener('click', () => {
         pages[kind].page += direction;
         populate();
-        syncVisibleCount();
         const nextButton = details.querySelector(`button[aria-label="${button.getAttribute('aria-label')}"]`);
         if (nextButton && !nextButton.disabled) nextButton.focus();
         else summary.focus();
@@ -147,7 +138,6 @@ function pageDetails(kind, title, start, end) {
   details.addEventListener('toggle', () => {
     pages[kind].open = details.open;
     populate();
-    syncVisibleCount();
   });
   return details;
 }
@@ -178,30 +168,12 @@ function renderSubnets(plan) {
   if ($('show-binary').checked) container.append(legend());
 }
 
-function visibleIndices() {
-  if (!current?.plan) return [];
-  const plan = current.plan;
-  const indices = summaryIndices(plan.concernedCount);
-  for (const [kind, start, end] of [['middle', 3, plan.concernedCount - 3], ['extra', plan.concernedCount, plan.capacity]]) {
-    if (pages[kind].open && end > start) indices.push(...subnetPage(plan, { start, end, page: pages[kind].page }).items.map(row => row.index));
-  }
-  return [...new Set(indices)];
-}
-
-function syncVisibleCount() {
-  if (!current?.plan) return;
-  $('export-scope').options[0].textContent = `Sous-réseaux visibles (${format(visibleIndices().length)})`;
-}
-
 function render() {
   $('results').hidden = false;
   $('network-result').hidden = false;
   $('result-title').textContent = current.plan ? 'Votre découpage FLSM' : 'Résultat du calcul';
   renderNetwork(current.base);
   renderSubnets(current.plan);
-  $('scope-field').hidden = !current.plan;
-  $('export-scope').options[1].textContent = current.plan?.requestedCount === null ? 'Ensemble (méthode hôtes)' : 'Sous-réseaux demandés';
-  syncVisibleCount();
 }
 
 function clearErrors() {
@@ -214,19 +186,14 @@ function clearErrors() {
 
 function calculate(focus = true) {
   clearErrors();
-  $('export-feedback').hidden = true;
   try {
     if (form.elements.mode.value === 'vlsm') throw new Error('VLSM indisponible : moteur non développé.');
     if ($('protocol').value !== 'ipv4') throw new Error('IPv6 indisponible : moteur non développé.');
     const base = parseNetwork($('address').value, $('mask').value);
     const plan = form.elements.mode.value === 'subnets' ? planSubnets(base, { method: $('method').value, count: $('count').value, hosts: $('hosts').value }) : null;
     current = { base, plan };
-    stale = false;
     pages = { middle: { open: false, page: 0 }, extra: { open: false, page: 0 } };
     $('stale-notice').hidden = true;
-    $('copy-results').disabled = false;
-    $('export-csv').disabled = false;
-    $('export-scope').value = 'visible';
     render();
     $('result-announcement').textContent = `Réseau ${base.address}/${base.prefix} calculé.${plan ? ` ${format(plan.concernedCount)} sous-réseaux /${plan.prefix}.` : ''}`;
     if (focus) $('result-title').focus({ preventScroll: true });
@@ -257,21 +224,13 @@ function syncSettings() {
 
 function invalidateResults() {
   current = null;
-  stale = true;
   pages = { middle: { open: false, page: 0 }, extra: { open: false, page: 0 } };
   $('network-result').replaceChildren();
   $('network-result').hidden = true;
   $('subnet-result').replaceChildren();
   $('subnet-result').hidden = true;
-  $('scope-field').hidden = true;
-  $('export-scope').value = 'visible';
-  $('export-scope').options[0].textContent = 'Sous-réseaux visibles';
   $('result-title').textContent = 'Résultat du calcul';
   $('result-announcement').textContent = '';
-  $('copy-results').disabled = true;
-  $('export-csv').disabled = true;
-  $('export-feedback').textContent = '';
-  $('export-feedback').hidden = true;
 }
 
 function markStale() {
@@ -285,36 +244,5 @@ form.addEventListener('submit', event => { event.preventDefault(); calculate(); 
 form.addEventListener('input', markStale);
 form.addEventListener('change', () => { syncSettings(); markStale(); });
 $('show-binary').addEventListener('change', () => { if (current) render(); });
-$('export-scope').addEventListener('change', () => { $('export-feedback').hidden = true; });
-
-function selection() {
-  if (!current || stale) throw new Error('Relancez le calcul avant de copier ou d’exporter.');
-  return exportSelection(current, $('export-scope').value, visibleIndices());
-}
-
-$('copy-results').addEventListener('click', async () => {
-  try {
-    const selected = selection();
-    await copyText(toText(selected));
-    showFeedback(`Copié : ${selected.label.toLowerCase()} (${format(selected.rows.length)} réseau${selected.rows.length > 1 ? 'x' : ''}).`);
-  } catch (error) { showFeedback(error.message, true); }
-});
-
-$('export-csv').addEventListener('click', () => {
-  try {
-    const selected = selection();
-    const url = URL.createObjectURL(new Blob([toCSV(selected)], { type: 'text/csv;charset=utf-8' }));
-    const link = element('a');
-    link.href = url;
-    const scope = current.plan ? $('export-scope').value : 'reseau';
-    link.download = `IPcalc-${current.base.address}-${current.base.prefix}-${scope}.csv`;
-    document.body.append(link);
-    link.click();
-    link.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-    showFeedback(`Exporté : ${selected.label.toLowerCase()} (${format(selected.rows.length)} réseau${selected.rows.length > 1 ? 'x' : ''}). CSV UTF-8, séparateur point-virgule.`);
-  } catch (error) { showFeedback(error.message, true); }
-});
-
 syncSettings();
 calculate(false);

@@ -23,8 +23,11 @@
           <img src="./icons/icon.svg" width="38" height="38" alt="">
           <span>IP<span class="brand-light">calc</span></span>
         </a>
-        <span class="cybernet">par <strong>CyberNet</strong></span>
-        <span class="version" title="2.0.0-step1.1">V2 · étape 1.1</span>
+        <picture class="cybernet-logo">
+          <source media="(prefers-color-scheme: dark)" srcset="./icons/Logo_CyberNet_blanc_transparent.svg">
+          <img src="./icons/Logo_CyberNet_bleu_marine_transparent.svg" width="1688" height="932" alt="CyberNet">
+        </picture>
+        <span class="version" title="2.0.0-step1.2">V2 · étape 1.2</span>
       </div>
       <div class="header-actions">
         <span id="connection-status" class="connection-status"><span class="status-dot"></span><span id="connection-label">Calcul local</span></span>
@@ -45,6 +48,13 @@
         <section class="input-panel panel" aria-labelledby="input-title">
           <form id="calculator-form" novalidate>
             <div class="panel-heading"><span class="step-number">01</span><h2 id="input-title">Votre réseau</h2></div>
+            <div class="form-actions">
+              <button type="submit" class="button calculate-button"><span>Calculer le réseau</span><span aria-hidden="true">→</span></button>
+              <button id="print-results" type="button" class="button button-outline print-button" disabled aria-label="Imprimer — à venir" title="Imprimer — à venir" aria-describedby="print-help">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M7 8V3h10v5M7 17H4V8h16v9h-3M7 14h10v7H7z"/><path d="M16 11h1"/></svg>
+              </button>
+              <span id="print-help" class="field-help print-status">À venir</span>
+            </div>
             <div class="network-fields">
               <div class="field">
                 <label for="protocol">Protocole</label>
@@ -52,10 +62,9 @@
                 <p id="protocol-help" class="field-help">IPv6 : moteur non développé.</p>
               </div>
               <div class="field address-field">
-                <button type="submit" class="button calculate-button"><span>Calculer le réseau</span><span aria-hidden="true">→</span></button>
-                <label for="address">Adresse IPv4 <span class="field-optional">avec ou sans CIDR</span></label>
+                <label for="address">Adresse IP</label>
                 <input id="address" name="address" type="text" value="192.168.10.75/26" placeholder="192.168.10.75/26" spellcheck="false" autocomplete="off" autocapitalize="off" enterkeyhint="go" aria-describedby="address-help">
-                <p id="address-help" class="field-help">Une adresse d’hôte est automatiquement ramenée à son réseau.</p>
+                <p id="address-help" class="field-help">IPv4 avec ou sans CIDR. Une adresse d’hôte est ramenée à son réseau.</p>
               </div>
               <div class="field">
                 <label for="mask">Masque ou préfixe <span class="field-optional">si besoin</span></label>
@@ -110,25 +119,6 @@
           </div>
           <div id="subnet-result" class="panel subnet-panel" hidden></div>
 
-          <section class="panel export-panel" aria-labelledby="export-title">
-            <div><h3 id="export-title">Export des résultats</h3><p id="print-help">Impression dédiée : disponible dans une prochaine étape.</p></div>
-            <div class="export-controls">
-              <div id="scope-field" class="export-scope" hidden>
-                <label for="export-scope">Périmètre</label>
-                <select id="export-scope">
-                  <option value="visible">Sous-réseaux visibles</option>
-                  <option value="requested">Sous-réseaux demandés</option>
-                  <option value="all">Ensemble des sous-réseaux</option>
-                </select>
-              </div>
-              <div class="export-buttons">
-                <button id="print-results" type="button" class="button button-outline" disabled aria-describedby="print-help">Imprimer — à venir</button>
-                <button id="copy-results" class="button button-outline"><span aria-hidden="true">▣</span> Copier</button>
-                <button id="export-csv" class="button button-outline"><span aria-hidden="true">↓</span> Export CSV</button>
-              </div>
-            </div>
-            <p id="export-feedback" class="export-feedback" role="status" hidden></p>
-          </section>
           <p id="result-announcement" class="sr-only" role="status" aria-live="polite"></p>
         </section>
       </div>
