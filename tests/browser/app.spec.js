@@ -49,13 +49,13 @@ test('dix sous-réseaux demandés : règle papier exacte et capacité distincte'
   await expect(page.locator('#subnet-result h3')).toHaveText('10 sous-réseaux demandés');
   await expect(page.locator('#subnet-result')).toContainText('Capacité totale 16');
   const numbers = await page.locator('#subnet-result tr[data-subnet-number]').evaluateAll(rows => rows.map(row => row.dataset.subnetNumber));
-  expect(numbers).toEqual(['1', '2', '3', '8', '9', '10']);
+  expect(numbers).toEqual(['0', '1', '2', '7', '8', '9']);
   await expect(page.locator('.ellipsis-row')).toContainText('4 sous-réseaux intermédiaires');
   await page.locator('#middle-details > summary').click();
   await expect(page.locator('#middle-details tr[data-subnet-number]')).toHaveCount(4);
-  await expect(page.locator('#middle-details tr[data-subnet-number]').first()).toHaveAttribute('data-subnet-number', '4');
+  await expect(page.locator('#middle-details tr[data-subnet-number]').first()).toHaveAttribute('data-subnet-number', '3');
   await page.locator('#extra-details > summary').click();
-  await expect(page.locator('#extra-details tr[data-subnet-number]').first()).toHaveAttribute('data-subnet-number', '11');
+  await expect(page.locator('#extra-details tr[data-subnet-number]').first()).toHaveAttribute('data-subnet-number', '10');
   await expect(page.locator('#export-scope option').first()).toHaveText('Sous-réseaux visibles (16)');
 });
 
@@ -79,7 +79,7 @@ test('grand /0 : six lignes, pagination bornée et export protégé', async ({ p
   await page.locator('#middle-details > summary').click();
   await expect(page.locator('#middle-details tr[data-subnet-number]')).toHaveCount(50);
   await page.getByRole('button', { name: 'Suivants : sous-réseaux intermédiaires' }).click();
-  await expect(page.locator('#middle-details tr[data-subnet-number]').first()).toHaveAttribute('data-subnet-number', '54');
+  await expect(page.locator('#middle-details tr[data-subnet-number]').first()).toHaveAttribute('data-subnet-number', '53');
   await page.getByLabel('Périmètre', { exact: true }).selectOption('all');
   await page.getByRole('button', { name: 'Export CSV' }).click();
   await expect(page.locator('#export-feedback')).toContainText('La limite est de');
@@ -233,4 +233,60 @@ test('modifier un calcul avec pagination ouverte ne conserve aucun sous-réseau'
   await expect(page.locator('#network-result')).toContainText('10.0.0.0');
   await expect(page.locator('#middle-details')).not.toHaveAttribute('open');
   await expect(page.locator('#extra-details')).not.toHaveAttribute('open');
+});
+
+test('bouton au-dessus de l’adresse, en-têtes alignés et navigation clavier', async ({ page }) => {
+  const button = page.getByRole('button', { name: 'Calculer le réseau' });
+  const address = page.getByLabel('Adresse IPv4');
+  const initialButton = await button.boundingBox();
+  const field = await address.boundingBox();
+  expect(initialButton.y + initialButton.height).toBeLessThan(field.y);
+  expect(Math.abs(initialButton.x - field.x)).toBeLessThan(1);
+  expect(initialButton.width).toBeGreaterThan(field.width * .85);
+  expect(initialButton.width).toBeLessThanOrEqual(field.width);
+  expect(initialButton.height).toBeLessThanOrEqual(44);
+  const inputHeading = await page.locator('.panel-heading .step-number').boundingBox();
+  const resultHeading = await page.locator('.results-heading .step-number').boundingBox();
+  expect(inputHeading.x).toBe(resultHeading.x);
+  expect(inputHeading.width).toBe(resultHeading.width);
+  expect(inputHeading.height).toBe(resultHeading.height);
+  await expect(page.locator('.results-primary > .results-heading')).toBeVisible();
+  await page.locator('#protocol').focus();
+  await page.keyboard.press('Tab');
+  await expect(button).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(address).toBeFocused();
+  await address.fill('10.0.0.1/24');
+  await address.press('Enter');
+  await expect(page.locator('#network-result dd').first()).toHaveText('10.0.0.0');
+  await expect(page.locator('#result-title')).toBeFocused();
+  await page.getByRole('radio', { name: 'Aucun découpage', exact: true }).focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(page.getByRole('radio', { name: 'FLSM', exact: true })).toBeChecked();
+  await expect(page.locator('#network-result')).toBeEmpty();
+  // Comparer les coordonnées du document malgré le défilement clavier mobile.
+  const position = await button.evaluate(node => ({ x: node.getBoundingClientRect().x + scrollX, y: node.getBoundingClientRect().y + scrollY }));
+  expect(position.x).toBe(initialButton.x);
+  expect(position.y).toBe(initialButton.y);
+  await address.press('Enter');
+  await expect(page.locator('#result-title')).toHaveText('Votre découpage FLSM');
+  await expect(page.locator('.help-panel, .site-footer')).toHaveCount(0);
+  await expect(page.locator('.brand-group .cybernet')).toHaveText('par CyberNet');
+  await expect(page.locator('.version')).toBeVisible();
+});
+
+test('numérotation à zéro : huit réseaux, intermédiaires et tous les réseaux', async ({ page }) => {
+  await subdivide(page, { count: '8' });
+  const rows = page.locator('#subnet-result tr[data-subnet-number]');
+  await expect(rows.locator('td:first-child')).toHaveText(['#0', '#1', '#2', '#5', '#6', '#7']);
+  await expect(rows.first().locator('td').nth(1)).toHaveText('192.168.10.0');
+  await expect(rows.last().locator('td').nth(1)).toHaveText('192.168.10.224');
+  await page.locator('#middle-details > summary').click();
+  await expect(page.locator('#middle-details tr[data-subnet-number] td:first-child')).toHaveText(['#3', '#4']);
+  await subdivide(page, { count: '4' });
+  await expect(rows.locator('td:first-child')).toHaveText(['#0', '#1', '#2', '#3']);
+  await expect(rows.last().locator('td').nth(1)).toHaveText('192.168.10.192');
+  await subdivide(page, { count: '1' });
+  await expect(rows.locator('td:first-child')).toHaveText(['#0']);
+  await expect(rows.first().locator('td').nth(1)).toHaveText('192.168.10.0');
 });

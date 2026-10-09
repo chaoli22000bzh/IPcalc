@@ -95,8 +95,8 @@ function networkTable(rows, omitted = 0) {
       tbody.append(gap);
     }
     const row = element('tr');
-    row.dataset.subnetNumber = String(network.number);
-    const values = [`#${format(network.number)}`, network.address, network.mask, `/${network.prefix}`, network.broadcast ?? 'Sans broadcast', format(network.usableHosts)];
+    row.dataset.subnetNumber = String(network.index);
+    const values = [`#${format(network.index)}`, network.address, network.mask, `/${network.prefix}`, network.broadcast ?? 'Sans broadcast', format(network.usableHosts)];
     values.forEach((value, column) => {
       const cell = element('td', '', value);
       cell.dataset.label = column === 0 ? 'Nº' : EXPORT_COLUMNS[column - 1];

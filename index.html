@@ -18,15 +18,17 @@
   <body>
     <a class="skip-link" href="#calculator">Aller au calculateur</a>
     <header class="site-header">
-      <a class="brand" href="./" aria-label="IPcalc, accueil">
-        <img src="./icons/icon.svg" width="38" height="38" alt="">
-        <span>IP<span class="brand-light">calc</span></span>
-        <span class="version">V2</span>
-      </a>
+      <div class="brand-group">
+        <a class="brand" href="./" aria-label="IPcalc, accueil">
+          <img src="./icons/icon.svg" width="38" height="38" alt="">
+          <span>IP<span class="brand-light">calc</span></span>
+        </a>
+        <span class="cybernet">par <strong>CyberNet</strong></span>
+        <span class="version" title="2.0.0-step1.1">V2 · étape 1.1</span>
+      </div>
       <div class="header-actions">
         <span id="connection-status" class="connection-status"><span class="status-dot"></span><span id="connection-label">Calcul local</span></span>
         <button id="install-app" class="button button-small button-outline" hidden>Installer l’application</button>
-        <span class="cybernet">par <strong>CyberNet</strong></span>
       </div>
     </header>
 
@@ -49,7 +51,8 @@
                 <select id="protocol" name="protocol" aria-describedby="protocol-help"><option value="ipv4">IPv4</option><option value="ipv6" disabled>IPv6 — indisponible</option></select>
                 <p id="protocol-help" class="field-help">IPv6 : moteur non développé.</p>
               </div>
-              <div class="field">
+              <div class="field address-field">
+                <button type="submit" class="button calculate-button"><span>Calculer le réseau</span><span aria-hidden="true">→</span></button>
                 <label for="address">Adresse IPv4 <span class="field-optional">avec ou sans CIDR</span></label>
                 <input id="address" name="address" type="text" value="192.168.10.75/26" placeholder="192.168.10.75/26" spellcheck="false" autocomplete="off" autocapitalize="off" enterkeyhint="go" aria-describedby="address-help">
                 <p id="address-help" class="field-help">Une adresse d’hôte est automatiquement ramenée à son réseau.</p>
@@ -93,17 +96,18 @@
             </div>
 
             <p id="calculation-error" class="form-error" role="alert" hidden></p>
-            <button type="submit" class="button calculate-button"><span>Calculer le réseau</span><span aria-hidden="true">→</span></button>
           </form>
         </section>
 
         <section id="results" class="results" aria-labelledby="result-title">
+          <div class="panel results-primary">
           <div class="results-heading">
             <div class="heading-with-step"><span class="step-number">02</span><h2 id="result-title" tabindex="-1">Résultat du calcul</h2></div>
             <label class="binary-toggle"><input id="show-binary" type="checkbox"><span>Afficher le binaire</span></label>
           </div>
           <p id="stale-notice" class="notice" role="status" hidden>Paramètres modifiés. Relancez le calcul pour actualiser les résultats.</p>
-          <div id="network-result" class="panel network-panel"></div>
+          <div id="network-result" class="network-panel"></div>
+          </div>
           <div id="subnet-result" class="panel subnet-panel" hidden></div>
 
           <section class="panel export-panel" aria-labelledby="export-title">
@@ -129,21 +133,8 @@
         </section>
       </div>
 
-      <section class="help-panel" aria-labelledby="help-title">
-        <details>
-          <summary id="help-title"><span>Un repère pour vos calculs</span><span class="detail-plus" aria-hidden="true">+</span></summary>
-          <div class="help-content">
-            <p><strong>Du /0 au /31.</strong> Le préfixe indique combien de bits identifient le réseau. Les autres bits identifient les adresses dans ce réseau. Le /32 est exclu de cette version.</p>
-            <p><strong>FLSM.</strong> Le découpage produit des réseaux de taille identique. Les nombres de sous-réseaux suivent les puissances de deux : pour dix réseaux demandés, la capacité est de seize. Les six autres restent à part.</p>
-            <p><strong>La règle papier.</strong> Jusqu’à six sous-réseaux, tout est affiché. Au-delà, vous voyez les trois premiers et les trois derniers du périmètre demandé. Les autres se consultent par pages de 50.</p>
-            <p><strong>Le cas /31.</strong> Une liaison point à point dispose de deux adresses utilisables et n’a pas de broadcast conventionnel.</p>
-            <p><strong>Hors connexion.</strong> Ouvrez une première fois IPcalc en ligne et attendez la confirmation « Prêt hors connexion ». Sur Android, utilisez le bouton d’installation ou le menu de Chrome. Sur ordinateur, une page déjà mise en cache reste accessible sans Internet. Le CSV UTF-8 utilise le point-virgule et peut être ouvert dans Excel.</p>
-          </div>
-        </details>
-      </section>
     </main>
 
-    <footer class="site-footer"><span><strong>IPcalc</strong> · Un outil CyberNet</span><span class="footer-version">V2 · étape 1</span></footer>
     <noscript><p class="notice">Activez JavaScript pour utiliser les calculs et le fonctionnement hors connexion d’IPcalc.</p></noscript>
   </body>
 </html>
