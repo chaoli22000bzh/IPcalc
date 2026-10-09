@@ -44,7 +44,7 @@ function build(base,corrected){
  const vals=[base.inputAddress,base.mask,network,first,last,bcast];
  const labels=["Adresse de l'hôte","Masque en binaire","Adresse réseau","Première adresse","Dernière adresse","Broadcast"];
  for(let row=0;row<6;row++){font(labels[row],34,318+23*row,8);
- if(corrected){let bits=binaryOctets(vals[row]).join('');for(let j=0;j<32;j++)if(bits[j]==='1'||(row>=2&&j>=30))font(bits[j],bx+(j+.5)*bw-2.6,296+25*row,8,true)}
+ if(corrected){let bits=binaryOctets(vals[row]).join('');for(let j=0;j<32;j++)if(bits[j]==='1'||(row>=2&&j>=30))font(bits[j],bx+(j+.5)*bw-2.6,318+23*row,8,true)}
  }
  if(corrected)line(bx+base.prefix*bw,ys[3],bx+base.prefix*bw,ys.at(-1),1.6,true);
  section(2,473,'Compléter le tableau en décimal ci-dessous');
