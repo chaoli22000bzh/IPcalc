@@ -1,3 +1,4 @@
+import { downloadFlsmA3 } from './pdf-a3-flsm.js';
 import { downloadAddressingA4 } from './pdf-a4.js';
 import { parseNetwork, planSubnets, subnetAt, summaryIndices, subnetPage, binaryOctets } from './ipv4.js';
 import { EXPORT_COLUMNS } from './exports.js';
@@ -252,27 +253,32 @@ calculate(false);
 
 function updatePdfAvailability() {
   const button=$('print-results');
-  const available=Boolean(current && !current.plan);
+  const available=Boolean(current);
+  const flsm=Boolean(current?.plan);
   button.disabled=!available;
-  button.setAttribute('aria-label',available?'Télécharger la fiche IPv4 A4':'Impression FLSM à venir');
-  button.title=available?'Télécharger une fiche IPv4 A4':'Impression FLSM à venir';
-  $('print-help').textContent=available?'PDF A4':'À venir';
+  button.setAttribute('aria-label',available?'Télécharger une fiche pédagogique PDF':'Imprimer — calcul indisponible');
+  button.title=available?'Télécharger une fiche pédagogique PDF':'Impression indisponible';
+  $('print-help').textContent=available?(flsm?'PDF A3':'PDF A4'):'À venir';
 }
 $('print-results').addEventListener('click',()=>{
-  if (!current||current.plan)return;
+  if(!current)return;
+  const flsm=Boolean(current.plan);
   $('pdf-a4-error').hidden=true;
+  $('pdf-a4-title').textContent=flsm?'Fiche IPv4 et sous-réseaux FLSM':'Fiche d’adressage IPv4';
+  $('pdf-a4-description').textContent=flsm?'Choisir un PDF A3 paysage à télécharger :':'Choisir un PDF A4 portrait à télécharger :';
   $('pdf-a4-dialog').showModal();
 });
-function exportA4(corrected) {
-  if(!current||current.plan)return;
+function exportDocument(corrected) {
+  if(!current)return;
   try {
-    downloadAddressingA4(current.base,corrected);
+    if(current.plan)downloadFlsmA3(current.base,current.plan,corrected);
+    else downloadAddressingA4(current.base,corrected);
     $('pdf-a4-dialog').close();
-  } catch(err) {
-    $('pdf-a4-error').textContent='Impossible de générer le PDF : '+err.message;
+  }catch(error){
+    $('pdf-a4-error').textContent='Impossible de générer le PDF : '+error.message;
     $('pdf-a4-error').hidden=false;
   }
 }
-$('pdf-a4-student').addEventListener('click',()=>exportA4(false));
-$('pdf-a4-corrected').addEventListener('click',()=>exportA4(true));
+$('pdf-a4-student').addEventListener('click',()=>exportDocument(false));
+$('pdf-a4-corrected').addEventListener('click',()=>exportDocument(true));
 updatePdfAvailability();
