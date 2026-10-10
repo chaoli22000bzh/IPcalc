@@ -413,6 +413,9 @@ test('impression A4 VLSM : résumé textuel et tableau, bouton PDF historique pr
   await page.evaluate(()=>{ window.__printCalled=false;window.print=()=>{window.__printCalled=true;}; });
   await page.getByRole('button',{name:'Imprimer le plan VLSM A4'}).click();
   expect(await page.evaluate(()=>window.__printCalled)).toBe(true);
+  await expect(page).toHaveTitle('192.168.50.0_VLSM');
+  await page.evaluate(()=>window.dispatchEvent(new Event('afterprint')));
+  await expect(page).toHaveTitle('IPcalc — Adressage IPv4 et IPv6 · CyberNet');
   await expect(page.locator('#print-summary-content')).toContainText('192.168.50.0/24');
   await expect(page.locator('.vlsm-results-table tbody tr')).toHaveCount(6);
   await page.emulateMedia({media:'print'});
