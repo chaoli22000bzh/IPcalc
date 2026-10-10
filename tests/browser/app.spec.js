@@ -156,7 +156,7 @@ test('ressources locales, thème automatique, portrait / paysage sans débordeme
 test('modes disponibles, emplacements futurs et disposition verticale', async ({ page }) => {
   await expect(page.getByRole('radio', { name: 'VLSM', exact: true })).toBeEnabled();
   await expect(page.locator('#protocol option[value="ipv6"]')).toBeEnabled();
-  await expect(page.getByRole('button', { name: 'Imprimer — à venir' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Télécharger une fiche pédagogique PDF' })).toBeEnabled();
   await expect(page.locator('.intro')).toHaveCount(0);
   const input = await page.locator('.input-panel').boundingBox();
   const results = await page.locator('#results').boundingBox();
@@ -400,4 +400,27 @@ test('VLSM : refus d’un réseau trop petit et mise à jour de la fiche avant c
   await page.getByRole('button',{name:'Planifier les sous-réseaux'}).click();
   await expect(page.getByRole('alert')).toContainText('Capacité insuffisante');
   await expect(page.locator('.vlsm-results-table')).toHaveCount(0);
+});
+
+test('impression A4 VLSM : résumé textuel et tableau, bouton PDF historique préservé', async ({ page }) => {
+  await page.getByLabel('Adresse IP').fill('192.168.50.0/24');
+  await page.getByRole('radio',{name:'VLSM',exact:true}).check();
+  for(const [index,hosts] of [50,25,12,5,2,10].entries()){
+    if(index===5)await page.locator('#vlsm-add').click();
+    await page.getByLabel('Hôtes par réseau ligne '+(index+1)).fill(String(hosts));
+  }
+  await page.getByRole('button',{name:'Planifier les sous-réseaux'}).click();
+  await page.evaluate(()=>{ window.__printCalled=false;window.print=()=>{window.__printCalled=true;}; });
+  await page.getByRole('button',{name:'Imprimer le plan VLSM A4'}).click();
+  expect(await page.evaluate(()=>window.__printCalled)).toBe(true);
+  await expect(page.locator('#print-summary-content')).toContainText('192.168.50.0/24');
+  await expect(page.locator('.vlsm-results-table tbody tr')).toHaveCount(6);
+  await page.emulateMedia({media:'print'});
+  await expect(page.locator('#print-summary')).toBeVisible();
+  await expect(page.locator('.input-panel')).toBeHidden();
+  await expect(page.locator('.vlsm-results-table')).toBeVisible();
+  await page.emulateMedia({media:'screen'});
+  await page.getByRole('radio',{name:'Aucun découpage',exact:true}).check();
+  await page.getByRole('button',{name:'Calculer le réseau'}).click();
+  await expect(page.getByRole('button',{name:'Télécharger une fiche pédagogique PDF'})).toBeEnabled();
 });
