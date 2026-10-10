@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#17685c">
-    <meta name="description" content="Calculez vos réseaux IPv4 et sous-réseaux FLSM. Gratuit, sans compte et disponible hors connexion.">
+    <meta name="description" content="Analysez vos adresses IPv4 et IPv6 et calculez les sous-réseaux FLSM IPv4, hors connexion.">
     <meta name="color-scheme" content="light dark">
-    <title>IPcalc — Calculatrice IPv4 · CyberNet</title>
+    <title>IPcalc — Adressage IPv4 et IPv6 · CyberNet</title>
     <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="./icons/icon-192.png">
     <link rel="manifest" href="./manifest.webmanifest">
@@ -57,17 +57,17 @@
           <form id="calculator-form" novalidate>
             <div class="panel-heading"><span class="step-number">01</span><h2 id="input-title">Votre réseau</h2></div>
             <div class="form-actions">
-              <button type="submit" class="button calculate-button"><span>Calculer le réseau</span><span aria-hidden="true">→</span></button>
+              <button type="submit" class="button calculate-button"><span id="calculate-label">Calculer le réseau</span><span aria-hidden="true">→</span></button>
               <button id="print-results" type="button" class="button button-outline print-button" disabled aria-label="Imprimer — à venir" title="Imprimer — à venir" aria-describedby="print-help">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M7 8V3h10v5M7 17H4V8h16v9h-3M7 14h10v7H7z"/><path d="M16 11h1"/></svg>
               </button>
               <span id="print-help" class="field-help print-status">À venir</span>
             </div>
             <div class="network-fields">
-              <div class="field">
-                <label for="protocol">Protocole</label>
-                <select id="protocol" name="protocol" aria-describedby="protocol-help"><option value="ipv4">IPv4</option><option value="ipv6" disabled>IPv6 — indisponible</option></select>
-                <p id="protocol-help" class="field-help">IPv6 : moteur non développé.</p>
+              <div class="field protocol-detection">
+                <span class="field-label">Protocole</span>
+                <span id="protocol-indicator" class="protocol-indicator" role="status">IPv4 détecté</span>
+                <p class="field-help">Détection automatique selon l’adresse saisie.</p>
               </div>
               <div class="field address-field">
                 <label for="address">Adresse IP</label>
@@ -80,7 +80,7 @@
                 <p id="mask-help" class="field-help">Laissez vide si l’adresse contient déjà un préfixe.</p>
               </div>
             </div>
-            <fieldset class="mode-fieldset">
+            <fieldset id="mode-fieldset" class="mode-fieldset">
               <legend>Mode de découpage</legend>
               <div class="mode-switch">
                 <label><input type="radio" name="mode" value="simple" checked><span>Aucun découpage</span></label>
