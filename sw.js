@@ -1,10 +1,10 @@
 // Incrémenter VERSION à chaque livraison modifiant une ressource de l’application.
-const VERSION = '2.0.0-step3.5';
+const VERSION = '2.0.0-step3.6';
 const CACHE_PREFIX = `ipcalc:${self.registration.scope}:`;
 const CACHE_NAME = `${CACHE_PREFIX}${VERSION}`;
 const ASSETS = [
-  './', './index.html', './styles.css', './print.css', './manifest.webmanifest',
-  './js/vlsm.js', './js/ipv6.js', './js/pdf-a4.js', './js/pdf-a3-flsm.js', './js/ipv4.js', './js/exports.js', './js/app.js', './js/pwa.js', './js/report-profiles.js',
+  './', './index.html', './styles.css', './print.css', './professional-report.css', './manifest.webmanifest',
+  './js/vlsm.js', './js/ipv6.js', './js/pdf-a4.js', './js/pdf-a3-flsm.js', './js/ipv4.js', './js/exports.js', './js/app.js', './js/pwa.js', './js/report-profiles.js', './js/professional-flsm.js',
   './icons/Logo_CyberNet_blanc_transparent.svg', './icons/Logo_CyberNet_bleu_marine_transparent.svg',
   './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png',
 ];
