@@ -2,8 +2,9 @@ import { describeVlsmBase, summarizeVlsmRequests, planVlsm, VLSM_MAX_SUBNETS, VL
 import { parseIPv6 } from './ipv6.js?v=2.0.0-step3.0';
 import { downloadFlsmA3 } from './pdf-a3-flsm.js?v=2.0.0-step3.0';
 import { downloadAddressingA4 } from './pdf-a4.js?v=2.0.0-step3.0';
-import { printFlsmProfessional } from './professional-flsm.js?v=2.0.0-step3.7';
-import { printIPv4Professional } from './professional-ipv4.js?v=2.0.0-step3.7';
+import { printFlsmProfessional } from './professional-flsm.js?v=2.0.0-step3.8';
+import { printIPv4Professional } from './professional-ipv4.js?v=2.0.0-step3.8';
+import { printIPv6Professional } from './professional-ipv6.js?v=2.0.0-step3.8';
 import { parseNetwork, planSubnets, subnetAt, summaryIndices, subnetPage } from './ipv4.js?v=2.0.0-step3.0';
 import { EXPORT_COLUMNS } from './exports.js?v=2.0.0-step3.0';
 
@@ -498,15 +499,21 @@ function updatePdfAvailability(){
   const print=$('print-results');
   const vlsm=Boolean(current?.vlsm);
   const legacy=Boolean(current)&&current.protocol==='ipv4'&&!vlsm;
+  const ipv6=Boolean(current)&&current.protocol==='ipv6';
   // Le bouton historique conserve ses deux PDF scolaires en IPv4 et FLSM.
   // En mode VLSM, la même icône ouvre l'impression A4 de Firefox.
-  print.disabled=!vlsm&&!legacy;
-  print.setAttribute('aria-label',vlsm?'Imprimer le plan VLSM A4':legacy?'Télécharger une fiche pédagogique PDF':'Impression indisponible');
-  print.title=vlsm?'Imprimer le plan VLSM A4 ou enregistrer en PDF':legacy?'Télécharger une fiche pédagogique PDF':'Impression indisponible';
-  $('print-help').textContent=vlsm?'Impression VLSM A4':legacy?(current.plan?'PDF A3 / A4 Pro':'PDF A4 / A4 Pro'):'À venir';
+  print.disabled=!vlsm&&!legacy&&!ipv6;
+  print.setAttribute('aria-label',vlsm?'Imprimer le plan VLSM A4':legacy?'Télécharger une fiche pédagogique PDF':ipv6?'Imprimer la fiche professionnelle IPv6 A4':'Impression indisponible');
+  print.title=vlsm?'Imprimer le plan VLSM A4 ou enregistrer en PDF':legacy?'Télécharger une fiche pédagogique PDF':ipv6?'Imprimer la fiche professionnelle IPv6 A4':'Impression indisponible';
+  $('print-help').textContent=vlsm?'Impression VLSM A4':legacy?(current.plan?'PDF A3 / A4 Pro':'PDF A4 / A4 Pro'):ipv6?'PDF A4 Pro':'À venir';
 }
 $('print-results').addEventListener('click',()=>{
-  if(!current||current.protocol!=='ipv4')return;
+  if(!current)return;
+  if(current.protocol==='ipv6'){
+    printIPv6Professional(current.base);
+    return;
+  }
+  if(current.protocol!=='ipv4')return;
   if(current.vlsm){
     refreshPrintSummary();
     const printWrapper=$('subnet-result').querySelector('.vlsm-print-table-wrapper');
