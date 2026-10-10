@@ -278,11 +278,11 @@ function renderVlsm(plan){
   bar.setAttribute('role','img');
   bar.setAttribute('aria-label',format(plan.usedAddresses)+' adresses attribuées et '+format(plan.freeAddresses)+' non attribuées sur '+format(plan.initial.totalAddresses));
   // La largeur est proportionnelle aux blocs, en nombre d'adresses, pas aux hôtes utilisables.
-  plan.rows.forEach(row=>{
+  plan.groups.forEach(group=>{
     const seg=element('span','vlsm-bar-segment');
-    seg.style.width=(row.blockSize/plan.initial.totalAddresses*100)+'%';
-    seg.style.backgroundColor=vlsmColors[row.sourceIndex%vlsmColors.length];
-    seg.title='Réseau '+row.index+' : '+row.cidr+' ; '+row.blockSize+' adresses';
+    seg.style.width=(group.addressCost/plan.initial.totalAddresses*100)+'%';
+    seg.style.backgroundColor=vlsmColors[group.sourceIndex%vlsmColors.length];
+    seg.title=group.quantity+' réseaux /'+group.prefix+' : '+group.addressCost+' adresses';
     bar.append(seg);
   });
   if(plan.freeAddresses){
@@ -322,6 +322,19 @@ function renderVlsm(plan){
     });tbody.append(tr);
   });
   table.append(tbody);wrapper.append(table);other.append(wrapper);
+  // Version complète réservée à l'impression A4, indépendante de la pagination.
+  const printWrapper=element('div','vlsm-print-table-wrapper');
+  const printTable=element('table','vlsm-print-table');
+  const printHead=element('thead'),printHeader=element('tr');
+  ['Nº','Hôtes demandés','Hôtes disponibles','Adresse réseau / CIDR','Broadcast','Masque décimal'].forEach(label=>{
+    const th=element('th','',label);printHeader.append(th);
+  });
+  printHead.append(printHeader);printTable.append(printHead);
+  const printBody=element('tbody');
+  // Construit lors de l'impression, pour ne pas créer plusieurs milliers de nœuds en consultation.
+  printWrapper.append(printTable);other.append(printWrapper);
+  printWrapper.dataset.ready='false';
+
   if(pageCount>1){
     const nav=element('nav','vlsm-pagination');
     nav.setAttribute('aria-label','Pages du plan VLSM');
@@ -488,6 +501,18 @@ $('print-results').addEventListener('click',()=>{
   if(!current||current.protocol!=='ipv4')return;
   if(current.vlsm){
     refreshPrintSummary();
+    const printWrapper=$('subnet-result').querySelector('.vlsm-print-table-wrapper');
+    if(printWrapper && printWrapper.dataset.ready!=='true'){
+      const table=printWrapper.querySelector('table');
+      const tbody=element('tbody');
+      current.vlsm.rows.forEach(row=>{
+        const tr=element('tr');
+        [row.index,row.requestedHosts,row.usableHosts,row.cidr,row.broadcast??'Sans broadcast (/31)',row.mask].forEach(value=>
+          tr.append(element('td','',String(value))));
+        tbody.append(tr);
+      });
+      table.append(tbody);printWrapper.dataset.ready='true';
+    }
     // Firefox utilise le titre HTML comme nom proposé pour « Enregistrer en PDF ».
     // Le CIDR /24 reste visible dans le document, mais pas dans le nom de fichier.
     const normalTitle=document.title;
