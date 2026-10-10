@@ -427,3 +427,23 @@ test('impression A4 VLSM : résumé textuel et tableau, bouton PDF historique pr
   await page.getByRole('button',{name:'Calculer le réseau'}).click();
   await expect(page.getByRole('button',{name:'Télécharger une fiche pédagogique PDF'})).toBeEnabled();
 });
+
+test('VLSM 140 réseaux : pagination écran à 100 et impression complète', async ({ page }) => {
+  await page.getByLabel('Adresse IP').fill('10.0.0.0/7');
+  await page.getByRole('radio',{name:'VLSM',exact:true}).check();
+  const groups=[[30,50],[20,25],[40,13],[50,8]];
+  for(let i=0;i<groups.length;i++){
+    await page.getByLabel('Quantité ligne '+(i+1)).fill(String(groups[i][0]));
+    await page.getByLabel('Hôtes par réseau ligne '+(i+1)).fill(String(groups[i][1]));
+  }
+  await expect(page.locator('#vlsm-base-content')).toContainText('4 000 adresses nécessaires');
+  await page.getByRole('button',{name:'Planifier les sous-réseaux'}).click();
+  await expect(page.locator('.vlsm-results-table tbody tr')).toHaveCount(100);
+  await expect(page.locator('.vlsm-pagination')).toContainText('140');
+  await page.getByRole('button',{name:'Suivant'}).click();
+  await expect(page.locator('.vlsm-results-table tbody tr')).toHaveCount(40);
+  await expect(page.locator('.vlsm-results-table tbody tr').first()).toContainText('100');
+  await page.evaluate(()=>{window.print=()=>{};});
+  await page.getByRole('button',{name:'Imprimer le plan VLSM A4'}).click();
+  await expect(page.locator('.vlsm-print-table tbody tr')).toHaveCount(140);
+});
