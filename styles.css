@@ -373,3 +373,7 @@ input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--primary)
 @media(min-width:791px) {
   .vlsm-base-panel {margin-top:78px;}
 }
+
+/* VLSM : pagination écran, rapport complet uniquement à l'impression. */
+.vlsm-pagination {display:flex;justify-content:center;align-items:center;gap:15px;flex-wrap:wrap;padding:15px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);}
+.vlsm-print-table-wrapper {display:none !important;}
