@@ -1,8 +1,8 @@
-import { parseIPv6 } from './ipv6.js?v=2.0.0-step2.8';
-import { downloadFlsmA3 } from './pdf-a3-flsm.js?v=2.0.0-step2.8';
-import { downloadAddressingA4 } from './pdf-a4.js?v=2.0.0-step2.8';
-import { parseNetwork, planSubnets, subnetAt, summaryIndices, subnetPage, binaryOctets } from './ipv4.js?v=2.0.0-step2.8';
-import { EXPORT_COLUMNS } from './exports.js?v=2.0.0-step2.8';
+import { parseIPv6 } from './ipv6.js?v=2.0.0-step2.9';
+import { downloadFlsmA3 } from './pdf-a3-flsm.js?v=2.0.0-step2.9';
+import { downloadAddressingA4 } from './pdf-a4.js?v=2.0.0-step2.9';
+import { parseNetwork, planSubnets, subnetAt, summaryIndices, subnetPage, binaryOctets } from './ipv4.js?v=2.0.0-step2.9';
+import { EXPORT_COLUMNS } from './exports.js?v=2.0.0-step2.9';
 
 const $ = id => document.getElementById(id);
 const format = value => value.toLocaleString('fr-FR');
@@ -209,7 +209,9 @@ function renderIPv6(info) {
     ['Adresses du bloc',powerOfTwo(info.addressExponent,info.addressCount)],
     ['Sous-réseaux /64 possibles',info.subnets64Exponent===null
       ? '0 (préfixe plus long que /64)'
-      : powerOfTwo(info.subnets64Exponent,info.subnets64)]
+      : info.subnets64Exponent===0
+        ? '1 (2 à la puissance 0)'
+        : powerOfTwo(info.subnets64Exponent,info.subnets64)]
   ];
   for(const [label,value] of fields){
     const group=element('div');
