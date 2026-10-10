@@ -191,9 +191,10 @@ function renderIPv6(info) {
     group.append(element('dt','',label),element('dd',className,value));
     addresses.append(group);
   }
-  container.append(addresses);
+  const detailLayout=element('div','ipv6-detail-layout');
+  detailLayout.append(addresses);
 
-  const other=element('dl','network-data ipv6-summary-data');
+  const other=element('dl','ipv6-summary-data');
   const fields=[
     ['Préfixe CIDR','/'+info.prefix+(info.assumedPrefix?' (adresse seule, par défaut)':'')],
     ['Type d’adresse',info.type],
@@ -204,7 +205,8 @@ function renderIPv6(info) {
     group.append(element('dt','',label),element('dd','ipv6-value',value));
     other.append(group);
   }
-  container.append(other,element('p','network-note','IPv6 ne possède pas de broadcast. Le préfixe désigne un bloc d’adresses, sans notion de premier ou dernier hôte utilisable.'));
+  detailLayout.append(other);
+  container.append(detailLayout,element('p','network-note','IPv6 ne possède pas de broadcast. Le préfixe désigne un bloc d’adresses, sans notion de premier ou dernier hôte utilisable.'));
   $('subnet-result').replaceChildren();
   $('subnet-result').hidden=true;
 }
