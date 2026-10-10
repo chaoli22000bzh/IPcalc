@@ -429,8 +429,8 @@ test('FLSM A4 Pro : un sous-réseau libre, 14 hôtes disponibles et barre 75/25'
   await page.locator('#pdf-a4-professional').click();
   await expect(page.locator('.professional-report-group').first()).toContainText('192.168.10.64/26');
   await expect(page.locator('.professional-report-group').last()).toContainText('14');
-  await expect(page.locator('.professional-report-group').last()).toContainText('1 /');
-  await expect(page.locator('.professional-report-legend-free')).toContainText('1 sous-réseaux restants · 14 hôtes utilisables non affectés');
+  await expect(page.locator('.professional-report-group').last()).toContainText('3 / 4');
+  await expect(page.locator('.professional-report-legend-free')).toContainText('1 sous-réseau restant · 14 hôtes utilisables non affectés');
   await expect(page.locator('.professional-report-note')).toContainText('1 sous-réseau supplémentaire est possible');
   expect(await page.locator('.professional-report-used').evaluate(node => parseFloat(node.style.width))).toBe(75);
   expect(await page.locator('.professional-report-free').evaluate(node => parseFloat(node.style.width))).toBe(25);
