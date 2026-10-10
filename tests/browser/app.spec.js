@@ -370,7 +370,7 @@ test('VLSM : cinq lignes compactes et fiche réseau initial automatique', async 
   await page.getByRole('radio',{name:'VLSM',exact:true}).check();
   await expect(page.locator('#vlsm-settings')).toBeVisible();
   await expect(page.locator('.vlsm-request-row')).toHaveCount(5);
-  await expect(page.locator('.vlsm-request-row input[aria-label^="Quantité"]')).toHaveValues(['1','1','1','1','1']);
+  expect(await page.locator('.vlsm-request-row input[aria-label^="Quantité"]').evaluateAll(nodes => nodes.map(node => node.value))).toEqual(['1','1','1','1','1']);
   await expect(page.locator('#vlsm-base-content')).toContainText('192.168.10.64/26');
   await expect(page.locator('#vlsm-base-content')).toContainText('255.255.255.192');
   await expect(page.locator('#show-binary')).toHaveCount(0);
