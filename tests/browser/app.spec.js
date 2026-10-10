@@ -381,6 +381,46 @@ test('numéros 48 et 128 sans dièse, adresses et pagination inchangées', async
   await expect(page.getByRole('img', { name: 'CyberNet Los Angeles', exact: true })).toHaveCount(1);
 });
 
+test('FLSM A4 Pro : troisième choix isolé, rapport complet et impression native', async ({ page }) => {
+  await subdivide(page, { address: '192.168.10.0/24', count: '10' });
+  await page.getByRole('button', { name: 'Télécharger une fiche pédagogique PDF' }).click();
+  await expect(page.locator('#pdf-a4-student')).toBeVisible();
+  await expect(page.locator('#pdf-a4-corrected')).toBeVisible();
+  await expect(page.locator('#pdf-a4-professional')).toBeVisible();
+  await expect(page.locator('#pdf-a4-description')).toContainText('A3 paysage');
+  await page.evaluate(() => {
+    window.__professionalPrints = 0;
+    window.print = () => { window.__professionalPrints += 1; };
+  });
+  await page.locator('#pdf-a4-professional').click();
+  await expect(page.locator('#pdf-a4-dialog')).toBeHidden();
+  expect(await page.evaluate(() => window.__professionalPrints)).toBe(1);
+  await expect(page).toHaveTitle('192.168.10.0_FLSM_Pro');
+  await expect(page.locator('body')).toHaveClass(/print-professional/);
+  await expect(page.locator('.professional-report-head')).toContainText('Plan d’adressage IPv4 — FLSM');
+  await expect(page.locator('.professional-report-fields')).toContainText('255.255.255.240');
+  await expect(page.locator('.professional-report-table tbody tr')).toHaveCount(10);
+  await expect(page.locator('.professional-report-table tbody tr').first()).toContainText('192.168.10.0/28');
+  await expect(page.locator('.professional-report-table tbody tr').last()).toContainText('192.168.10.144/28');
+  await expect(page.locator('.professional-report-logo')).toHaveAttribute('src', /Logo_CyberNet_bleu_marine_transparent\.svg/);
+  await page.emulateMedia({ media: 'print' });
+  await expect(page.locator('#professional-report')).toBeVisible();
+  await expect(page.locator('.workspace')).toBeHidden();
+  await page.emulateMedia({ media: 'screen' });
+  await page.evaluate(() => window.dispatchEvent(new Event('afterprint')));
+  await expect(page).toHaveTitle('IPcalc — Adressage IPv4 et IPv6 · CyberNet');
+  await expect(page.locator('#professional-report')).toHaveCount(0);
+  await expect(page.locator('body')).not.toHaveClass(/print-professional/);
+});
+
+test('IPv4 simple : les PDF scolaires restent inchangés et le choix Pro FLSM est absent', async ({ page }) => {
+  await page.getByRole('button', { name: 'Télécharger une fiche pédagogique PDF' }).click();
+  await expect(page.locator('#pdf-a4-description')).toContainText('A4 portrait');
+  await expect(page.locator('#pdf-a4-student')).toBeVisible();
+  await expect(page.locator('#pdf-a4-corrected')).toBeVisible();
+  await expect(page.locator('#pdf-a4-professional')).toBeHidden();
+});
+
 test('VLSM : cinq lignes compactes et fiche réseau initial automatique', async ({ page }) => {
   await page.getByRole('radio',{name:'VLSM',exact:true}).check();
   await expect(page.locator('#vlsm-settings')).toBeVisible();
