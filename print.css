@@ -1,5 +1,6 @@
 /* Impression technique A4. Le navigateur produit un PDF textuel, jamais une capture. */
-@page {size:A4 portrait;margin:12mm 10mm;}
+/* Petite réserve en bas de page pour éviter un débordement de pagination Firefox. */
+@page {size:A4 portrait;margin:12mm 10mm 9mm;}
 @media print {
   :root {color-scheme:light;--bg:#fff;--surface:#fff;--surface-soft:#fff;--ink:#111;
     --muted:#444;--line:#aaa;--primary:#174b35;--tint:#fff;--tint-ink:#111;}
@@ -75,4 +76,15 @@
   .vlsm-print-table th:nth-child(4),.vlsm-print-table td:nth-child(4){width:23%;}
   .vlsm-print-table th:nth-child(5),.vlsm-print-table td:nth-child(5){width:20%;}
   .vlsm-print-table th:nth-child(6),.vlsm-print-table td:nth-child(6){width:17%;}
+}
+
+/* Fin du rapport VLSM : pas de hauteur résiduelle ni de saut final. */
+@media print {
+  .vlsm-print-table-wrapper, .vlsm-print-table, .vlsm-print-table tbody {
+    height:auto !important;
+    min-height:0 !important;
+    break-after:auto !important;
+    page-break-after:auto !important;
+  }
+  .vlsm-print-table tbody tr:last-child {break-after:auto !important;page-break-after:auto !important;}
 }
