@@ -538,17 +538,20 @@ test('impression A4 VLSM : résumé textuel et tableau, bouton PDF historique pr
   await page.getByRole('button',{name:'Imprimer le plan VLSM A4'}).click();
   expect(await page.evaluate(()=>window.__printCalled)).toBe(true);
   await expect(page).toHaveTitle('192.168.50.0_VLSM');
-  await page.evaluate(()=>window.dispatchEvent(new Event('afterprint')));
-  await expect(page).toHaveTitle('IPcalc — Adressage IPv4 et IPv6 · CyberNet');
-  await expect(page.locator('#print-summary-content')).toContainText('192.168.50.0/24');
+  await expect(page.locator('#professional-report .print-summary-network')).toContainText('192.168.50.0/24');
+  await expect(page.locator('#professional-report .vlsm-print-table tbody tr')).toHaveCount(6);
+  await expect(page.locator('.vlsm-results-table tbody tr')).toHaveCount(6);
   await expect(page.locator('.vlsm-results-table tbody tr')).toHaveCount(6);
   await page.emulateMedia({media:'print'});
-  await expect(page.locator('#print-summary')).toBeVisible();
+  await expect(page.locator('#professional-report')).toBeVisible();
   await expect(page.locator('.input-panel')).toBeHidden();
   await expect(page.locator('.vlsm-results-table')).toBeHidden();
-  await expect(page.locator('.vlsm-print-table')).toBeVisible();
-  await expect(page.locator('.vlsm-print-table tbody tr')).toHaveCount(6);
+  await expect(page.locator('#professional-report .vlsm-print-table')).toBeVisible();
+  await expect(page.locator('#professional-report .vlsm-print-table tbody tr')).toHaveCount(6);
   await page.emulateMedia({media:'screen'});
+  await page.evaluate(()=>window.dispatchEvent(new Event('afterprint')));
+  await expect(page.locator('#professional-report')).toHaveCount(0);
+  await expect(page).toHaveTitle('IPcalc — Adressage IPv4 et IPv6 · CyberNet');
   await page.getByRole('radio',{name:'Aucun découpage',exact:true}).check();
   await page.getByRole('button',{name:'Calculer le réseau'}).click();
   await expect(page.getByRole('button',{name:'Télécharger une fiche pédagogique PDF'})).toBeEnabled();
@@ -571,7 +574,10 @@ test('VLSM 140 réseaux : pagination écran à 100 et impression complète', asy
   await expect(page.locator('.vlsm-results-table tbody tr').first()).toContainText('100');
   await page.evaluate(()=>{window.print=()=>{};});
   await page.getByRole('button',{name:'Imprimer le plan VLSM A4'}).click();
-  await expect(page.locator('.vlsm-print-table tbody tr')).toHaveCount(140);
+  await expect(page.locator('#professional-report .vlsm-print-table tbody tr')).toHaveCount(140);
+  await expect(page.locator('.vlsm-results-table tbody tr')).toHaveCount(40);
+  await page.evaluate(()=>window.dispatchEvent(new Event('afterprint')));
+  await expect(page.locator('#professional-report')).toHaveCount(0);
 });
 
 test('IPv6 Pro A4 : rapport autonome /64, impression Firefox et restauration', async ({ page }) => {
@@ -609,4 +615,26 @@ test('IPv6 Pro A4 : /128 ne propose aucun sous-réseau /64 et aucun identifiant 
   await expect(page.locator('.professional-ipv6-interface')).toHaveCount(0);
   await expect(page.locator('.professional-ipv6-report')).toContainText('2^0 = 1');
   await page.evaluate(() => window.dispatchEvent(new Event('afterprint')));
+});
+
+test('VLSM Pro : génération entièrement autonome sans panneaux IPcalc', async ({ page }) => {
+  await page.getByLabel('Adresse IP').fill('192.168.50.0/24');
+  await page.getByRole('radio', { name: 'VLSM', exact: true }).check();
+  await page.getByLabel('Hôtes par réseau ligne 1').fill('50');
+  await page.getByLabel('Hôtes par réseau ligne 2').fill('20');
+  await page.getByRole('button', { name: 'Planifier les sous-réseaux' }).click();
+  await page.evaluate(async () => {
+    const { parseNetwork } = await import('./js/ipv4.js');
+    const { planVlsm } = await import('./js/vlsm.js');
+    const { buildVlsmProfessionalReport } = await import('./js/professional-vlsm.js');
+    const base = parseNetwork('10.40.0.0/24');
+    const plan = planVlsm(base, [{ quantity: 2, hosts: 30 }]);
+    const report = buildVlsmProfessionalReport(base, plan);
+    document.querySelector('#network-result').replaceChildren();
+    document.querySelector('#subnet-result').replaceChildren();
+    document.body.append(report);
+  });
+  await expect(page.locator('#professional-report')).toContainText('10.40.0.0/24');
+  await expect(page.locator('#professional-report .vlsm-print-table tbody tr')).toHaveCount(2);
+  await expect(page.locator('#professional-report')).not.toContainText('192.168.50.0/24');
 });
