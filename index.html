@@ -64,10 +64,13 @@
               <span id="print-help" class="field-help print-status">À venir</span>
             </div>
             <div class="network-fields">
-              <div class="field protocol-detection">
-                <span class="field-label">Protocole</span>
-                <span id="protocol-indicator" class="protocol-indicator" role="status">IPv4 détecté</span>
-                <p class="field-help">Détection automatique selon l’adresse saisie.</p>
+              <div class="field">
+                <label for="protocol">Protocole</label>
+                <select id="protocol" name="protocol" aria-describedby="protocol-help">
+                  <option value="ipv4">IPv4</option>
+                  <option value="ipv6">IPv6</option>
+                </select>
+                <p id="protocol-help" class="field-help">Le protocole s’adapte automatiquement à l’adresse saisie.</p>
               </div>
               <div class="field address-field">
                 <label for="address">Adresse IP</label>
