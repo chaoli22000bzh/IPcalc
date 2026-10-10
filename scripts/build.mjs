@@ -5,7 +5,7 @@ import { resolve } from 'node:path';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const destination = resolve(root, 'dist');
-const assets = ['index.html', 'styles.css', 'print.css', 'manifest.webmanifest', 'sw.js', 'js', 'icons'];
+const assets = ['index.html', 'styles.css', 'print.css', 'professional-report.css', 'manifest.webmanifest', 'sw.js', 'js', 'icons'];
 const pkg = JSON.parse(await readFile(resolve(root, 'package.json'), 'utf8'));
 const sw = await readFile(resolve(root, 'sw.js'), 'utf8');
 if (!sw.includes(`const VERSION = '${pkg.version}';`)) throw new Error('La version du cache doit correspondre à celle de package.json.');
