@@ -50,7 +50,8 @@ export function parseIPv6(addressInput,maskInput=''){
   const parts=String(addressInput).trim().split('/');
   if(parts.length>2)throw new IPv6Error('Un seul préfixe CIDR est autorisé.');
   const number=parse128(parts[0]),separate=String(maskInput).trim().replace(/^\//,'');
-  const prefixText=parts.length===2?parts[1]:separate;
+  const assumedPrefix=parts.length===1&&!separate;
+  const prefixText=assumedPrefix?'128':parts.length===2?parts[1]:separate;
   if(!/^\d{1,3}$/.test(prefixText)||Number(prefixText)>128)
     throw new IPv6Error('Indiquez un préfixe IPv6 de /0 à /128.','mask');
   const prefix=Number(prefixText);
@@ -59,7 +60,7 @@ export function parseIPv6(addressInput,maskInput=''){
   const hostBits=BigInt(128-prefix);
   const mask=prefix===0?0n:FULL^((1n<<hostBits)-1n);
   const network=number&mask,[type,scope]=classify(number);
-  return {address:compressIPv6(number),expanded:expandIPv6(number),prefix,
+  return {address:compressIPv6(number),expanded:expandIPv6(number),prefix,assumedPrefix,
     network:compressIPv6(network),networkExpanded:expandIPv6(network),type,scope,
     interfaceId:prefix===64?groupsOf(number).slice(4).map(g=>g.toString(16).padStart(4,'0')).join(':'):null};
 }
