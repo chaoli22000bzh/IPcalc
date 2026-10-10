@@ -1,8 +1,9 @@
-import { parseIPv6 } from './ipv6.js?v=2.0.0-step2.9';
-import { downloadFlsmA3 } from './pdf-a3-flsm.js?v=2.0.0-step2.9';
-import { downloadAddressingA4 } from './pdf-a4.js?v=2.0.0-step2.9';
-import { parseNetwork, planSubnets, subnetAt, summaryIndices, subnetPage, binaryOctets } from './ipv4.js?v=2.0.0-step2.9';
-import { EXPORT_COLUMNS } from './exports.js?v=2.0.0-step2.9';
+import { describeVlsmBase, summarizeVlsmRequests, planVlsm, VLSM_MAX_SUBNETS } from './vlsm.js?v=2.0.0-step3.0';
+import { parseIPv6 } from './ipv6.js?v=2.0.0-step3.0';
+import { downloadFlsmA3 } from './pdf-a3-flsm.js?v=2.0.0-step3.0';
+import { downloadAddressingA4 } from './pdf-a4.js?v=2.0.0-step3.0';
+import { parseNetwork, planSubnets, subnetAt, summaryIndices, subnetPage } from './ipv4.js?v=2.0.0-step3.0';
+import { EXPORT_COLUMNS } from './exports.js?v=2.0.0-step3.0';
 
 const $ = id => document.getElementById(id);
 const format = value => value.toLocaleString('fr-FR');
@@ -23,30 +24,6 @@ function element(tag, className, text) {
   return node;
 }
 
-function binary(address, prefix) {
-  const node = element('span', 'binary');
-  node.setAttribute('role', 'img');
-  node.setAttribute('aria-label', `Binaire : ${binaryOctets(address).join(' . ')}. ${prefix} bits réseau, ${32 - prefix} bits hôte.`);
-  binaryOctets(address).forEach((octet, octetIndex) => {
-    const group = element('span', 'binary-octet');
-    group.setAttribute('aria-hidden', 'true');
-    [...octet].forEach((bit, bitIndex) => group.append(element('span', octetIndex * 8 + bitIndex < prefix ? 'network-bit' : 'host-bit', bit)));
-    node.append(group);
-    if (octetIndex < 3) {
-      const dot = element('span', 'binary-dot', '.');
-      dot.setAttribute('aria-hidden', 'true');
-      node.append(dot);
-    }
-  });
-  return node;
-}
-
-function legend() {
-  const node = element('div', 'binary-legend');
-  node.append(element('span', '', 'Bits réseau'), element('span', '', 'Bits hôte (soulignés)'));
-  return node;
-}
-
 function renderNetwork(base) {
   const container = $('network-result');
   container.replaceChildren();
@@ -62,12 +39,10 @@ function renderNetwork(base) {
   EXPORT_COLUMNS.forEach((label, index) => {
     const group = element('div');
     const value = element('dd', index === 4 ? 'hosts-value' : '', values[index]);
-    if ($('show-binary').checked && [0, 1, 3].includes(index) && !(index === 3 && base.broadcast === null)) value.append(binary(values[index], base.prefix));
     group.append(element('dt', '', label), value);
     data.append(group);
   });
   container.append(banner, data);
-  if ($('show-binary').checked) container.append(legend());
   if (base.inputAddress !== base.address) {
     container.append(element('p', 'network-note', `${base.inputAddress}/${base.prefix} appartient au réseau ${base.address}/${base.prefix}.`));
   }
@@ -101,8 +76,7 @@ function networkTable(rows, omitted = 0) {
     values.forEach((value, column) => {
       const cell = element('td', '', value);
       cell.dataset.label = column === 0 ? 'Nº' : EXPORT_COLUMNS[column - 1];
-      if ($('show-binary').checked && [1, 2, 4].includes(column) && !(column === 4 && network.broadcast === null)) cell.append(binary(value, network.prefix));
-      row.append(cell);
+        row.append(cell);
     });
     tbody.append(row);
   });
@@ -174,7 +148,6 @@ function renderSubnets(plan) {
     container.append(element('p', 'subnet-note', `La capacité est de ${format(plan.capacity)} sous-réseaux. Les ${format(count)} supplémentaires ne font pas partie de votre demande.`));
     container.append(pageDetails('extra', `Consulter les ${format(count)} sous-réseaux non demandés`, plan.concernedCount, plan.capacity));
   }
-  if ($('show-binary').checked) container.append(legend());
 }
 
 function renderIPv6(info) {
@@ -226,11 +199,133 @@ function renderIPv6(info) {
   $('subnet-result').replaceChildren();
   $('subnet-result').hidden=true;
 }
+// Une ligne de besoin correspond à plusieurs réseaux de taille identique.
+let vlsmRequests=Array.from({length:5},(_,i)=>({id:i+1,quantity:'1',hosts:''}));
+let nextVlsmId=6;
+const vlsmColors=['#28699c','#218e81','#d39737','#8976ba','#d46f77','#4c96b0','#a28b67','#5d9a72'];
+function readVlsmRequests(){
+  const filled=vlsmRequests.filter(r=>r.hosts.trim()!=='');
+  if(!filled.length)throw new Error('Indiquez au moins un nombre d’hôtes dans les demandes VLSM.');
+  if(vlsmRequests.some(r=>r.hosts.trim()==='' && r.quantity!=='1'))
+    throw new Error('Complétez les lignes dont la quantité est différente de 1.');
+  return filled.map(({quantity,hosts})=>({quantity,hosts}));
+}
+function renderVlsmRequestList(){
+  const list=$('vlsm-request-list');list.replaceChildren();
+  vlsmRequests.forEach((request,index)=>{
+    const row=element('div','vlsm-request-row');
+    row.append(element('span','vlsm-row-number',String(index+1)));
+    for(const [name,caption] of [['quantity','Quantité'],['hosts','Hôtes par réseau']]){
+      const input=element('input','vlsm-number-input');
+      input.type='text';input.inputMode='numeric';
+      input.value=request[name];input.autocomplete='off';
+      input.setAttribute('aria-label',caption+' ligne '+(index+1));
+      input.addEventListener('input',()=>{request[name]=input.value;markStale();});
+      row.append(input);
+    }
+    const remove=element('button','vlsm-remove','×');remove.type='button';
+    remove.setAttribute('aria-label','Supprimer la demande '+(index+1));
+    remove.disabled=vlsmRequests.length===1;
+    remove.addEventListener('click',()=>{
+      vlsmRequests=vlsmRequests.filter(x=>x.id!==request.id);
+      renderVlsmRequestList();markStale();
+    });
+    row.append(remove);list.append(row);
+  });
+}
+function refreshVlsmPreview(){
+  const content=$('vlsm-base-content');content.replaceChildren();
+  let base;
+  try{base=parseNetwork($('address').value,$('mask').value);}
+  catch{
+    content.append(element('p','vlsm-preview-help','Saisissez une adresse IPv4 et un préfixe valides pour afficher les caractéristiques du réseau.'));
+    return;
+  }
+  const detail=describeVlsmBase(base);
+  const items=[
+    ['Adresse réseau',detail.cidr],['Masque décimal',detail.mask],
+    ['Adresse de diffusion',detail.broadcast??'Sans broadcast (/31)'],
+    ['Adresses totales',format(detail.totalAddresses)],
+    ['Hôtes utilisables sans découpage',format(detail.usableHosts)]
+  ];
+  const dl=element('dl','vlsm-base-list');
+  for(const [label,value] of items){
+    const group=element('div');
+    group.append(element('dt','',label),element('dd','',value));dl.append(group);
+  }
+  content.append(dl);
+  try{
+    const requests=readVlsmRequests();
+    const summary=summarizeVlsmRequests(base,requests);
+    $('vlsm-count').textContent=format(summary.subnetCount)+' sous-réseaux demandés sur '+VLSM_MAX_SUBNETS+'.';
+    const status=element('p','vlsm-preview-status'+(summary.fits?'':' vlsm-preview-error'),
+      format(summary.requiredAddresses)+' adresses nécessaires sur '+format(detail.totalAddresses)
+      +(summary.fits?' ; '+format(summary.remainingAddresses)+' non attribuées.':' ; capacité insuffisante.'));
+    content.append(status);
+  }catch(error){
+    $('vlsm-count').textContent='100 sous-réseaux maximum au total.';
+    if(vlsmRequests.some(r=>r.hosts.trim()!==''))content.append(element('p','vlsm-preview-error',error.message));
+  }
+}
+function renderVlsm(plan){
+  const network=$('network-result');network.replaceChildren();
+  network.append(element('div','vlsm-results-intro',
+    format(plan.subnetCount)+' sous-réseaux attribués dans '+plan.initial.cidr));
+  const barPanel=element('div','vlsm-allocation-panel');
+  barPanel.append(element('h3','','Occupation de l’espace d’adressage'));
+  const bar=element('div','vlsm-allocation-bar');
+  bar.setAttribute('role','img');
+  bar.setAttribute('aria-label',format(plan.usedAddresses)+' adresses attribuées et '+format(plan.freeAddresses)+' non attribuées sur '+format(plan.initial.totalAddresses));
+  // La largeur est proportionnelle aux blocs, en nombre d'adresses, pas aux hôtes utilisables.
+  plan.rows.forEach(row=>{
+    const seg=element('span','vlsm-bar-segment');
+    seg.style.width=(row.blockSize/plan.initial.totalAddresses*100)+'%';
+    seg.style.backgroundColor=vlsmColors[row.sourceIndex%vlsmColors.length];
+    seg.title='Réseau '+row.index+' : '+row.cidr+' ; '+row.blockSize+' adresses';
+    bar.append(seg);
+  });
+  if(plan.freeAddresses){
+    const free=element('span','vlsm-bar-free');
+    free.style.width=(plan.freeAddresses/plan.initial.totalAddresses*100)+'%';
+    free.title=format(plan.freeAddresses)+' adresses non attribuées';
+    bar.append(free);
+  }
+  barPanel.append(bar);
+  const legend=element('div','vlsm-allocation-legend');
+  legend.append(element('span','',format(plan.usedAddresses)+' adresses attribuées'));
+  legend.append(element('span','',format(plan.freeAddresses)+' adresses non attribuées'));
+  barPanel.append(legend);network.append(barPanel);
+  const other=$('subnet-result');other.replaceChildren();other.hidden=false;
+  const wrapper=element('div','table-wrapper');
+  const table=element('table','subnet-table vlsm-results-table');
+  const header=element('tr');
+  ['Nº','Hôtes demandés','Hôtes disponibles','Adresse réseau / CIDR','Broadcast','Masque décimal'].forEach(label=>{
+    const cell=element('th','',label);cell.scope='col';header.append(cell);
+  });
+  const thead=element('thead');thead.append(header);table.append(thead);
+  const tbody=element('tbody');
+  plan.rows.forEach(row=>{
+    const tr=element('tr');tr.dataset.subnetNumber=String(row.index);
+    const cells=[row.index,row.requestedHosts,row.usableHosts,row.cidr,row.broadcast??'Sans broadcast (/31)',row.mask];
+    cells.forEach((value,i)=>{
+      const td=element('td','',String(value));td.dataset.label=header.children[i].textContent;
+      if(i===0){
+        const dot=element('span','vlsm-row-dot');
+        dot.style.backgroundColor=vlsmColors[row.sourceIndex%vlsmColors.length];
+        td.prepend(dot);
+      }
+      tr.append(td);
+    });tbody.append(tr);
+  });
+  table.append(tbody);wrapper.append(table);other.append(wrapper);
+}
+
 function render() {
   $('results').hidden = false;
   $('network-result').hidden = false;
-  $('result-title').textContent = current.protocol==='ipv6'?'Informations IPv6':current.plan ? 'Votre découpage FLSM' : 'Résultat du calcul';
+  $('result-title').textContent = current.protocol==='ipv6'?'Informations IPv6':current.vlsm?'Plan VLSM':current.plan?'Votre découpage FLSM':'Résultat du calcul';
   if(current.protocol==='ipv6')renderIPv6(current.base);
+  else if(current.vlsm)renderVlsm(current.vlsm);
   else {renderNetwork(current.base);renderSubnets(current.plan);}
 }
 
@@ -245,18 +340,19 @@ function clearErrors() {
 function calculate(focus = true) {
   clearErrors();
   try {
-    if (form.elements.mode.value === 'vlsm') throw new Error('VLSM indisponible : moteur non développé.');
     const protocol=detectedProtocol();
     if(protocol==='ipv6' && form.elements.mode.value !== 'simple')
       throw new Error('Le découpage FLSM IPv6 n’est pas encore disponible. Choisissez « Aucun découpage ».');
     const base = protocol==='ipv6' ? parseIPv6($('address').value,$('mask').value) : parseNetwork($('address').value, $('mask').value);
-    const plan = protocol==='ipv4' && form.elements.mode.value === 'subnets' ? planSubnets(base, { method: $('method').value, count: $('count').value, hosts: $('hosts').value }) : null;
-    current = { protocol,base,plan };
+    const mode=form.elements.mode.value;
+    const plan = protocol==='ipv4' && mode === 'subnets' ? planSubnets(base, { method: $('method').value, count: $('count').value, hosts: $('hosts').value }) : null;
+    const vlsm=protocol==='ipv4' && mode==='vlsm' ? planVlsm(base,readVlsmRequests()) : null;
+    current = { protocol,base,plan,vlsm };
     updatePdfAvailability();
     pages = { middle: { open: false, page: 0 }, extra: { open: false, page: 0 } };
     $('stale-notice').hidden = true;
     render();
-    $('result-announcement').textContent = protocol==='ipv6' ? `Adresse IPv6 ${base.address}, préfixe ${base.network}/${base.prefix}.` : `Réseau ${base.address}/${base.prefix} calculé.${plan ? ` ${format(plan.concernedCount)} sous-réseaux /${plan.prefix}.` : ''}`;
+    $('result-announcement').textContent = protocol==='ipv6' ? `Adresse IPv6 ${base.address}, préfixe ${base.network}/${base.prefix}.` : vlsm ? `Plan VLSM : ${vlsm.rows.length} sous-réseaux calculés.` : `Réseau ${base.address}/${base.prefix} calculé.${plan ? ` ${format(plan.concernedCount)} sous-réseaux /${plan.prefix}.` : ''}`;
     if (focus) $('result-title').focus({ preventScroll: true });
   } catch (error) {
     invalidateResults();
@@ -283,7 +379,6 @@ function syncProtocol(){
   $('mask').inputMode=ipv6?'numeric':'decimal';
   $('mode-fieldset').hidden=ipv6;
   if(ipv6)form.elements.mode.value='simple';
-  $('show-binary').closest('label').hidden=ipv6;
   $('calculate-label').textContent=ipv6?'Afficher les informations':'Calculer le réseau';
 }
 function syncSettings() {
@@ -296,6 +391,10 @@ function syncSettings() {
   $('count').disabled = !subdivide || $('method').value === 'hosts';
   $('hosts').disabled = !subdivide || $('method').value === 'count';
   $('method-help').textContent = $('method').value === 'hosts' ? 'Sans nombre demandé, tous les sous-réseaux possibles sont concernés.' : 'Tous les sous-réseaux ont la même taille.';
+  const showVlsm=detectedProtocol()==='ipv4' && form.elements.mode.value==='vlsm';
+  $('vlsm-settings').hidden=!showVlsm;
+  $('calculate-label').textContent=showVlsm?'Planifier les sous-réseaux':detectedProtocol()==='ipv6'?'Afficher les informations':'Calculer le réseau';
+  if(showVlsm)refreshVlsmPreview();
 }
 
 function invalidateResults() {
@@ -321,18 +420,23 @@ function markStale() {
 form.addEventListener('submit', event => { event.preventDefault(); calculate(); });
 form.addEventListener('input', markStale);
 form.addEventListener('change', () => { syncSettings(); markStale(); });
-$('show-binary').addEventListener('change', () => { if (current) render(); });
+renderVlsmRequestList();
+$('vlsm-add').addEventListener('click',()=>{
+  if(vlsmRequests.length>=100)return;
+  vlsmRequests.push({id:nextVlsmId++,quantity:'1',hosts:''});
+  renderVlsmRequestList();markStale();
+});
 syncSettings();
 calculate(false);
 
 function updatePdfAvailability() {
   const button=$('print-results');
-  const available=Boolean(current) && current.protocol!=='ipv6';
+  const available=Boolean(current) && current.protocol!=='ipv6' && !current.vlsm;
   const flsm=Boolean(current?.plan);
   button.disabled=!available;
   button.setAttribute('aria-label',available?'Télécharger une fiche pédagogique PDF':'Imprimer — calcul indisponible');
   button.title=available?'Télécharger une fiche pédagogique PDF':'Impression indisponible';
-  $('print-help').textContent=current?.protocol==='ipv6'?'PDF IPv6 à venir':available?(flsm?'PDF A3':'PDF A4'):'À venir';
+  $('print-help').textContent=current?.vlsm?'PDF VLSM à venir':current?.protocol==='ipv6'?'PDF IPv6 à venir':available?(flsm?'PDF A3':'PDF A4'):'À venir';
 }
 $('print-results').addEventListener('click',()=>{
   if(!current)return;
