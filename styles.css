@@ -318,7 +318,7 @@ input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--primary)
 .ipv6-power-expression { white-space:nowrap; font-variant-numeric:tabular-nums; }
 .ipv6-power-exponent {
   font-family:inherit;
-  font-size:0.83em;
+  font-size:0.98em;
   font-weight:750;
   line-height:0;
   letter-spacing:0;
