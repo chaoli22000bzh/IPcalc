@@ -45,27 +45,68 @@ export function buildFlsmProfessionalReport(base, plan) {
 
   const summary = node('section', 'professional-report-summary');
   summary.append(node('h2', '', 'Synthèse du plan d’adressage'));
-  const data = node('dl', 'professional-report-fields');
+  const remaining = plan.capacity - plan.concernedCount;
+  const remainingHosts = remaining * plan.usableHosts;
+  const assignedHosts = plan.concernedCount * plan.usableHosts;
+  const sections = node('div', 'professional-report-groups');
+  const initial = node('div', 'professional-report-group');
+  initial.append(node('h3', '', 'Réseau initial'));
+  const initialFields = node('dl', 'professional-report-fields');
   [
-    ['Réseau initial', base.address + '/' + base.prefix],
+    ['Adresse réseau', base.address + '/' + base.prefix],
     ['Masque initial', base.mask],
     ['Broadcast initial', base.broadcast ?? 'Sans broadcast'],
+    ['Adresses totales', number(base.blockSize)],
+  ].forEach(([label, value]) => initialFields.append(info(label, value)));
+  initial.append(initialFields);
+
+  const allocation = node('div', 'professional-report-group');
+  allocation.append(node('h3', '', 'Découpage FLSM'));
+  const allocationFields = node('dl', 'professional-report-fields');
+  [
     ['Préfixe des sous-réseaux', '/' + plan.prefix],
     ['Masque FLSM', plan.mask],
     ['Hôtes utilisables / réseau', number(plan.usableHosts)],
-    ['Sous-réseaux concernés', number(plan.concernedCount)],
-    ['Capacité du réseau initial', number(plan.capacity) + ' sous-réseaux'],
-  ].forEach(([label, value]) => data.append(info(label, value)));
-  summary.append(data);
+    ['Sous-réseaux attribués', number(plan.concernedCount) + ' / ' + number(plan.capacity)],
+    ['Sous-réseaux restants', number(remaining)],
+    ['Hôtes utilisables non affectés', number(remainingHosts)],
+  ].forEach(([label, value]) => allocationFields.append(info(label, value)));
+  allocation.append(allocationFields);
+  sections.append(initial, allocation);
+  summary.append(sections);
+
+  // Une barre unique, deux segments : sous-réseaux attribués et non affectés.
+  // La proportion porte sur les adresses, sans confondre hôtes et capacité brute.
+  const visual = node('div', 'professional-report-allocation');
+  visual.append(node('h3', '', 'Répartition du réseau initial'));
+  const bar = node('div', 'professional-report-allocation-bar');
+  bar.setAttribute('role', 'img');
+  bar.setAttribute('aria-label', number(plan.concernedCount) + ' sous-réseaux attribués sur ' + number(plan.capacity) +
+    ', ' + number(remaining) + ' restants');
+  const used = node('span', 'professional-report-used');
+  used.style.width = (plan.concernedCount / plan.capacity * 100) + '%';
+  const free = node('span', 'professional-report-free');
+  free.style.width = (remaining / plan.capacity * 100) + '%';
+  bar.append(used, free);
+  const legend = node('div', 'professional-report-allocation-legend');
+  const usedLegend = node('span', 'professional-report-legend-used',
+    number(plan.concernedCount) + ' sous-réseaux attribués · ' + number(assignedHosts) + ' hôtes utilisables');
+  const freeLegend = node('span', 'professional-report-legend-free',
+    number(remaining) + ' sous-réseaux restants · ' + number(remainingHosts) + ' hôtes utilisables non affectés');
+  legend.append(usedLegend, freeLegend);
+  visual.append(bar, legend);
+  summary.append(visual);
   const description = plan.method === 'hosts'
     ? 'Méthode B — dimensionnement selon le nombre minimal d’hôtes : ' + number(plan.minimumHosts)
     : plan.method === 'combined'
       ? 'Méthode combinée — ' + number(plan.requestedCount) + ' réseaux et ' + number(plan.minimumHosts) + ' hôtes minimum par réseau'
       : 'Méthode A — découpage selon le nombre de sous-réseaux demandés : ' + number(plan.requestedCount);
   summary.append(node('p', 'professional-report-method', description));
-  if (plan.capacity > plan.concernedCount) {
+  if (remaining > 0) {
     summary.append(node('p', 'professional-report-note',
-      number(plan.capacity - plan.concernedCount) + ' sous-réseaux supplémentaires sont possibles mais ne font pas partie de la demande.'));
+      number(remaining) + ' sous-réseau' + (remaining > 1 ? 'x' : '') +
+      ' supplémentaire' + (remaining > 1 ? 's sont possibles, mais ne font pas partie' : ' est possible, mais ne fait pas partie') +
+      ' de la demande.'));
   }
   report.append(summary);
 
