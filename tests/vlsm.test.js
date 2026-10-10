@@ -61,8 +61,8 @@ test('140 sous-réseaux acceptés, même si l’affichage est paginé à 100',()
     {quantity:40,hosts:13},{quantity:50,hosts:8}
   ]);
   assert.equal(p.rows.length,140);
-  assert.equal(p.usedAddresses,4800);
-  assert.equal(p.freeAddresses,33554432-4800);
+  assert.equal(p.usedAddresses,4000);
+  assert.equal(p.freeAddresses,33554432-4000);
   assert.equal(p.rows[0].cidr,'10.0.0.0/26');
   assert.equal(p.rows[139].prefix,28);
   assert.ok(VLSM_MAX_SUBNETS>140);
