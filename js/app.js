@@ -175,27 +175,36 @@ function renderIPv6(info) {
   const container=$('network-result');
   container.replaceChildren();
   const banner=element('div','network-banner');
-  const title=element('div');
-  title.append(element('p','network-kicker','Adresse IPv6 identifiée'));
-  title.append(element('p','network-address ipv6-address',info.address));
-  banner.append(title,element('span','network-badge','IPv6'));
+  banner.append(element('p','network-kicker','Adresse IPv6 identifiée'),element('span','network-badge','IPv6'));
   container.append(banner);
-  const data=element('dl','network-data ipv6-data');
+
+  // Adresses en pleine largeur, verticalement : la forme développée ne se coupe jamais.
+  const addresses=element('dl','ipv6-address-details');
+  const addressFields=[
+    ['Adresse développée',info.expanded,'ipv6-full-address'],
+    ['Adresse abrégée',info.address,'ipv6-short-address'],
+    ['Préfixe réseau',info.network+'/'+info.prefix,'ipv6-network-prefix']
+  ];
+  if(info.interfaceId)addressFields.push(['Identifiant d’interface (/64)',info.interfaceId,'ipv6-interface-id']);
+  for(const [label,value,className] of addressFields){
+    const group=element('div','ipv6-address-row');
+    group.append(element('dt','',label),element('dd',className,value));
+    addresses.append(group);
+  }
+  container.append(addresses);
+
+  const other=element('dl','network-data ipv6-summary-data');
   const fields=[
-    ['Adresse abrégée',info.address],
-    ['Adresse développée',info.expanded],
     ['Préfixe CIDR','/'+info.prefix+(info.assumedPrefix?' (adresse seule, par défaut)':'')],
-    ['Préfixe réseau',info.network+'/'+info.prefix],
     ['Type d’adresse',info.type],
     ['Portée',info.scope]
   ];
-  if(info.interfaceId)fields.push(['Identifiant interface (/64)',info.interfaceId]);
   for(const [label,value] of fields){
     const group=element('div');
     group.append(element('dt','',label),element('dd','ipv6-value',value));
-    data.append(group);
+    other.append(group);
   }
-  container.append(data,element('p','network-note','IPv6 ne possède pas de broadcast. Le préfixe désigne un bloc d’adresses, sans notion de premier ou dernier hôte utilisable.'));
+  container.append(other,element('p','network-note','IPv6 ne possède pas de broadcast. Le préfixe désigne un bloc d’adresses, sans notion de premier ou dernier hôte utilisable.'));
   $('subnet-result').replaceChildren();
   $('subnet-result').hidden=true;
 }
