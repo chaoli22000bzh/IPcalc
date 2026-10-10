@@ -435,10 +435,10 @@ calculate(false);
 function refreshPrintSummary(){
   const box=$('print-summary'),content=$('print-summary-content');
   content.replaceChildren();
-  if(!current || current.protocol==='ipv6'){box.hidden=true;return;}
-  const {base,plan,vlsm}=current;
+  if(!current?.vlsm){box.hidden=true;return;}
+  const {base,vlsm}=current;
   box.hidden=false;
-  $('print-summary-title').textContent=vlsm?'Plan VLSM':plan?'Plan FLSM':'Réseau IPv4';
+  $('print-summary-title').textContent='Plan VLSM';
   const dl=element('dl','print-summary-network');
   const fields=[
     ['Réseau initial',base.address+'/'+base.prefix],
@@ -453,30 +453,26 @@ function refreshPrintSummary(){
     dl.append(cell);
   }
   content.append(dl);
-  if(vlsm)content.append(element('p','print-summary-line',
-    format(vlsm.rows.length)+' sous-réseaux attribués, '+format(vlsm.usedAddresses)
-    +' adresses attribuées, '+format(vlsm.freeAddresses)+' adresses non attribuées.'));
-  else if(plan)content.append(element('p','print-summary-line',
-    format(plan.concernedCount)+' sous-réseaux concernés, préfixe /'+plan.prefix+'.'));
 }
-function updatePdfAvailability() {
-  const available=Boolean(current)&&current.protocol!=='ipv6';
-  const simplePdf=available&&!current.vlsm;
+function updatePdfAvailability(){
   const print=$('print-results'),school=$('school-pdf');
-  print.disabled=!available;
-  print.setAttribute('aria-label',available?'Imprimer le résultat A4':'Impression indisponible');
-  print.title=available?'Imprimer le résultat sur une page A4 ou enregistrer en PDF':'Impression indisponible';
-  school.hidden=!simplePdf;
-  school.disabled=!simplePdf;
-  $('print-help').textContent=current?.protocol==='ipv6'?'Impression IPv6 à venir':available?'Impression A4':'Calculez un réseau pour imprimer';
+  const vlsm=Boolean(current?.vlsm);
+  const legacy=Boolean(current)&&current.protocol==='ipv4'&&!vlsm;
+  // Le bouton historique conserve ses deux PDF scolaires en IPv4 et FLSM.
+  // En mode VLSM, la même icône ouvre l'impression A4 de Firefox.
+  print.disabled=!vlsm&&!legacy;
+  print.setAttribute('aria-label',vlsm?'Imprimer le plan VLSM A4':legacy?'Télécharger une fiche pédagogique PDF':'Impression indisponible');
+  print.title=vlsm?'Imprimer le plan VLSM A4 ou enregistrer en PDF':legacy?'Télécharger une fiche pédagogique PDF':'Impression indisponible';
+  school.hidden=true;
+  $('print-help').textContent=vlsm?'Impression VLSM A4':legacy?(current.plan?'PDF A3':'PDF A4'):'À venir';
 }
 $('print-results').addEventListener('click',()=>{
-  if(!current||current.protocol==='ipv6')return;
-  refreshPrintSummary();
-  window.print();
-});
-$('school-pdf').addEventListener('click',()=>{
-  if(!current||current.protocol==='ipv6'||current.vlsm)return;
+  if(!current||current.protocol!=='ipv4')return;
+  if(current.vlsm){
+    refreshPrintSummary();
+    window.print();
+    return;
+  }
   const flsm=Boolean(current.plan);
   $('pdf-a4-error').hidden=true;
   $('pdf-a4-title').textContent=flsm?'Fiche IPv4 et sous-réseaux FLSM':'Fiche d’adressage IPv4';
