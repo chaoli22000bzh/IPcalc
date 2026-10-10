@@ -319,7 +319,7 @@ input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--primary)
 .ipv6-power-exponent {
   font-family:inherit;
   font-size:0.98em;
-  font-weight:750;
+  font-weight:600;
   line-height:0;
   letter-spacing:0;
   vertical-align:super;
