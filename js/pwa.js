@@ -1,4 +1,4 @@
-/** Installation et mise à jour séparées de l’interface et du moteur IPv4. */
+/** Installation et mise à jour cohérente de l'interface IPv4/IPv6 hors connexion. */
 const $ = id => document.getElementById(id);
 let registration;
 let installPrompt;
@@ -23,6 +23,14 @@ window.addEventListener('offline', updateConnection);
 window.addEventListener('online', () => {
   updateConnection();
   registration?.update().catch(() => {});
+});
+
+// Vérifier les mises à jour lors du retour à l'onglet ou à l'application.
+window.addEventListener('pageshow', () => {
+  if(navigator.onLine) registration?.update().catch(() => {});
+});
+document.addEventListener('visibilitychange', () => {
+  if(!document.hidden && navigator.onLine) registration?.update().catch(() => {});
 });
 
 window.addEventListener('beforeinstallprompt', event => {
@@ -55,7 +63,7 @@ $('apply-update').addEventListener('click', () => {
 
 if ('serviceWorker' in navigator && window.isSecureContext) {
   navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (!$('update-banner').hidden && !refreshing) {
+    if (!refreshing) {
       refreshing = true;
       window.location.reload();
     }
