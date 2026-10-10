@@ -1,3 +1,4 @@
+import { parseIPv6 } from './ipv6.js';
 import { downloadFlsmA3 } from './pdf-a3-flsm.js';
 import { downloadAddressingA4 } from './pdf-a4.js';
 import { parseNetwork, planSubnets, subnetAt, summaryIndices, subnetPage, binaryOctets } from './ipv4.js';
@@ -170,12 +171,40 @@ function renderSubnets(plan) {
   if ($('show-binary').checked) container.append(legend());
 }
 
+function renderIPv6(info) {
+  const container=$('network-result');
+  container.replaceChildren();
+  const banner=element('div','network-banner');
+  const title=element('div');
+  title.append(element('p','network-kicker','Adresse IPv6 identifiée'));
+  title.append(element('p','network-address ipv6-address',info.address));
+  banner.append(title,element('span','network-badge','IPv6'));
+  container.append(banner);
+  const data=element('dl','network-data ipv6-data');
+  const fields=[
+    ['Adresse abrégée',info.address],
+    ['Adresse développée',info.expanded],
+    ['Préfixe CIDR','/'+info.prefix],
+    ['Préfixe réseau',info.network+'/'+info.prefix],
+    ['Type d’adresse',info.type],
+    ['Portée',info.scope]
+  ];
+  if(info.interfaceId)fields.push(['Identifiant interface (/64)',info.interfaceId]);
+  for(const [label,value] of fields){
+    const group=element('div');
+    group.append(element('dt','',label),element('dd','ipv6-value',value));
+    data.append(group);
+  }
+  container.append(data,element('p','network-note','IPv6 ne possède pas de broadcast. Le préfixe désigne un bloc d’adresses, sans notion de premier ou dernier hôte utilisable.'));
+  $('subnet-result').replaceChildren();
+  $('subnet-result').hidden=true;
+}
 function render() {
   $('results').hidden = false;
   $('network-result').hidden = false;
   $('result-title').textContent = current.plan ? 'Votre découpage FLSM' : 'Résultat du calcul';
-  renderNetwork(current.base);
-  renderSubnets(current.plan);
+  if(current.protocol==='ipv6')renderIPv6(current.base);
+  else {renderNetwork(current.base);renderSubnets(current.plan);}
 }
 
 function clearErrors() {
@@ -190,15 +219,17 @@ function calculate(focus = true) {
   clearErrors();
   try {
     if (form.elements.mode.value === 'vlsm') throw new Error('VLSM indisponible : moteur non développé.');
-    if ($('protocol').value !== 'ipv4') throw new Error('IPv6 indisponible : moteur non développé.');
-    const base = parseNetwork($('address').value, $('mask').value);
-    const plan = form.elements.mode.value === 'subnets' ? planSubnets(base, { method: $('method').value, count: $('count').value, hosts: $('hosts').value }) : null;
-    current = { base, plan };
+    const protocol=detectedProtocol();
+    if(protocol==='ipv6' && form.elements.mode.value !== 'simple')
+      throw new Error('Le découpage FLSM IPv6 n’est pas encore disponible. Choisissez « Aucun découpage ».');
+    const base = protocol==='ipv6' ? parseIPv6($('address').value,$('mask').value) : parseNetwork($('address').value, $('mask').value);
+    const plan = protocol==='ipv4' && form.elements.mode.value === 'subnets' ? planSubnets(base, { method: $('method').value, count: $('count').value, hosts: $('hosts').value }) : null;
+    current = { protocol,base,plan };
     updatePdfAvailability();
     pages = { middle: { open: false, page: 0 }, extra: { open: false, page: 0 } };
     $('stale-notice').hidden = true;
     render();
-    $('result-announcement').textContent = `Réseau ${base.address}/${base.prefix} calculé.${plan ? ` ${format(plan.concernedCount)} sous-réseaux /${plan.prefix}.` : ''}`;
+    $('result-announcement').textContent = protocol==='ipv6' ? `Adresse IPv6 ${base.address}, préfixe ${base.network}/${base.prefix}.` : `Réseau ${base.address}/${base.prefix} calculé.${plan ? ` ${format(plan.concernedCount)} sous-réseaux /${plan.prefix}.` : ''}`;
     if (focus) $('result-title').focus({ preventScroll: true });
   } catch (error) {
     invalidateResults();
@@ -214,8 +245,22 @@ function calculate(focus = true) {
   }
 }
 
+function detectedProtocol(){
+  return $('address').value.trim().split('/')[0].includes(':')?'ipv6':'ipv4';
+}
+function syncProtocol(){
+  const ipv6=detectedProtocol()==='ipv6';
+  $('protocol-indicator').textContent=ipv6?'IPv6 détecté':'IPv4 détecté';
+  $('address-help').textContent=ipv6?'Adresse IPv6 abrégée ou complète, avec préfixe /0 à /128.':'IPv4 avec ou sans CIDR. Une adresse d’hôte est ramenée à son réseau.';
+  $('mask').placeholder=ipv6?'/64':'255.255.255.192 ou /26';
+  $('mask').inputMode=ipv6?'numeric':'decimal';
+  $('mode-fieldset').hidden=ipv6;
+  $('show-binary').closest('label').hidden=ipv6;
+  $('calculate-label').textContent=ipv6?'Afficher les informations':'Calculer le réseau';
+}
 function syncSettings() {
-  const subdivide = form.elements.mode.value === 'subnets';
+  syncProtocol();
+  const subdivide = detectedProtocol()==='ipv4' && form.elements.mode.value === 'subnets';
   $('subnet-settings').hidden = !subdivide;
   $('method').disabled = !subdivide;
   $('count-field').hidden = $('method').value === 'hosts';
@@ -238,6 +283,7 @@ function invalidateResults() {
 }
 
 function markStale() {
+  syncSettings();
   clearErrors();
   invalidateResults();
   $('results').hidden = false;
@@ -253,12 +299,12 @@ calculate(false);
 
 function updatePdfAvailability() {
   const button=$('print-results');
-  const available=Boolean(current);
+  const available=Boolean(current) && current.protocol!=='ipv6';
   const flsm=Boolean(current?.plan);
   button.disabled=!available;
   button.setAttribute('aria-label',available?'Télécharger une fiche pédagogique PDF':'Imprimer — calcul indisponible');
   button.title=available?'Télécharger une fiche pédagogique PDF':'Impression indisponible';
-  $('print-help').textContent=available?(flsm?'PDF A3':'PDF A4'):'À venir';
+  $('print-help').textContent=current?.protocol==='ipv6'?'PDF IPv6 à venir':available?(flsm?'PDF A3':'PDF A4'):'À venir';
 }
 $('print-results').addEventListener('click',()=>{
   if(!current)return;
