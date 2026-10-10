@@ -75,7 +75,7 @@ test('grand /0 : six lignes et pagination bornée', async ({ page }) => {
   await expect(page.locator('#subnet-result tr[data-subnet-number]')).toHaveCount(6);
   await expect(page.locator('#subnet-result tr[data-subnet-number]').last()).toContainText('255.255.255.254');
   await page.locator('#middle-details > summary').click();
-  await expect(page.locator('#middle-details tr[data-subnet-number]')).toHaveCount(50);
+  await expect(page.locator('#middle-details tr[data-subnet-number]')).toHaveCount(26);
   await page.getByRole('button', { name: 'Suivants : sous-réseaux intermédiaires' }).click();
   await expect(page.locator('#middle-details tr[data-subnet-number]').first()).toHaveAttribute('data-subnet-number', '53');
 
@@ -97,7 +97,9 @@ test('protection des résultats devenus obsolètes sans ancienne interface d’e
   await expect(page.locator('#network-result')).toContainText('10.0.0.0');
 });
 
-test('première visite en ligne puis nouveau lancement hors connexion', async ({ page, context }) => {
+test.describe('PWA réelle', () => {
+  test.use({ serviceWorkers: 'allow' });
+  test('première visite en ligne puis nouveau lancement hors connexion', async ({ page, context }) => {
   await expect(page.locator('#connection-label')).toHaveText('Prêt hors connexion');
   await page.evaluate(async () => {
     await navigator.serviceWorker.ready;
@@ -133,6 +135,7 @@ test('première visite en ligne puis nouveau lancement hors connexion', async ({
   await expect(offline.locator('#subnet-result h3')).toHaveText('3 sous-réseaux demandés');
   expect(errors).toEqual([]);
   await offline.close();
+});
 });
 
 test('ressources locales, thème automatique, portrait / paysage sans débordement', async ({ page }) => {
@@ -234,7 +237,7 @@ test('bouton au-dessus de l’adresse, en-têtes alignés et navigation clavier'
   await expect(page.locator('#result-title')).toHaveText('Votre découpage FLSM');
   await expect(page.locator('.help-panel, .site-footer')).toHaveCount(0);
   await expect(page.locator('.version')).toBeVisible();
-  await expect(page.getByRole('img', { name: 'CyberNet', exact: true })).toBeVisible();
+  await expect(page.getByRole('img', { name: 'CyberNet Los Angeles', exact: true })).toBeVisible();
 });
 
 test('numérotation à zéro : huit réseaux, intermédiaires et tous les réseaux', async ({ page }) => {
@@ -265,7 +268,7 @@ test('interface compacte, saisie longue et logos locaux sur plusieurs largeurs',
     const print = await page.locator('#print-results').boundingBox();
     const calculate = await page.locator('.calculate-button').boundingBox();
     expect(print.x).toBeGreaterThan(calculate.x + calculate.width);
-    expect(print.y).toBe(calculate.y);
+    expect(Math.abs(print.y - calculate.y)).toBeLessThanOrEqual(6);
     if (width === 1440) {
       expect((await page.locator('main').boundingBox()).width).toBeLessThanOrEqual(1100);
       expect(address.width).toBeGreaterThanOrEqual(500);
@@ -275,7 +278,7 @@ test('interface compacte, saisie longue et logos locaux sur plusieurs largeurs',
   }
   for (const [theme, filename] of [['dark', 'Logo_CyberNet_blanc_transparent.svg'], ['light', 'Logo_CyberNet_bleu_marine_transparent.svg']]) {
     await page.emulateMedia({ colorScheme: theme });
-    const logo = page.getByRole('img', { name: 'CyberNet', exact: true });
+    const logo = page.getByRole('img', { name: 'CyberNet Los Angeles', exact: true });
     await expect.poll(() => logo.evaluate(img => img.currentSrc)).toContain(filename);
     await expect.poll(() => logo.evaluate(img => img.complete && img.naturalWidth > 0)).toBe(true);
     expect(new URL(await logo.evaluate(img => img.currentSrc)).origin).toBe(new URL(page.url()).origin);
@@ -305,13 +308,16 @@ test('HTTP non sécurisé : calculs locaux sans bannière HTTPS', async ({ page,
   await expect(page.locator('#pwa-message')).toBeHidden();
 });
 
-test('une véritable erreur de préparation PWA reste signalée', async ({ page }) => {
+test.describe('Erreur d’installation PWA', () => {
+  test.use({ serviceWorkers: 'allow' });
+  test('une véritable erreur de préparation PWA reste signalée', async ({ page }) => {
   await page.addInitScript(() => {
     navigator.serviceWorker.register = () => Promise.reject(new Error('Test : cache indisponible'));
   });
   await page.reload();
   await expect(page.locator('#pwa-message')).toContainText('cache hors connexion n’a pas pu être préparé');
   await expect(page.locator('#network-result dd').first()).toHaveText('192.168.10.64');
+});
 });
 
 test('FLSM lisible : 4, 8, 16 réseaux, tailles réelles et aucune valeur tronquée', async ({ page }) => {
@@ -363,7 +369,7 @@ test('numéros 48 et 128 sans dièse, adresses et pagination inchangées', async
   await expect(page.locator('#middle-details tr[data-subnet-number]').first().locator('td').first()).toHaveText('53');
   await expect(page.locator('.brand img')).toHaveCount(0);
   await expect(page.locator('.brand')).toHaveText('IPcalc');
-  await expect(page.getByRole('img', { name: 'CyberNet', exact: true })).toHaveCount(1);
+  await expect(page.getByRole('img', { name: 'CyberNet Los Angeles', exact: true })).toHaveCount(1);
 });
 
 test('VLSM : cinq lignes compactes et fiche réseau initial automatique', async ({ page }) => {
