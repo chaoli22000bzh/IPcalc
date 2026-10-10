@@ -43,6 +43,10 @@ function classify(n){
   if(n>>118n===0x3fan)return ['Lien local (fe80::/10)','Uniquement sur le lien local'];
   if(n>>121n===0x7en)return ['Locale unique (fc00::/7)','Réseau privé, non routable sur Internet'];
   if(n>>32n===65535n)return ['IPv4 mappée (::ffff:0:0/96)','Représentation IPv6 d’une IPv4'];
+  // Préfixes documentaires RFC 3849 (2001:db8::/32) et RFC 9637 (3fff::/20).
+  // Ces adresses sont syntaxiquement globales mais ne sont pas routables publiquement.
+  if((n>>96n)===0x20010db8n || (n>>108n)===0x3fff0n)
+    return ['Documentation IPv6','Réservée aux exemples ; non routable publiquement'];
   if(n>>125n===1n)return ['Unicast globale (2000::/3)','Potentiellement routable sur Internet'];
   return ['Adresse spéciale ou réservée','Portée dépendant du préfixe et de l’usage'];
 }
@@ -60,7 +64,14 @@ export function parseIPv6(addressInput,maskInput=''){
   const hostBits=BigInt(128-prefix);
   const mask=prefix===0?0n:FULL^((1n<<hostBits)-1n);
   const network=number&mask,[type,scope]=classify(number);
+  const last=network|((1n<<hostBits)-1n);
+  const addressCount=1n<<hostBits;
+  const subnets64=prefix<=64?1n<<BigInt(64-prefix):0n;
   return {address:compressIPv6(number),expanded:expandIPv6(number),prefix,assumedPrefix,
-    network:compressIPv6(network),networkExpanded:expandIPv6(network),type,scope,
+    network:compressIPv6(network),networkExpanded:expandIPv6(network),
+    lastAddress:compressIPv6(last),lastAddressExpanded:expandIPv6(last),
+    addressCount:addressCount.toString(),addressExponent:128-prefix,
+    subnets64:subnets64.toString(),subnets64Exponent:prefix<=64?64-prefix:null,
+    type,scope,
     interfaceId:prefix===64?groupsOf(number).slice(4).map(g=>g.toString(16).padStart(4,'0')).join(':'):null};
 }
