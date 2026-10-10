@@ -438,12 +438,43 @@ test('FLSM A4 Pro : un sous-réseau libre, 14 hôtes disponibles et barre 75/25'
   await page.evaluate(() => window.dispatchEvent(new Event('afterprint')));
 });
 
-test('IPv4 simple : les PDF scolaires restent inchangés et le choix Pro FLSM est absent', async ({ page }) => {
+test('IPv4 simple : fiche Pro A4, plage utilisable et deux fiches scolaires préservées', async ({ page }) => {
   await page.getByRole('button', { name: 'Télécharger une fiche pédagogique PDF' }).click();
-  await expect(page.locator('#pdf-a4-description')).toContainText('A4 portrait');
-  await expect(page.locator('#pdf-a4-student')).toBeVisible();
-  await expect(page.locator('#pdf-a4-corrected')).toBeVisible();
-  await expect(page.locator('#pdf-a4-professional')).toBeHidden();
+  await expect(page.locator('#pdf-a4-description')).toBeHidden();
+  await expect(page.locator('#pdf-a4-professional')).toBeVisible();
+  await expect(page.locator('.pdf-a4-options > button').first()).toHaveAttribute('id', 'pdf-a4-professional');
+  await expect(page.locator('#pdf-a4-student')).toHaveText('Fiche élève · Énoncé');
+  await expect(page.locator('#pdf-a4-corrected')).toHaveText('Fiche élève · Corrigé');
+  await page.evaluate(() => { window.__printCount = 0; window.print = () => { window.__printCount++; }; });
+  await page.locator('#pdf-a4-professional').click();
+  expect(await page.evaluate(() => window.__printCount)).toBe(1);
+  await expect(page).toHaveTitle('192.168.10.64_IPv4_Pro');
+  await expect(page.locator('.professional-report-head')).toContainText('Fiche d’adressage IPv4');
+  await expect(page.locator('.professional-ipv4-fields')).toContainText('192.168.10.65');
+  await expect(page.locator('.professional-ipv4-fields')).toContainText('192.168.10.126');
+  await expect(page.locator('.professional-ipv4-fields')).toContainText('192.168.10.127');
+  await expect(page.locator('.professional-ipv4-fields')).toContainText('62');
+  await expect(page.locator('#professional-report')).toBeHidden();
+  await page.emulateMedia({ media: 'print' });
+  await expect(page.locator('#professional-report')).toBeVisible();
+  await expect(page.locator('.workspace')).toBeHidden();
+  await page.emulateMedia({ media: 'screen' });
+  await page.evaluate(() => window.dispatchEvent(new Event('afterprint')));
+  await expect(page.locator('#professional-report')).toHaveCount(0);
+  await expect(page).toHaveTitle('IPcalc — Adressage IPv4 et IPv6 · CyberNet');
+});
+
+test('IPv4 /31 Pro : deux adresses utilisables sans broadcast', async ({ page }) => {
+  await page.getByLabel('Adresse IP').fill('10.0.0.1/31');
+  await page.getByRole('button', { name: 'Calculer le réseau' }).click();
+  await page.getByRole('button', { name: 'Télécharger une fiche pédagogique PDF' }).click();
+  await page.evaluate(() => { window.print = () => {}; });
+  await page.locator('#pdf-a4-professional').click();
+  await expect(page.locator('.professional-ipv4-fields')).toContainText('10.0.0.0');
+  await expect(page.locator('.professional-ipv4-fields')).toContainText('10.0.0.1');
+  await expect(page.locator('.professional-ipv4-fields')).toContainText('Sans broadcast (/31)');
+  await expect(page.locator('.professional-report-note')).toContainText('point à point');
+  await page.evaluate(() => window.dispatchEvent(new Event('afterprint')));
 });
 
 test('VLSM : cinq lignes compactes et fiche réseau initial automatique', async ({ page }) => {
