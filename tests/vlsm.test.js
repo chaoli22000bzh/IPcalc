@@ -54,12 +54,18 @@ test('les liaisons 1 ou 2 hôtes utilisent /31 et n’ont pas de broadcast conve
   assert.equal(p.freeAddresses,242);
 });
 
-test('100 demandes acceptées, 101 refusées, total compté sur toutes les lignes',()=>{
-  assert.equal(VLSM_MAX_SUBNETS,100);
-  const p=planVlsm(base,[{quantity:50,hosts:1},{quantity:50,hosts:2}]);
-  assert.equal(p.rows.length,100);
-  assert.equal(p.usedAddresses,200);
-  assert.throws(()=>planVlsm(base,[{quantity:50,hosts:1},{quantity:51,hosts:2}]),/100 sous-réseaux/);
+test('140 sous-réseaux acceptés, même si l’affichage est paginé à 100',()=>{
+  const b=parseNetwork('10.0.0.0/7');
+  const p=planVlsm(b,[
+    {quantity:30,hosts:50},{quantity:20,hosts:25},
+    {quantity:40,hosts:13},{quantity:50,hosts:8}
+  ]);
+  assert.equal(p.rows.length,140);
+  assert.equal(p.usedAddresses,4800);
+  assert.equal(p.freeAddresses,33554432-4800);
+  assert.equal(p.rows[0].cidr,'10.0.0.0/26');
+  assert.equal(p.rows[139].prefix,28);
+  assert.ok(VLSM_MAX_SUBNETS>140);
 });
 
 test('bloc trop petit : aucun plan partiel, diagnostique la capacité',()=>{
