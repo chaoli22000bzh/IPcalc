@@ -2,6 +2,8 @@ import { describeVlsmBase, summarizeVlsmRequests, planVlsm, VLSM_MAX_SUBNETS, VL
 import { parseIPv6 } from './ipv6.js?v=2.0.0-step3.0';
 import { downloadFlsmA3 } from './pdf-a3-flsm.js?v=2.0.0-step3.0';
 import { downloadAddressingA4 } from './pdf-a4.js?v=2.0.0-step3.0';
+import { printFlsmProfessional } from './professional-flsm.js?v=2.0.0-step3.7';
+import { printIPv4Professional } from './professional-ipv4.js?v=2.0.0-step3.7';
 import { parseNetwork, planSubnets, subnetAt, summaryIndices, subnetPage } from './ipv4.js?v=2.0.0-step3.0';
 import { EXPORT_COLUMNS } from './exports.js?v=2.0.0-step3.0';
 
@@ -86,16 +88,20 @@ function networkTable(rows, omitted = 0) {
 }
 
 function pageDetails(kind, title, start, end) {
+  // Conserver le plan lié à cet accordéon : un événement 'toggle' peut être
+  // livré après qu'un changement de saisie a invalidé les anciens résultats.
+  const plan = current?.plan;
   const details = element('details', 'pages-details');
   details.id = `${kind}-details`;
   details.open = pages[kind].open;
   const summary = element('summary', '', title);
   details.append(summary);
   function populate() {
+    if (current?.plan !== plan || !plan) return;
     const old = details.querySelector('.page-body');
     if (old) old.remove();
     if (!details.open) return;
-    const result = subnetPage(current.plan, { start, end, page: pages[kind].page });
+    const result = subnetPage(plan, { start, end, page: pages[kind].page });
     const body = element('div', 'page-body');
     body.append(element('p', '', `${format(result.total)} sous-réseaux dans ce périmètre. Au maximum 50 par page.`), networkTable(result.items));
     const navigation = element('div', 'pagination');
@@ -105,6 +111,7 @@ function pageDetails(kind, title, start, end) {
       button.disabled = direction < 0 ? result.page === 0 : result.page + 1 >= result.pageCount;
       button.setAttribute('aria-label', `${label} : ${kind === 'middle' ? 'sous-réseaux intermédiaires' : 'sous-réseaux non demandés'}`);
       button.addEventListener('click', () => {
+        if (!details.isConnected || current?.plan !== plan) return;
         pages[kind].page += direction;
         populate();
         const nextButton = details.querySelector(`button[aria-label="${button.getAttribute('aria-label')}"]`);
@@ -119,6 +126,7 @@ function pageDetails(kind, title, start, end) {
   }
   populate();
   details.addEventListener('toggle', () => {
+    if (!details.isConnected || current?.plan !== plan) return;
     pages[kind].open = details.open;
     populate();
   });
@@ -495,7 +503,7 @@ function updatePdfAvailability(){
   print.disabled=!vlsm&&!legacy;
   print.setAttribute('aria-label',vlsm?'Imprimer le plan VLSM A4':legacy?'Télécharger une fiche pédagogique PDF':'Impression indisponible');
   print.title=vlsm?'Imprimer le plan VLSM A4 ou enregistrer en PDF':legacy?'Télécharger une fiche pédagogique PDF':'Impression indisponible';
-  $('print-help').textContent=vlsm?'Impression VLSM A4':legacy?(current.plan?'PDF A3':'PDF A4'):'À venir';
+  $('print-help').textContent=vlsm?'Impression VLSM A4':legacy?(current.plan?'PDF A3 / A4 Pro':'PDF A4 / A4 Pro'):'À venir';
 }
 $('print-results').addEventListener('click',()=>{
   if(!current||current.protocol!=='ipv4')return;
@@ -531,7 +539,11 @@ $('print-results').addEventListener('click',()=>{
   const flsm=Boolean(current.plan);
   $('pdf-a4-error').hidden=true;
   $('pdf-a4-title').textContent=flsm?'Fiche IPv4 et sous-réseaux FLSM':'Fiche d’adressage IPv4';
-  $('pdf-a4-description').textContent=flsm?'Choisir un PDF A3 paysage à télécharger :':'Choisir un PDF A4 portrait à télécharger :';
+  $('pdf-a4-description').hidden=true;
+  if(!flsm)$('pdf-a4-description').textContent='Choisir le document A4 portrait à télécharger :';
+  $('pdf-a4-student').textContent=flsm?'Exercice A3 · Énoncé':'Fiche élève · Énoncé';
+  $('pdf-a4-corrected').textContent=flsm?'Exercice A3 · Corrigé':'Fiche élève · Corrigé';
+  $('pdf-a4-professional').hidden=false;
   $('pdf-a4-dialog').showModal();
 });
 function exportDocument(corrected) {
@@ -547,4 +559,17 @@ function exportDocument(corrected) {
 }
 $('pdf-a4-student').addEventListener('click',()=>exportDocument(false));
 $('pdf-a4-corrected').addEventListener('click',()=>exportDocument(true));
+$('pdf-a4-professional').addEventListener('click',()=>{
+  if(!current || current.protocol!=='ipv4')return;
+  try {
+    $('pdf-a4-error').hidden=true;
+    $('pdf-a4-dialog').close();
+    if(current.plan)printFlsmProfessional(current.base,current.plan);
+    else printIPv4Professional(current.base);
+  }catch(error){
+    $('pdf-a4-error').textContent='Impossible de préparer le rapport professionnel : '+error.message;
+    $('pdf-a4-error').hidden=false;
+    $('pdf-a4-dialog').showModal();
+  }
+});
 updatePdfAvailability();

@@ -197,7 +197,18 @@ test('modifier un calcul avec pagination ouverte ne conserve aucun sous-réseau'
   await subdivide(page);
   await page.locator('#middle-details > summary').click();
   await page.locator('#extra-details > summary').click();
+  // Mémoriser les accordéons pour simuler des événements arrivant après leur retrait.
+  await page.evaluate(() => {
+    window.__staleDetails = [
+      document.querySelector('#middle-details'),
+      document.querySelector('#extra-details'),
+    ];
+  });
   await page.getByLabel('Adresse IP').fill('10.0.0.0/16');
+  await page.evaluate(() => {
+    window.__staleDetails.forEach(details => details.dispatchEvent(new Event('toggle')));
+    delete window.__staleDetails;
+  });
   await expect(page.locator('#subnet-result')).toBeEmpty();
   await expect(page.locator('#network-result')).toBeEmpty();
   await page.getByRole('button', { name: 'Calculer le réseau' }).click();
@@ -213,7 +224,9 @@ test('bouton au-dessus de l’adresse, en-têtes alignés et navigation clavier'
   const field = await address.boundingBox();
   expect(initialButton.y + initialButton.height).toBeLessThan(field.y);
   expect(Math.abs(initialButton.x - field.x)).toBeLessThan(1);
-  expect(initialButton.width).toBeGreaterThan(field.width * .65);
+  // Le bouton reste suffisamment large pour son libellé, sans imposer
+  // un ratio fixe lorsque l'affichage mobile inclut le bouton d'impression.
+  expect(initialButton.width).toBeGreaterThan(180);
   expect(initialButton.width).toBeLessThanOrEqual(field.width);
   expect(initialButton.height).toBeLessThanOrEqual(44);
   const inputHeading = await page.locator('.panel-heading .step-number').boundingBox();
@@ -379,6 +392,102 @@ test('numéros 48 et 128 sans dièse, adresses et pagination inchangées', async
   await expect(page.locator('.brand img')).toHaveCount(0);
   await expect(page.locator('.brand')).toHaveText('IPcalc');
   await expect(page.getByRole('img', { name: 'CyberNet Los Angeles', exact: true })).toHaveCount(1);
+});
+
+test('FLSM A4 Pro : troisième choix isolé, rapport complet et impression native', async ({ page }) => {
+  await subdivide(page, { address: '192.168.10.0/24', count: '10' });
+  await page.getByRole('button', { name: 'Télécharger une fiche pédagogique PDF' }).click();
+  await expect(page.locator('#pdf-a4-student')).toBeVisible();
+  await expect(page.locator('#pdf-a4-corrected')).toBeVisible();
+  await expect(page.locator('#pdf-a4-professional')).toBeVisible();
+  await expect(page.locator('#pdf-a4-description')).toBeHidden();
+  await expect(page.locator('#pdf-a4-professional')).toHaveText('Fiche professionnelle A4');
+  await expect(page.locator('#pdf-a4-student')).toHaveText('Exercice A3 · Énoncé');
+  await expect(page.locator('#pdf-a4-corrected')).toHaveText('Exercice A3 · Corrigé');
+  await expect(page.locator('.pdf-a4-options > button').first()).toHaveAttribute('id', 'pdf-a4-professional');
+  await page.evaluate(() => {
+    window.__professionalPrints = 0;
+    window.print = () => { window.__professionalPrints += 1; };
+  });
+  await page.locator('#pdf-a4-professional').click();
+  await expect(page.locator('#pdf-a4-dialog')).toBeHidden();
+  expect(await page.evaluate(() => window.__professionalPrints)).toBe(1);
+  await expect(page).toHaveTitle('192.168.10.0_FLSM_Pro');
+  await expect(page.locator('body')).toHaveClass(/print-professional/);
+  await expect(page.locator('.professional-report-head')).toContainText('Plan d’adressage IPv4 — FLSM');
+  await expect(page.locator('.professional-report-group').last().locator('.professional-report-fields')).toContainText('255.255.255.240');
+  await expect(page.locator('.professional-report-group').first()).toContainText('Masque initial');
+  await expect(page.locator('.professional-report-group').last()).toContainText('Découpage FLSM');
+  await expect(page.locator('.professional-report-group').last().locator('.professional-report-fields')).toContainText('Hôtes utilisables non affectés');
+  await expect(page.locator('.professional-report-allocation-bar')).toHaveAttribute('role', 'img');
+  await expect(page.locator('.professional-report-allocation-legend')).toContainText('sous-réseaux attribués');
+  await expect(page.locator('.professional-report-table tbody tr')).toHaveCount(10);
+  await expect(page.locator('.professional-report-table tbody tr').first()).toContainText('192.168.10.0/28');
+  await expect(page.locator('.professional-report-table tbody tr').last()).toContainText('192.168.10.144/28');
+  await expect(page.locator('.professional-report-logo')).toHaveAttribute('src', /Logo_CyberNet_bleu_marine_transparent\.svg/);
+  await page.emulateMedia({ media: 'print' });
+  await expect(page.locator('#professional-report')).toBeVisible();
+  await expect(page.locator('.workspace')).toBeHidden();
+  await page.emulateMedia({ media: 'screen' });
+  await page.evaluate(() => window.dispatchEvent(new Event('afterprint')));
+  await expect(page).toHaveTitle('IPcalc — Adressage IPv4 et IPv6 · CyberNet');
+  await expect(page.locator('#professional-report')).toHaveCount(0);
+  await expect(page.locator('body')).not.toHaveClass(/print-professional/);
+});
+
+test('FLSM A4 Pro : un sous-réseau libre, 14 hôtes disponibles et barre 75/25', async ({ page }) => {
+  await subdivide(page, { address: '192.168.10.75/26', count: '3' });
+  await page.getByRole('button', { name: 'Télécharger une fiche pédagogique PDF' }).click();
+  await page.evaluate(() => { window.print = () => {}; });
+  await page.locator('#pdf-a4-professional').click();
+  await expect(page.locator('.professional-report-group').first()).toContainText('192.168.10.64/26');
+  await expect(page.locator('.professional-report-group').last()).toContainText('14');
+  await expect(page.locator('.professional-report-group').last()).toContainText('3 / 4');
+  await expect(page.locator('.professional-report-legend-free')).toContainText('1 sous-réseau restant · 14 hôtes utilisables non affectés');
+  await expect(page.locator('.professional-report-note')).toContainText('1 sous-réseau supplémentaire est possible');
+  expect(await page.locator('.professional-report-used').evaluate(node => parseFloat(node.style.width))).toBe(75);
+  expect(await page.locator('.professional-report-free').evaluate(node => parseFloat(node.style.width))).toBe(25);
+  await expect(page.locator('.professional-report-table tbody tr')).toHaveCount(3);
+  await page.evaluate(() => window.dispatchEvent(new Event('afterprint')));
+});
+
+test('IPv4 simple : fiche Pro A4, plage utilisable et deux fiches scolaires préservées', async ({ page }) => {
+  await page.getByRole('button', { name: 'Télécharger une fiche pédagogique PDF' }).click();
+  await expect(page.locator('#pdf-a4-description')).toBeHidden();
+  await expect(page.locator('#pdf-a4-professional')).toBeVisible();
+  await expect(page.locator('.pdf-a4-options > button').first()).toHaveAttribute('id', 'pdf-a4-professional');
+  await expect(page.locator('#pdf-a4-student')).toHaveText('Fiche élève · Énoncé');
+  await expect(page.locator('#pdf-a4-corrected')).toHaveText('Fiche élève · Corrigé');
+  await page.evaluate(() => { window.__printCount = 0; window.print = () => { window.__printCount++; }; });
+  await page.locator('#pdf-a4-professional').click();
+  expect(await page.evaluate(() => window.__printCount)).toBe(1);
+  await expect(page).toHaveTitle('192.168.10.64_IPv4_Pro');
+  await expect(page.locator('.professional-report-head')).toContainText('Fiche d’adressage IPv4');
+  await expect(page.locator('.professional-ipv4-fields')).toContainText('192.168.10.65');
+  await expect(page.locator('.professional-ipv4-fields')).toContainText('192.168.10.126');
+  await expect(page.locator('.professional-ipv4-fields')).toContainText('192.168.10.127');
+  await expect(page.locator('.professional-ipv4-fields')).toContainText('62');
+  await expect(page.locator('#professional-report')).toBeHidden();
+  await page.emulateMedia({ media: 'print' });
+  await expect(page.locator('#professional-report')).toBeVisible();
+  await expect(page.locator('.workspace')).toBeHidden();
+  await page.emulateMedia({ media: 'screen' });
+  await page.evaluate(() => window.dispatchEvent(new Event('afterprint')));
+  await expect(page.locator('#professional-report')).toHaveCount(0);
+  await expect(page).toHaveTitle('IPcalc — Adressage IPv4 et IPv6 · CyberNet');
+});
+
+test('IPv4 /31 Pro : deux adresses utilisables sans broadcast', async ({ page }) => {
+  await page.getByLabel('Adresse IP').fill('10.0.0.1/31');
+  await page.getByRole('button', { name: 'Calculer le réseau' }).click();
+  await page.getByRole('button', { name: 'Télécharger une fiche pédagogique PDF' }).click();
+  await page.evaluate(() => { window.print = () => {}; });
+  await page.locator('#pdf-a4-professional').click();
+  await expect(page.locator('.professional-ipv4-fields')).toContainText('10.0.0.0');
+  await expect(page.locator('.professional-ipv4-fields')).toContainText('10.0.0.1');
+  await expect(page.locator('.professional-ipv4-fields')).toContainText('Sans broadcast (/31)');
+  await expect(page.locator('.professional-report-note')).toContainText('point à point');
+  await page.evaluate(() => window.dispatchEvent(new Event('afterprint')));
 });
 
 test('VLSM : cinq lignes compactes et fiche réseau initial automatique', async ({ page }) => {
