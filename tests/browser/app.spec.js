@@ -213,7 +213,9 @@ test('bouton au-dessus de l’adresse, en-têtes alignés et navigation clavier'
   const field = await address.boundingBox();
   expect(initialButton.y + initialButton.height).toBeLessThan(field.y);
   expect(Math.abs(initialButton.x - field.x)).toBeLessThan(1);
-  expect(initialButton.width).toBeGreaterThan(field.width * .65);
+  // Le bouton reste suffisamment large pour son libellé, sans imposer
+  // un ratio fixe lorsque l'affichage mobile inclut le bouton d'impression.
+  expect(initialButton.width).toBeGreaterThan(180);
   expect(initialButton.width).toBeLessThanOrEqual(field.width);
   expect(initialButton.height).toBeLessThanOrEqual(44);
   const inputHeading = await page.locator('.panel-heading .step-number').boundingBox();
