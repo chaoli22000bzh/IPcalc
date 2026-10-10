@@ -455,7 +455,7 @@ function refreshPrintSummary(){
   content.append(dl);
 }
 function updatePdfAvailability(){
-  const print=$('print-results'),school=$('school-pdf');
+  const print=$('print-results');
   const vlsm=Boolean(current?.vlsm);
   const legacy=Boolean(current)&&current.protocol==='ipv4'&&!vlsm;
   // Le bouton historique conserve ses deux PDF scolaires en IPv4 et FLSM.
@@ -463,7 +463,6 @@ function updatePdfAvailability(){
   print.disabled=!vlsm&&!legacy;
   print.setAttribute('aria-label',vlsm?'Imprimer le plan VLSM A4':legacy?'Télécharger une fiche pédagogique PDF':'Impression indisponible');
   print.title=vlsm?'Imprimer le plan VLSM A4 ou enregistrer en PDF':legacy?'Télécharger une fiche pédagogique PDF':'Impression indisponible';
-  school.hidden=true;
   $('print-help').textContent=vlsm?'Impression VLSM A4':legacy?(current.plan?'PDF A3':'PDF A4'):'À venir';
 }
 $('print-results').addEventListener('click',()=>{
