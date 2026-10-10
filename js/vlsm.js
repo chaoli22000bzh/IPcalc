@@ -1,7 +1,9 @@
 /** Planification VLSM IPv4 autonome, aucune dépendance au navigateur. */
 import { CalculationError, numberToIPv4, prefixToMask } from './ipv4.js';
 
-export const VLSM_MAX_SUBNETS=100;
+export const VLSM_PAGE_SIZE=100;
+// Garde-fou de ressources pour éviter une création accidentelle de millions de lignes.
+export const VLSM_MAX_SUBNETS=100000;
 function positiveInt(value,label){
   const text=String(value??'').trim(),number=Number(text);
   if(!/^\d+$/.test(text)||!Number.isSafeInteger(number)||number<1)
@@ -37,7 +39,7 @@ export function summarizeVlsmRequests(base,requests){
     const hosts=positiveInt(request.hosts,'Hôtes (ligne '+(index+1)+')');
     subnetCount+=quantity;
     if(subnetCount>VLSM_MAX_SUBNETS)
-      throw new CalculationError('100 sous-réseaux maximum, toutes les lignes cumulées.','vlsm');
+      throw new CalculationError('Ce calcul dépasse la limite de sécurité de '+VLSM_MAX_SUBNETS.toLocaleString('fr-FR')+' réseaux. Réduisez la demande pour préserver le navigateur.','vlsm');
     const size=sizeFor(hosts);
     if(size.prefix<initial.prefix)
       throw new CalculationError('Un besoin de '+hosts+' hôtes dépasse la capacité de '+initial.cidr+'.','vlsm');
