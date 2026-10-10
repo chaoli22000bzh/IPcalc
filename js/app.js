@@ -1,8 +1,8 @@
-import { parseIPv6 } from './ipv6.js';
-import { downloadFlsmA3 } from './pdf-a3-flsm.js';
-import { downloadAddressingA4 } from './pdf-a4.js';
-import { parseNetwork, planSubnets, subnetAt, summaryIndices, subnetPage, binaryOctets } from './ipv4.js';
-import { EXPORT_COLUMNS } from './exports.js';
+import { parseIPv6 } from './ipv6.js?v=2.0.0-step2.6';
+import { downloadFlsmA3 } from './pdf-a3-flsm.js?v=2.0.0-step2.6';
+import { downloadAddressingA4 } from './pdf-a4.js?v=2.0.0-step2.6';
+import { parseNetwork, planSubnets, subnetAt, summaryIndices, subnetPage, binaryOctets } from './ipv4.js?v=2.0.0-step2.6';
+import { EXPORT_COLUMNS } from './exports.js?v=2.0.0-step2.6';
 
 const $ = id => document.getElementById(id);
 const format = value => value.toLocaleString('fr-FR');
