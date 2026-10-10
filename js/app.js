@@ -183,7 +183,8 @@ function renderIPv6(info) {
   const addressFields=[
     ['Adresse développée',info.expanded,'ipv6-full-address'],
     ['Adresse abrégée',info.address,'ipv6-short-address'],
-    ['Préfixe réseau',info.network+'/'+info.prefix,'ipv6-network-prefix']
+    ['Préfixe réseau',info.network+'/'+info.prefix,'ipv6-network-prefix'],
+    ['Dernière adresse du bloc',info.lastAddress,'ipv6-last-address']
   ];
   if(info.interfaceId)addressFields.push(['Identifiant d’interface (/64)',info.interfaceId,'ipv6-interface-id']);
   for(const [label,value,className] of addressFields){
@@ -198,7 +199,11 @@ function renderIPv6(info) {
   const fields=[
     ['Préfixe CIDR','/'+info.prefix+(info.assumedPrefix?' (adresse seule, par défaut)':'')],
     ['Type d’adresse',info.type],
-    ['Portée',info.scope]
+    ['Portée',info.scope],
+    ['Adresses du bloc',`2^${info.addressExponent} — ${BigInt(info.addressCount).toLocaleString('fr-FR')}`],
+    ['Sous-réseaux /64 possibles',info.subnets64Exponent===null
+      ? '0 (préfixe plus long que /64)'
+      : `2^${info.subnets64Exponent} — ${BigInt(info.subnets64).toLocaleString('fr-FR')}`]
   ];
   for(const [label,value] of fields){
     const group=element('div');
