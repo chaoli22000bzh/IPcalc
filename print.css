@@ -60,3 +60,19 @@
   #network-result:empty,#subnet-result:empty {display:none !important;}
   /* Les sous-réseaux déjà affichés sont imprimés en tant que texte et tableau. */
 }
+
+@media print {
+  .vlsm-pagination,.vlsm-results-table,.vlsm-results-table+.vlsm-pagination {display:none !important;}
+  .vlsm-print-table-wrapper {display:block !important;margin-top:3mm;}
+  .vlsm-print-table {width:100%;border-collapse:collapse;table-layout:fixed;font:8pt/1.35 Arial,Helvetica,sans-serif;color:#111;}
+  .vlsm-print-table thead {display:table-header-group;}
+  .vlsm-print-table th,.vlsm-print-table td {border:1px solid #aaa;padding:1.6mm 1mm;text-align:left;white-space:nowrap;overflow:visible;}
+  .vlsm-print-table th {background:#eee;font-weight:700;}
+  .vlsm-print-table tr {break-inside:avoid;page-break-inside:avoid;}
+  .vlsm-print-table th:nth-child(1),.vlsm-print-table td:nth-child(1){width:7%;}
+  .vlsm-print-table th:nth-child(2),.vlsm-print-table td:nth-child(2){width:16%;}
+  .vlsm-print-table th:nth-child(3),.vlsm-print-table td:nth-child(3){width:17%;}
+  .vlsm-print-table th:nth-child(4),.vlsm-print-table td:nth-child(4){width:23%;}
+  .vlsm-print-table th:nth-child(5),.vlsm-print-table td:nth-child(5){width:20%;}
+  .vlsm-print-table th:nth-child(6),.vlsm-print-table td:nth-child(6){width:17%;}
+}
