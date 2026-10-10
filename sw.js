@@ -23,8 +23,16 @@ self.addEventListener('install', event => {
 self.addEventListener('activate', event => {
   event.waitUntil((async () => {
     const names = await caches.keys();
-    await Promise.all(names.filter(name => name.startsWith(CACHE_PREFIX) && name !== CACHE_NAME).map(name => caches.delete(name)));
+    const previous=names.filter(name => name.startsWith(CACHE_PREFIX) && name !== CACHE_NAME);
+    await Promise.all(previous.map(name => caches.delete(name)));
     await self.clients.claim();
+    // Pont de migration depuis les anciennes versions : leur pwa.js ne savait
+    // pas toujours rafraîchir après une activation automatique.
+    if(previous.length){
+      const windows=await self.clients.matchAll({type:'window',includeUncontrolled:true});
+      await Promise.all(windows.filter(client=>client.url.startsWith(self.registration.scope))
+        .map(client=>client.navigate(client.url).catch(()=>{})));
+    }
   })());
 });
 
