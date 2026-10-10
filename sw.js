@@ -1,5 +1,5 @@
 // Incrémenter VERSION à chaque livraison modifiant une ressource de l’application.
-const VERSION = '2.0.0-step3.2';
+const VERSION = '2.0.0-step3.3';
 const CACHE_PREFIX = `ipcalc:${self.registration.scope}:`;
 const CACHE_NAME = `${CACHE_PREFIX}${VERSION}`;
 const ASSETS = [
