@@ -387,7 +387,11 @@ test('FLSM A4 Pro : troisième choix isolé, rapport complet et impression nativ
   await expect(page.locator('#pdf-a4-student')).toBeVisible();
   await expect(page.locator('#pdf-a4-corrected')).toBeVisible();
   await expect(page.locator('#pdf-a4-professional')).toBeVisible();
-  await expect(page.locator('#pdf-a4-description')).toContainText('A3 paysage');
+  await expect(page.locator('#pdf-a4-description')).toBeHidden();
+  await expect(page.locator('#pdf-a4-professional')).toHaveText('Fiche professionnelle A4');
+  await expect(page.locator('#pdf-a4-student')).toHaveText('Exercice A3 · Énoncé');
+  await expect(page.locator('#pdf-a4-corrected')).toHaveText('Exercice A3 · Corrigé');
+  await expect(page.locator('.pdf-a4-options > button').first()).toHaveAttribute('id', 'pdf-a4-professional');
   await page.evaluate(() => {
     window.__professionalPrints = 0;
     window.print = () => { window.__professionalPrints += 1; };
@@ -399,6 +403,11 @@ test('FLSM A4 Pro : troisième choix isolé, rapport complet et impression nativ
   await expect(page.locator('body')).toHaveClass(/print-professional/);
   await expect(page.locator('.professional-report-head')).toContainText('Plan d’adressage IPv4 — FLSM');
   await expect(page.locator('.professional-report-fields')).toContainText('255.255.255.240');
+  await expect(page.locator('.professional-report-group').first()).toContainText('Masque initial');
+  await expect(page.locator('.professional-report-group').last()).toContainText('Découpage FLSM');
+  await expect(page.locator('.professional-report-fields')).toContainText('Hôtes utilisables non affectés');
+  await expect(page.locator('.professional-report-allocation-bar')).toHaveAttribute('role', 'img');
+  await expect(page.locator('.professional-report-allocation-legend')).toContainText('sous-réseaux attribués');
   await expect(page.locator('.professional-report-table tbody tr')).toHaveCount(10);
   await expect(page.locator('.professional-report-table tbody tr').first()).toContainText('192.168.10.0/28');
   await expect(page.locator('.professional-report-table tbody tr').last()).toContainText('192.168.10.144/28');
@@ -411,6 +420,22 @@ test('FLSM A4 Pro : troisième choix isolé, rapport complet et impression nativ
   await expect(page).toHaveTitle('IPcalc — Adressage IPv4 et IPv6 · CyberNet');
   await expect(page.locator('#professional-report')).toHaveCount(0);
   await expect(page.locator('body')).not.toHaveClass(/print-professional/);
+});
+
+test('FLSM A4 Pro : un sous-réseau libre, 14 hôtes disponibles et barre 75/25', async ({ page }) => {
+  await subdivide(page, { address: '192.168.10.75/26', count: '3' });
+  await page.getByRole('button', { name: 'Télécharger une fiche pédagogique PDF' }).click();
+  await page.evaluate(() => { window.print = () => {}; });
+  await page.locator('#pdf-a4-professional').click();
+  await expect(page.locator('.professional-report-group').first()).toContainText('192.168.10.64/26');
+  await expect(page.locator('.professional-report-group').last()).toContainText('14');
+  await expect(page.locator('.professional-report-group').last()).toContainText('1 /');
+  await expect(page.locator('.professional-report-legend-free')).toContainText('1 sous-réseaux restants · 14 hôtes utilisables non affectés');
+  await expect(page.locator('.professional-report-note')).toContainText('1 sous-réseau supplémentaire est possible');
+  expect(await page.locator('.professional-report-used').evaluate(node => parseFloat(node.style.width))).toBe(75);
+  expect(await page.locator('.professional-report-free').evaluate(node => parseFloat(node.style.width))).toBe(25);
+  await expect(page.locator('.professional-report-table tbody tr')).toHaveCount(3);
+  await page.evaluate(() => window.dispatchEvent(new Event('afterprint')));
 });
 
 test('IPv4 simple : les PDF scolaires restent inchangés et le choix Pro FLSM est absent', async ({ page }) => {
