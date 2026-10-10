@@ -88,16 +88,20 @@ function networkTable(rows, omitted = 0) {
 }
 
 function pageDetails(kind, title, start, end) {
+  // Conserver le plan lié à cet accordéon : un événement 'toggle' peut être
+  // livré après qu'un changement de saisie a invalidé les anciens résultats.
+  const plan = current?.plan;
   const details = element('details', 'pages-details');
   details.id = `${kind}-details`;
   details.open = pages[kind].open;
   const summary = element('summary', '', title);
   details.append(summary);
   function populate() {
+    if (current?.plan !== plan || !plan) return;
     const old = details.querySelector('.page-body');
     if (old) old.remove();
     if (!details.open) return;
-    const result = subnetPage(current.plan, { start, end, page: pages[kind].page });
+    const result = subnetPage(plan, { start, end, page: pages[kind].page });
     const body = element('div', 'page-body');
     body.append(element('p', '', `${format(result.total)} sous-réseaux dans ce périmètre. Au maximum 50 par page.`), networkTable(result.items));
     const navigation = element('div', 'pagination');
@@ -107,6 +111,7 @@ function pageDetails(kind, title, start, end) {
       button.disabled = direction < 0 ? result.page === 0 : result.page + 1 >= result.pageCount;
       button.setAttribute('aria-label', `${label} : ${kind === 'middle' ? 'sous-réseaux intermédiaires' : 'sous-réseaux non demandés'}`);
       button.addEventListener('click', () => {
+        if (!details.isConnected || current?.plan !== plan) return;
         pages[kind].page += direction;
         populate();
         const nextButton = details.querySelector(`button[aria-label="${button.getAttribute('aria-label')}"]`);
@@ -121,6 +126,7 @@ function pageDetails(kind, title, start, end) {
   }
   populate();
   details.addEventListener('toggle', () => {
+    if (!details.isConnected || current?.plan !== plan) return;
     pages[kind].open = details.open;
     populate();
   });
