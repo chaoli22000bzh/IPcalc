@@ -88,9 +88,8 @@
               <div class="mode-switch">
                 <label><input type="radio" name="mode" value="simple" checked><span>Aucun découpage</span></label>
                 <label><input type="radio" name="mode" value="subnets"><span>FLSM</span></label>
-                <label><input type="radio" name="mode" value="vlsm" disabled aria-describedby="vlsm-help"><span>VLSM — indisponible</span></label>
+                <label><input type="radio" name="mode" value="vlsm"><span>VLSM</span></label>
               </div>
-              <p id="vlsm-help" class="field-help">VLSM : moteur non développé.</p>
             </fieldset>
 
             <div id="subnet-settings" class="subnet-settings" hidden>
@@ -115,6 +114,23 @@
               <p id="method-help" class="field-help">Tous les sous-réseaux ont la même taille.</p>
             </div>
 
+            <section id="vlsm-settings" class="vlsm-settings" aria-labelledby="vlsm-input-title" hidden>
+              <div class="vlsm-input-layout">
+                <div class="vlsm-request-panel">
+                  <h3 id="vlsm-input-title">Demandes VLSM</h3>
+                  <p class="field-help">Indiquez la quantité et le nombre d’hôtes utilisables par sous-réseau.</p>
+                  <div class="vlsm-request-columns" aria-hidden="true"><span>Nº</span><span>Quantité</span><span>Hôtes par réseau</span><span></span></div>
+                  <div id="vlsm-request-list"></div>
+                  <button id="vlsm-add" type="button" class="button button-outline button-small">+ Ajouter une demande</button>
+                  <p id="vlsm-count" class="field-help" role="status"></p>
+                </div>
+                <aside class="vlsm-base-panel" aria-labelledby="vlsm-base-title">
+                  <h3 id="vlsm-base-title">Réseau initial</h3>
+                  <div id="vlsm-base-content" class="vlsm-base-content" aria-live="polite"></div>
+                </aside>
+              </div>
+            </section>
+
             <p id="calculation-error" class="form-error" role="alert" hidden></p>
           </form>
         </section>
@@ -123,7 +139,6 @@
           <div class="panel results-primary">
           <div class="results-heading">
             <div class="heading-with-step"><span class="step-number">02</span><h2 id="result-title" tabindex="-1">Résultat du calcul</h2></div>
-            <label class="binary-toggle"><input id="show-binary" type="checkbox"><span>Afficher le binaire</span></label>
           </div>
           <p id="stale-notice" class="notice" role="status" hidden>Paramètres modifiés. Relancez le calcul pour actualiser les résultats.</p>
           <div id="network-result" class="network-panel"></div>
