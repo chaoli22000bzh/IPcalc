@@ -4,38 +4,47 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#17685c">
-    <meta name="description" content="Calculez vos réseaux IPv4 et sous-réseaux FLSM. Gratuit, sans compte et disponible hors connexion.">
+    <meta name="description" content="Analysez vos adresses IPv4 et IPv6 et calculez les sous-réseaux FLSM IPv4, hors connexion.">
     <meta name="color-scheme" content="light dark">
-    <title>IPcalc — Calculatrice IPv4 · CyberNet</title>
+    <title>IPcalc — Adressage IPv4 et IPv6 · CyberNet</title>
     <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="./icons/icon-192.png">
     <link rel="manifest" href="./manifest.webmanifest">
-    <link rel="stylesheet" href="./styles.css">
-    <script type="module" src="./js/app.js"></script>
-    <script type="module" src="./js/pwa.js"></script>
-  </head>
+    <link rel="stylesheet" href="./styles.css?v=2.0.0-step3.5">
+    <link rel="stylesheet" href="./print.css?v=2.0.0-step3.5" media="print">
+    <script type="module" src="./js/app.js?v=2.0.0-step3.5"></script>
+    <script type="module" src="./js/pwa.js?v=2.0.0-step3.5"></script>
+  <style>
+#pdf-a4-dialog{border:1px solid #8b9995;border-radius:14px;max-width:min(95vw,470px);width:420px;padding:0;color:CanvasText;background:Canvas;box-shadow:0 18px 50px #0008}
+#pdf-a4-dialog::backdrop{background:#0009}
+.pdf-a4-dialog-content{padding:22px;display:grid;gap:16px}
+.pdf-a4-dialog-content p{margin:0}
+.pdf-a4-dialog-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.pdf-a4-dialog-head h2{font-size:1.15rem;margin:0}
+.pdf-a4-close{border:0;background:transparent;color:inherit;font-size:24px;cursor:pointer}
+.pdf-a4-options{display:grid;gap:10px}
+#pdf-a4-error{color:#c44}
+</style>
+</head>
   <body>
     <a class="skip-link" href="#calculator">Aller au calculateur</a>
     <header class="site-header">
+      <picture class="cybernet-logo">
+        <source media="(prefers-color-scheme: dark)" srcset="./icons/Logo_CyberNet_blanc_transparent.svg">
+        <img src="./icons/Logo_CyberNet_bleu_marine_transparent.svg" width="1688" height="932" alt="CyberNet Los Angeles">
+      </picture>
       <a class="brand" href="./" aria-label="IPcalc, accueil">
-        <img src="./icons/icon.svg" width="38" height="38" alt="">
         <span>IP<span class="brand-light">calc</span></span>
-        <span class="version">V1</span>
       </a>
       <div class="header-actions">
-        <span id="connection-status" class="connection-status"><span class="status-dot"></span><span id="connection-label">Calcul local</span></span>
+        <span class="version" title="2.0.0-step3.5">V2 · étape 3.5</span>
+        <span id="connection-status" class="connection-status" aria-hidden="true" hidden><span class="status-dot"></span><span id="connection-label">Calcul local</span></span>
         <button id="install-app" class="button button-small button-outline" hidden>Installer l’application</button>
-        <span class="cybernet">par <strong>CyberNet</strong></span>
       </div>
     </header>
 
     <main>
-      <div class="intro">
-        <p class="eyebrow"><span class="eyebrow-line"></span> CALCULATRICE IPv4</p>
-        <h1>Le réseau, <span>en clair.</span></h1>
-        <p>Une adresse. Les bonnes réponses.<br class="mobile-break"> Calculez et découpez vos réseaux en quelques secondes.</p>
-        <div class="intro-tags"><span>IPv4 & FLSM</span><span>100 % local</span><span>Sans compte</span></div>
-      </div>
+      <h1 class="sr-only">IPcalc — Calcul réseau</h1>
 
       <div id="update-banner" class="notice update-banner" hidden>
         <span>Une nouvelle version d’IPcalc est disponible.</span>
@@ -44,25 +53,42 @@
       <p id="pwa-message" class="notice" role="status" hidden></p>
 
       <div id="calculator" class="workspace">
-        <aside class="input-panel panel" aria-labelledby="input-title">
+        <section class="input-panel panel" aria-labelledby="input-title">
           <form id="calculator-form" novalidate>
             <div class="panel-heading"><span class="step-number">01</span><h2 id="input-title">Votre réseau</h2></div>
-            <div class="field">
-              <label for="address">Adresse IPv4 <span class="field-optional">avec ou sans CIDR</span></label>
-              <input id="address" name="address" type="text" value="192.168.10.75/26" placeholder="192.168.10.75/26" spellcheck="false" autocomplete="off" autocapitalize="off" enterkeyhint="go" aria-describedby="address-help">
-              <p id="address-help" class="field-help">Une adresse d’hôte est automatiquement ramenée à son réseau.</p>
+            <div class="form-actions">
+              <button type="submit" class="button calculate-button"><span id="calculate-label">Calculer le réseau</span><span aria-hidden="true">→</span></button>
+              <button id="print-results" type="button" class="button button-outline print-button" disabled aria-label="Imprimer — à venir" title="Imprimer — à venir" aria-describedby="print-help">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M7 8V3h10v5M7 17H4V8h16v9h-3M7 14h10v7H7z"/><path d="M16 11h1"/></svg>
+              </button>
+              <span id="print-help" class="field-help print-status">À venir</span>
             </div>
-            <div class="field">
-              <label for="mask">Masque ou préfixe <span class="field-optional">si besoin</span></label>
-              <input id="mask" name="mask" type="text" placeholder="255.255.255.192 ou /26" inputmode="decimal" spellcheck="false" autocomplete="off" aria-describedby="mask-help">
-              <p id="mask-help" class="field-help">Laissez vide si l’adresse contient déjà un préfixe.</p>
+            <div class="network-fields">
+              <div class="field">
+                <label for="protocol">Protocole</label>
+                <select id="protocol" name="protocol" aria-describedby="protocol-help">
+                  <option value="ipv4">IPv4</option>
+                  <option value="ipv6">IPv6</option>
+                </select>
+                <p id="protocol-help" class="field-help">Le protocole s’adapte automatiquement à l’adresse saisie.</p>
+              </div>
+              <div class="field address-field">
+                <label for="address">Adresse IP</label>
+                <input id="address" name="address" type="text" value="192.168.10.75/26" placeholder="192.168.10.75/26" spellcheck="false" autocomplete="off" autocapitalize="off" enterkeyhint="go" aria-describedby="address-help">
+                <p id="address-help" class="field-help">IPv4 avec ou sans CIDR. Une adresse d’hôte est ramenée à son réseau.</p>
+              </div>
+              <div class="field">
+                <label for="mask">Masque ou préfixe <span class="field-optional">si besoin</span></label>
+                <input id="mask" name="mask" type="text" placeholder="255.255.255.192 ou /26" inputmode="decimal" spellcheck="false" autocomplete="off" aria-describedby="mask-help">
+                <p id="mask-help" class="field-help">Laissez vide si l’adresse contient déjà un préfixe.</p>
+              </div>
             </div>
-
-            <fieldset class="mode-fieldset">
-              <legend>Que souhaitez-vous calculer ?</legend>
+            <fieldset id="mode-fieldset" class="mode-fieldset">
+              <legend>Mode de découpage</legend>
               <div class="mode-switch">
-                <label><input type="radio" name="mode" value="simple" checked><span>Réseau simple</span></label>
-                <label><input type="radio" name="mode" value="subnets"><span>Sous-réseaux</span></label>
+                <label><input type="radio" name="mode" value="simple" checked><span>Aucun découpage</span></label>
+                <label><input type="radio" name="mode" value="subnets"><span>FLSM</span></label>
+                <label><input type="radio" name="mode" value="vlsm"><span>VLSM</span></label>
               </div>
             </fieldset>
 
@@ -88,58 +114,59 @@
               <p id="method-help" class="field-help">Tous les sous-réseaux ont la même taille.</p>
             </div>
 
+            <section id="vlsm-settings" class="vlsm-settings" aria-labelledby="vlsm-input-title" hidden>
+              <div class="vlsm-input-layout">
+                <div class="vlsm-request-panel">
+                  <h3 id="vlsm-input-title">Demandes VLSM</h3>
+                  <p class="field-help">Indiquez la quantité et le nombre d’hôtes utilisables par sous-réseau.</p>
+                  <div class="vlsm-request-columns" aria-hidden="true"><span>Nº</span><span>Quantité</span><span>Hôtes par réseau</span><span></span></div>
+                  <div id="vlsm-request-list"></div>
+                  <button id="vlsm-add" type="button" class="button button-outline button-small">+ Ajouter une demande</button>
+                  <p id="vlsm-count" class="field-help" role="status"></p>
+                </div>
+                <aside class="vlsm-base-panel" aria-labelledby="vlsm-base-title">
+                  <h3 id="vlsm-base-title">Réseau initial</h3>
+                  <div id="vlsm-base-content" class="vlsm-base-content" aria-live="polite"></div>
+                </aside>
+              </div>
+            </section>
+
             <p id="calculation-error" class="form-error" role="alert" hidden></p>
-            <button type="submit" class="button calculate-button"><span>Calculer le réseau</span><span aria-hidden="true">→</span></button>
-            <p class="privacy-note"><span aria-hidden="true">◇</span> Vos calculs restent sur cet appareil.</p>
           </form>
-        </aside>
+        </section>
+
+        <section id="print-summary" class="print-summary" hidden>
+          <h2 id="print-summary-title">IPcalc</h2>
+          <div id="print-summary-content"></div>
+        </section>
 
         <section id="results" class="results" aria-labelledby="result-title">
+          <div class="panel results-primary">
           <div class="results-heading">
             <div class="heading-with-step"><span class="step-number">02</span><h2 id="result-title" tabindex="-1">Résultat du calcul</h2></div>
-            <label class="binary-toggle"><input id="show-binary" type="checkbox"><span>Afficher le binaire</span></label>
           </div>
           <p id="stale-notice" class="notice" role="status" hidden>Paramètres modifiés. Relancez le calcul pour actualiser les résultats.</p>
-          <div id="network-result" class="panel network-panel"></div>
+          <div id="network-result" class="network-panel"></div>
+          </div>
           <div id="subnet-result" class="panel subnet-panel" hidden></div>
 
-          <section class="panel export-panel" aria-labelledby="export-title">
-            <div><h3 id="export-title">Emportez vos résultats</h3><p>Cinq informations, prêtes à partager.</p></div>
-            <div class="export-controls">
-              <div id="scope-field" class="export-scope" hidden>
-                <label for="export-scope">Périmètre</label>
-                <select id="export-scope">
-                  <option value="visible">Sous-réseaux visibles</option>
-                  <option value="requested">Sous-réseaux demandés</option>
-                  <option value="all">Ensemble des sous-réseaux</option>
-                </select>
-              </div>
-              <div class="export-buttons">
-                <button id="copy-results" class="button button-outline"><span aria-hidden="true">▣</span> Copier</button>
-                <button id="export-csv" class="button button-outline"><span aria-hidden="true">↓</span> Export CSV</button>
-              </div>
-            </div>
-            <p id="export-feedback" class="export-feedback" role="status" hidden></p>
-          </section>
           <p id="result-announcement" class="sr-only" role="status" aria-live="polite"></p>
         </section>
       </div>
 
-      <section class="help-panel" aria-labelledby="help-title">
-        <details>
-          <summary id="help-title"><span>Un repère pour vos calculs</span><span class="detail-plus" aria-hidden="true">+</span></summary>
-          <div class="help-content">
-            <p><strong>Du /0 au /31.</strong> Le préfixe indique combien de bits identifient le réseau. Les autres bits identifient les adresses dans ce réseau. Le /32 est exclu de cette version.</p>
-            <p><strong>FLSM.</strong> Le découpage produit des réseaux de taille identique. Les nombres de sous-réseaux suivent les puissances de deux : pour dix réseaux demandés, la capacité est de seize. Les six autres restent à part.</p>
-            <p><strong>La règle papier.</strong> Jusqu’à six sous-réseaux, tout est affiché. Au-delà, vous voyez les trois premiers et les trois derniers du périmètre demandé. Les autres se consultent par pages de 50.</p>
-            <p><strong>Le cas /31.</strong> Une liaison point à point dispose de deux adresses utilisables et n’a pas de broadcast conventionnel.</p>
-            <p><strong>Hors connexion.</strong> Ouvrez une première fois IPcalc en ligne et attendez la confirmation « Prêt hors connexion ». Sur Android, utilisez le bouton d’installation ou le menu de Chrome. Sur ordinateur, une page déjà mise en cache reste accessible sans Internet. Le CSV UTF-8 utilise le point-virgule et peut être ouvert dans Excel.</p>
-          </div>
-        </details>
-      </section>
     </main>
 
-    <footer class="site-footer"><span><strong>IPcalc</strong> · Un outil CyberNet</span><span>Gratuit. Local. Sans historique. <span class="footer-version">v1.0.0</span></span></footer>
+    <dialog id="pdf-a4-dialog" aria-labelledby="pdf-a4-title">
+      <form method="dialog" class="pdf-a4-dialog-content">
+        <div class="pdf-a4-dialog-head"><h2 id="pdf-a4-title">Fiche d'adressage IPv4</h2><button value="cancel" class="pdf-a4-close" aria-label="Fermer">×</button></div>
+        <p id="pdf-a4-description">Choisir le document A4 portrait à télécharger :</p>
+        <div class="pdf-a4-options">
+          <button type="button" id="pdf-a4-student" class="button">Fiche élève · Énoncé</button>
+          <button type="button" id="pdf-a4-corrected" class="button button-outline">Corrigé</button>
+        </div>
+        <p id="pdf-a4-error" role="alert" hidden></p>
+      </form>
+    </dialog>
     <noscript><p class="notice">Activez JavaScript pour utiliser les calculs et le fonctionnement hors connexion d’IPcalc.</p></noscript>
   </body>
 </html>

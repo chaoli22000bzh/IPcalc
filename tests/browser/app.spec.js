@@ -1,5 +1,4 @@
 import { test, expect } from '@playwright/test';
-import { readFile } from 'node:fs/promises';
 
 test.beforeEach(async ({ page }) => {
   const errors = [];
@@ -13,8 +12,8 @@ test.afterEach(async ({ page }) => {
 });
 
 async function subdivide(page, { address = '192.168.10.75/24', method = 'count', count = '10', hosts = '30' } = {}) {
-  await page.getByLabel('Adresse IPv4').fill(address);
-  await page.getByLabel('Sous-réseaux', { exact: true }).check();
+  await page.getByLabel('Adresse IP').fill(address);
+  await page.getByRole('radio', { name: 'FLSM', exact: true }).check();
   await page.getByLabel('Méthode de découpage FLSM').selectOption(method);
   if (method !== 'hosts') await page.getByLabel('Sous-réseaux demandés', { exact: true }).fill(count);
   if (method !== 'count') await page.getByLabel('Hôtes utilisables minimum').fill(hosts);
@@ -30,12 +29,12 @@ test('réseau simple, cinq champs exacts et normalisation de l’hôte', async (
 });
 
 test('adresse et masque invalides : erreur annoncée, champ ciblé, résultats masqués', async ({ page }) => {
-  await page.getByLabel('Adresse IPv4').fill('256.1.2.3/24');
+  await page.getByLabel('Adresse IP').fill('256.1.2.3/24');
   await page.getByRole('button', { name: 'Calculer le réseau' }).click();
   await expect(page.getByRole('alert')).toContainText('0 et 255');
-  await expect(page.getByLabel('Adresse IPv4')).toHaveAttribute('aria-invalid', 'true');
+  await expect(page.getByLabel('Adresse IP')).toHaveAttribute('aria-invalid', 'true');
   await expect(page.locator('#results')).toBeHidden();
-  await page.getByLabel('Adresse IPv4').fill('192.168.1.1');
+  await page.getByLabel('Adresse IP').fill('192.168.1.1');
   await page.getByLabel('Masque ou préfixe').fill('255.0.255.0');
   await page.getByRole('button', { name: 'Calculer le réseau' }).click();
   await expect(page.getByRole('alert')).toContainText('contigu');
@@ -49,14 +48,13 @@ test('dix sous-réseaux demandés : règle papier exacte et capacité distincte'
   await expect(page.locator('#subnet-result h3')).toHaveText('10 sous-réseaux demandés');
   await expect(page.locator('#subnet-result')).toContainText('Capacité totale 16');
   const numbers = await page.locator('#subnet-result tr[data-subnet-number]').evaluateAll(rows => rows.map(row => row.dataset.subnetNumber));
-  expect(numbers).toEqual(['1', '2', '3', '8', '9', '10']);
+  expect(numbers).toEqual(['0', '1', '2', '7', '8', '9']);
   await expect(page.locator('.ellipsis-row')).toContainText('4 sous-réseaux intermédiaires');
   await page.locator('#middle-details > summary').click();
   await expect(page.locator('#middle-details tr[data-subnet-number]')).toHaveCount(4);
-  await expect(page.locator('#middle-details tr[data-subnet-number]').first()).toHaveAttribute('data-subnet-number', '4');
+  await expect(page.locator('#middle-details tr[data-subnet-number]').first()).toHaveAttribute('data-subnet-number', '3');
   await page.locator('#extra-details > summary').click();
-  await expect(page.locator('#extra-details tr[data-subnet-number]').first()).toHaveAttribute('data-subnet-number', '11');
-  await expect(page.locator('#export-scope option').first()).toHaveText('Sous-réseaux visibles (16)');
+  await expect(page.locator('#extra-details tr[data-subnet-number]').first()).toHaveAttribute('data-subnet-number', '10');
 });
 
 test('méthodes hôtes et combinée, puis contrainte impossible', async ({ page }) => {
@@ -72,58 +70,31 @@ test('méthodes hôtes et combinée, puis contrainte impossible', async ({ page 
   await expect(page.getByRole('alert')).toContainText('moins de sous-réseaux');
 });
 
-test('grand /0 : six lignes, pagination bornée et export protégé', async ({ page }) => {
+test('grand /0 : six lignes et pagination bornée', async ({ page }) => {
   await subdivide(page, { address: '0.0.0.0/0', method: 'hosts', hosts: '2' });
   await expect(page.locator('#subnet-result tr[data-subnet-number]')).toHaveCount(6);
   await expect(page.locator('#subnet-result tr[data-subnet-number]').last()).toContainText('255.255.255.254');
   await page.locator('#middle-details > summary').click();
   await expect(page.locator('#middle-details tr[data-subnet-number]')).toHaveCount(50);
   await page.getByRole('button', { name: 'Suivants : sous-réseaux intermédiaires' }).click();
-  await expect(page.locator('#middle-details tr[data-subnet-number]').first()).toHaveAttribute('data-subnet-number', '54');
-  await page.getByLabel('Périmètre', { exact: true }).selectOption('all');
-  await page.getByRole('button', { name: 'Export CSV' }).click();
-  await expect(page.locator('#export-feedback')).toContainText('La limite est de');
-  await expect(page.locator('#export-feedback')).toHaveAttribute('data-error', 'true');
+  await expect(page.locator('#middle-details tr[data-subnet-number]').first()).toHaveAttribute('data-subnet-number', '53');
+
 });
 
-test('binaire facultatif : 32 bits et séparation réseau / hôte', async ({ page }) => {
-  await page.getByLabel('Afficher le binaire').check();
-  const address = page.locator('#network-result .binary').first();
-  await expect(address.locator('.network-bit')).toHaveCount(26);
-  await expect(address.locator('.host-bit')).toHaveCount(6);
-  await expect(address.locator('.binary-octet')).toHaveCount(4);
-  await page.getByLabel('Afficher le binaire').uncheck();
+test('la case binaire a disparu de l’interface', async ({ page }) => {
+  await expect(page.locator('#show-binary, .binary-toggle')).toHaveCount(0);
   await expect(page.locator('.binary')).toHaveCount(0);
 });
 
-test('export réel : CSV demandés, puis ensemble', async ({ page }) => {
-  await subdivide(page);
-  for (const [scope, rows] of [['requested', 10], ['all', 16], ['visible', 6]]) {
-    await page.getByLabel('Périmètre', { exact: true }).selectOption(scope);
-    const downloading = page.waitForEvent('download');
-    await page.getByRole('button', { name: 'Export CSV' }).click();
-    const download = await downloading;
-    const bytes = await readFile(await download.path());
-    expect([...bytes.subarray(0, 3)]).toEqual([239, 187, 191]);
-    const csv = bytes.toString('utf8');
-    expect(csv.trim().split('\r\n')).toHaveLength(rows + 2);
-    expect(csv).toContain('"Adresse réseau";"Masque décimal";"Préfixe CIDR";"Broadcast";"Hôtes utilisables"');
-    expect(download.suggestedFilename()).toBe(`IPcalc-192.168.10.0-24-${scope}.csv`);
-    expect(csv).not.toMatch(/Première|Dernière/);
-  }
-});
-
-test('copie et protection des résultats devenus obsolètes', async ({ page }) => {
-  await page.evaluate(() => Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async text => { window.copiedResult = text; } } }));
-  await page.getByRole('button', { name: 'Copier', exact: true }).click();
-  await expect(page.locator('#export-feedback')).toContainText('Copié');
-  expect(await page.evaluate(() => window.copiedResult)).toContain('Adresse réseau : 192.168.10.64');
-  await page.getByLabel('Adresse IPv4').fill('10.1.2.3/8');
+test('protection des résultats devenus obsolètes sans ancienne interface d’export', async ({ page }) => {
+  await expect(page.locator('#copy-results, #export-csv, #export-scope, .export-panel')).toHaveCount(0);
+  await page.getByLabel('Adresse IP', { exact: true }).fill('10.1.2.3/8');
   await expect(page.locator('#stale-notice')).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Copier', exact: true })).toBeDisabled();
-  await expect(page.getByRole('button', { name: 'Export CSV' })).toBeDisabled();
+  await expect(page.locator('#network-result')).toBeEmpty();
+  await expect(page.locator('#subnet-result')).toBeEmpty();
+  await expect(page.locator('#network-result')).toBeEmpty();
   await page.getByRole('button', { name: 'Calculer le réseau' }).click();
-  await expect(page.getByRole('button', { name: 'Copier', exact: true })).toBeEnabled();
+  await expect(page.locator('#network-result')).toContainText('10.0.0.0');
 });
 
 test('première visite en ligne puis nouveau lancement hors connexion', async ({ page, context }) => {
@@ -155,7 +126,7 @@ test('première visite en ligne puis nouveau lancement hors connexion', async ({
   expect(await offline.evaluate(async () => {
     try { await fetch('./offline-network-probe'); return false; } catch { return true; }
   })).toBe(true);
-  await offline.getByLabel('Adresse IPv4').fill('10.0.0.1/31');
+  await offline.getByLabel('Adresse IP').fill('10.0.0.1/31');
   await offline.getByRole('button', { name: 'Calculer le réseau' }).click();
   await expect(offline.locator('#network-result dd')).toHaveText(['10.0.0.0', '255.255.255.254', '/31', 'Sans broadcast', '2']);
   await subdivide(offline, { method: 'combined', count: '3', hosts: '50' });
@@ -171,7 +142,6 @@ test('ressources locales, thème automatique, portrait / paysage sans débordeme
   });
   await page.reload();
   await subdivide(page);
-  await page.getByLabel('Afficher le binaire').check();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await page.emulateMedia({ colorScheme: 'dark' });
   expect(await page.evaluate(() => getComputedStyle(document.body).backgroundColor)).toBe('rgb(21, 29, 27)');
@@ -180,4 +150,302 @@ test('ressources locales, thème automatique, portrait / paysage sans débordeme
   await page.setViewportSize({ width: 320, height: 640 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   expect(external).toEqual([]);
+});
+
+
+test('modes disponibles, emplacements futurs et disposition verticale', async ({ page }) => {
+  await expect(page.getByRole('radio', { name: 'VLSM', exact: true })).toBeEnabled();
+  await expect(page.locator('#protocol option[value="ipv6"]')).toBeEnabled();
+  await expect(page.getByRole('button', { name: 'Télécharger une fiche pédagogique PDF' })).toBeEnabled();
+  await expect(page.locator('.intro')).toHaveCount(0);
+  const input = await page.locator('.input-panel').boundingBox();
+  const results = await page.locator('#results').boundingBox();
+  expect(results.y).toBeGreaterThanOrEqual(input.y + input.height);
+  expect(Math.abs(results.width - input.width)).toBeLessThan(2);
+  await subdivide(page);
+  await page.getByRole('radio', { name: 'Aucun découpage', exact: true }).check();
+  await expect(page.locator('#subnet-settings')).toBeHidden();
+  await expect(page.locator('#network-result')).toBeEmpty();
+  await expect(page.locator('#subnet-result')).toBeEmpty();
+  await page.getByRole('button', { name: 'Calculer le réseau' }).click();
+  await expect(page.locator('#network-result dd')).toHaveCount(5);
+  await expect(page.locator('#subnet-result')).toBeHidden();
+});
+
+test('chaque paramètre invalide immédiatement le résultat', async ({ page }) => {
+  for (const parameter of ['address', 'mask', 'method', 'count', 'hosts']) {
+    await subdivide(page, { method: 'combined', count: '3', hosts: '50' });
+    if (parameter === 'method') await page.locator('#method').selectOption('hosts');
+    else await page.locator(`#${parameter}`).fill({ address: '10.0.0.1/24', mask: '/24', count: '2', hosts: '20' }[parameter]);
+    await expect(page.locator('#network-result')).toBeEmpty();
+    await expect(page.locator('#subnet-result')).toBeEmpty();
+    await expect(page.locator('#result-announcement')).toBeEmpty();
+    await page.locator('#mask').fill('');
+  }
+});
+
+test('modifier un calcul avec pagination ouverte ne conserve aucun sous-réseau', async ({ page }) => {
+  await subdivide(page);
+  await page.locator('#middle-details > summary').click();
+  await page.locator('#extra-details > summary').click();
+  await page.getByLabel('Adresse IP').fill('10.0.0.0/16');
+  await expect(page.locator('#subnet-result')).toBeEmpty();
+  await expect(page.locator('#network-result')).toBeEmpty();
+  await page.getByRole('button', { name: 'Calculer le réseau' }).click();
+  await expect(page.locator('#network-result')).toContainText('10.0.0.0');
+  await expect(page.locator('#middle-details')).not.toHaveAttribute('open');
+  await expect(page.locator('#extra-details')).not.toHaveAttribute('open');
+});
+
+test('bouton au-dessus de l’adresse, en-têtes alignés et navigation clavier', async ({ page }) => {
+  const button = page.getByRole('button', { name: 'Calculer le réseau' });
+  const address = page.getByLabel('Adresse IP');
+  const initialButton = await button.boundingBox();
+  const field = await address.boundingBox();
+  expect(initialButton.y + initialButton.height).toBeLessThan(field.y);
+  expect(Math.abs(initialButton.x - field.x)).toBeLessThan(1);
+  expect(initialButton.width).toBeGreaterThan(field.width * .65);
+  expect(initialButton.width).toBeLessThanOrEqual(field.width);
+  expect(initialButton.height).toBeLessThanOrEqual(44);
+  const inputHeading = await page.locator('.panel-heading .step-number').boundingBox();
+  const resultHeading = await page.locator('.results-heading .step-number').boundingBox();
+  expect(inputHeading.x).toBe(resultHeading.x);
+  expect(inputHeading.width).toBe(resultHeading.width);
+  expect(inputHeading.height).toBe(resultHeading.height);
+  await expect(page.locator('.results-primary > .results-heading')).toBeVisible();
+  await button.focus();
+  await expect(button).toBeFocused();
+  await page.keyboard.press('Tab');
+  if (await page.locator('#protocol').evaluate(node => document.activeElement === node)) await page.keyboard.press('Tab');
+  await expect(address).toBeFocused();
+  await address.fill('10.0.0.1/24');
+  await address.press('Enter');
+  await expect(page.locator('#network-result dd').first()).toHaveText('10.0.0.0');
+  await expect(page.locator('#result-title')).toBeFocused();
+  await page.getByRole('radio', { name: 'Aucun découpage', exact: true }).focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(page.getByRole('radio', { name: 'FLSM', exact: true })).toBeChecked();
+  await expect(page.locator('#network-result')).toBeEmpty();
+  // Comparer les coordonnées du document malgré le défilement clavier mobile.
+  const position = await button.evaluate(node => ({ x: node.getBoundingClientRect().x + scrollX, y: node.getBoundingClientRect().y + scrollY }));
+  expect(position.x).toBe(initialButton.x);
+  expect(position.y).toBe(initialButton.y);
+  await address.press('Enter');
+  await expect(page.locator('#result-title')).toHaveText('Votre découpage FLSM');
+  await expect(page.locator('.help-panel, .site-footer')).toHaveCount(0);
+  await expect(page.locator('.version')).toBeVisible();
+  await expect(page.getByRole('img', { name: 'CyberNet', exact: true })).toBeVisible();
+});
+
+test('numérotation à zéro : huit réseaux, intermédiaires et tous les réseaux', async ({ page }) => {
+  await subdivide(page, { count: '8' });
+  const rows = page.locator('#subnet-result tr[data-subnet-number]');
+  await expect(rows.locator('td:first-child')).toHaveText(['0', '1', '2', '5', '6', '7']);
+  await expect(rows.first().locator('td').nth(1)).toHaveText('192.168.10.0');
+  await expect(rows.last().locator('td').nth(1)).toHaveText('192.168.10.224');
+  await page.locator('#middle-details > summary').click();
+  await expect(page.locator('#middle-details tr[data-subnet-number] td:first-child')).toHaveText(['3', '4']);
+  await subdivide(page, { count: '4' });
+  await expect(rows.locator('td:first-child')).toHaveText(['0', '1', '2', '3']);
+  await expect(rows.last().locator('td').nth(1)).toHaveText('192.168.10.192');
+  await subdivide(page, { count: '1' });
+  await expect(rows.locator('td:first-child')).toHaveText(['0']);
+  await expect(rows.first().locator('td').nth(1)).toHaveText('192.168.10.0');
+});
+
+test('interface compacte, saisie longue et logos locaux sur plusieurs largeurs', async ({ page }) => {
+  const ipv6 = 'ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff/128';
+  for (const width of [320, 360, 390, 430, 768, 820, 900, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.getByLabel('Adresse IP', { exact: true }).fill(ipv6);
+    await expect(page.getByLabel('Adresse IP', { exact: true })).toHaveValue(ipv6);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    const address = await page.locator('#address').boundingBox();
+    expect(address.x + address.width).toBeLessThanOrEqual(width);
+    const print = await page.locator('#print-results').boundingBox();
+    const calculate = await page.locator('.calculate-button').boundingBox();
+    expect(print.x).toBeGreaterThan(calculate.x + calculate.width);
+    expect(print.y).toBe(calculate.y);
+    if (width === 1440) {
+      expect((await page.locator('main').boundingBox()).width).toBeLessThanOrEqual(1100);
+      expect(address.width).toBeGreaterThanOrEqual(500);
+      expect(address.width).toBeLessThanOrEqual(580);
+      expect((await page.locator('.panel-heading').boundingBox()).y).toBe(calculate.y);
+    }
+  }
+  for (const [theme, filename] of [['dark', 'Logo_CyberNet_blanc_transparent.svg'], ['light', 'Logo_CyberNet_bleu_marine_transparent.svg']]) {
+    await page.emulateMedia({ colorScheme: theme });
+    const logo = page.getByRole('img', { name: 'CyberNet', exact: true });
+    await expect.poll(() => logo.evaluate(img => img.currentSrc)).toContain(filename);
+    await expect.poll(() => logo.evaluate(img => img.complete && img.naturalWidth > 0)).toBe(true);
+    expect(new URL(await logo.evaluate(img => img.currentSrc)).origin).toBe(new URL(page.url()).origin);
+  }
+});
+
+test('HTTP non sécurisé : calculs locaux sans bannière HTTPS', async ({ page, baseURL }) => {
+  // L’origine HTTP non sécurisée est servie par le serveur de test local,
+  // sans contacter un DNS, le NAS ou un service externe.
+  await page.route('http://ipcalc.test/**', async route => {
+    const url = new URL(route.request().url());
+    const response = await route.fetch({ url: new URL(url.pathname, baseURL).href });
+    await route.fulfill({ response });
+  });
+  await page.goto('http://ipcalc.test/IPcalc/');
+  expect(await page.evaluate(() => isSecureContext)).toBe(false);
+  await expect(page.locator('#pwa-message')).toBeHidden();
+  await expect(page.locator('#connection-label')).toHaveText('Calcul local');
+  await expect(page.locator('#network-result dd').first()).toHaveText('192.168.10.64');
+  for (const method of ['count', 'hosts', 'combined']) {
+    await subdivide(page, { method, count: '3', hosts: '50' });
+    await expect(page.locator('#subnet-result')).toBeVisible();
+  }
+  await page.getByLabel('Adresse IP', { exact: true }).fill('999.1.1.1/24');
+  await page.getByLabel('Adresse IP', { exact: true }).press('Enter');
+  await expect(page.getByRole('alert')).toBeVisible();
+  await expect(page.locator('#pwa-message')).toBeHidden();
+});
+
+test('une véritable erreur de préparation PWA reste signalée', async ({ page }) => {
+  await page.addInitScript(() => {
+    navigator.serviceWorker.register = () => Promise.reject(new Error('Test : cache indisponible'));
+  });
+  await page.reload();
+  await expect(page.locator('#pwa-message')).toContainText('cache hors connexion n’a pas pu être préparé');
+  await expect(page.locator('#network-result dd').first()).toHaveText('192.168.10.64');
+});
+
+test('FLSM lisible : 4, 8, 16 réseaux, tailles réelles et aucune valeur tronquée', async ({ page }) => {
+  for (const width of [1440, 1024, 900, 540, 430, 390, 360, 320]) {
+    await page.setViewportSize({ width, height: 900 });
+    for (const count of ['4', '8', '16']) {
+      await subdivide(page, { count });
+      const rows = page.locator('#subnet-result > .table-wrapper tr[data-subnet-number]');
+      const numbers = count === '4' ? ['0', '1', '2', '3'] : count === '8' ? ['0', '1', '2', '5', '6', '7'] : ['0', '1', '2', '13', '14', '15'];
+      await expect(rows.locator('td:first-child')).toHaveText(numbers);
+      await expect(page.locator('.subnet-header > p')).toHaveText(count === '4' ? 'Tous les sous-réseaux concernés sont affichés.' : 'Affichage des 3 premiers et des 3 derniers sous-réseaux.');
+      const measures = await rows.locator('td').evaluateAll(cells => cells.map(cell => {
+        const style = getComputedStyle(cell);
+        const range = document.createRange();
+        range.selectNodeContents(cell);
+        const text = range.getBoundingClientRect();
+        const box = cell.getBoundingClientRect();
+        return { font: style.fontSize, weight: style.fontWeight, fontFamily: style.fontFamily, height: box.height, fits: text.left >= box.left - 1 && text.right <= box.right + 1, scrollFits: cell.scrollWidth <= cell.clientWidth + 1 };
+      }));
+      expect(measures.every(cell => cell.font === '16px' && cell.fontFamily.includes('monospace') && cell.fits && cell.scrollFits)).toBe(true);
+      expect(measures.filter((_, index) => index % 6 === 0).every(cell => Number(cell.weight) >= 700)).toBe(true);
+      if (width > 900) {
+        expect(measures.every(cell => cell.height >= 55)).toBe(true);
+        expect(await page.locator('.subnet-table th').first().evaluate(cell => getComputedStyle(cell).fontSize)).toBe('14px');
+      }
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+      if (count !== '4') {
+        expect(await page.locator('.ellipsis-row td').evaluate(cell => getComputedStyle(cell).fontSize)).toBe('14px');
+        await page.locator('#middle-details > summary').click();
+        await expect(page.locator('#middle-details tr[data-subnet-number]')).toHaveCount(Number(count) - 6);
+      }
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  }
+});
+
+test('numéros 48 et 128 sans dièse, adresses et pagination inchangées', async ({ page }) => {
+  await subdivide(page, { address: '10.0.0.0/16', count: '256' });
+  await page.locator('#middle-details > summary').click();
+  const row48 = page.locator('#middle-details tr[data-subnet-number="48"]');
+  await expect(row48.locator('td').first()).toHaveText('48');
+  await expect(row48.locator('td').nth(1)).toHaveText('10.0.48.0');
+  for (let i = 0; i < 2; i++) await page.getByRole('button', { name: 'Suivants : sous-réseaux intermédiaires' }).click();
+  const row128 = page.locator('#middle-details tr[data-subnet-number="128"]');
+  await expect(row128.locator('td').first()).toHaveText('128');
+  await expect(row128.locator('td').nth(1)).toHaveText('10.0.128.0');
+  await expect(row128.locator('td').nth(4)).toHaveText('10.0.128.255');
+  await page.getByRole('button', { name: 'Précédents : sous-réseaux intermédiaires' }).click();
+  await expect(page.locator('#middle-details tr[data-subnet-number]').first().locator('td').first()).toHaveText('53');
+  await expect(page.locator('.brand img')).toHaveCount(0);
+  await expect(page.locator('.brand')).toHaveText('IPcalc');
+  await expect(page.getByRole('img', { name: 'CyberNet', exact: true })).toHaveCount(1);
+});
+
+test('VLSM : cinq lignes compactes et fiche réseau initial automatique', async ({ page }) => {
+  await page.getByRole('radio',{name:'VLSM',exact:true}).check();
+  await expect(page.locator('#vlsm-settings')).toBeVisible();
+  await expect(page.locator('.vlsm-request-row')).toHaveCount(5);
+  expect(await page.locator('.vlsm-request-row input[aria-label^="Quantité"]').evaluateAll(nodes => nodes.map(node => node.value))).toEqual(['1','1','1','1','1']);
+  await expect(page.locator('#vlsm-base-content')).toContainText('192.168.10.64/26');
+  await expect(page.locator('#vlsm-base-content')).toContainText('255.255.255.192');
+  await expect(page.locator('#show-binary')).toHaveCount(0);
+});
+
+test('VLSM : saisir des quantités, classer et afficher le plan coloré', async ({ page }) => {
+  await page.getByLabel('Adresse IP').fill('192.168.10.0/24');
+  await page.getByRole('radio',{name:'VLSM',exact:true}).check();
+  await page.getByLabel('Hôtes par réseau ligne 1').fill('12');
+  await page.getByLabel('Hôtes par réseau ligne 2').fill('50');
+  await page.getByLabel('Hôtes par réseau ligne 3').fill('25');
+  await page.getByLabel('Hôtes par réseau ligne 4').fill('5');
+  await page.getByRole('button',{name:'Planifier les sous-réseaux'}).click();
+  await expect(page.locator('.vlsm-results-table tbody tr')).toHaveCount(4);
+  await expect(page.locator('.vlsm-results-table tbody tr').first()).toContainText('192.168.10.0/26');
+  await expect(page.locator('.vlsm-results-table tbody tr').last()).toContainText('192.168.10.112/29');
+  await expect(page.locator('.vlsm-allocation-bar .vlsm-bar-segment')).toHaveCount(4);
+  await expect(page.locator('.vlsm-allocation-legend')).toContainText('136 adresses non attribuées');
+});
+
+test('VLSM : refus d’un réseau trop petit et mise à jour de la fiche avant calcul', async ({ page }) => {
+  await page.getByRole('radio',{name:'VLSM',exact:true}).check();
+  await page.getByLabel('Adresse IP').fill('192.168.10.0/24');
+  await page.getByLabel('Quantité ligne 1').fill('30');
+  await page.getByLabel('Hôtes par réseau ligne 1').fill('64');
+  await expect(page.locator('#vlsm-base-content')).toContainText('capacité insuffisante');
+  await page.getByRole('button',{name:'Planifier les sous-réseaux'}).click();
+  await expect(page.getByRole('alert')).toContainText('Capacité insuffisante');
+  await expect(page.locator('.vlsm-results-table')).toHaveCount(0);
+});
+
+test('impression A4 VLSM : résumé textuel et tableau, bouton PDF historique préservé', async ({ page }) => {
+  await page.getByLabel('Adresse IP').fill('192.168.50.0/24');
+  await page.getByRole('radio',{name:'VLSM',exact:true}).check();
+  for(const [index,hosts] of [50,25,12,5,2,10].entries()){
+    if(index===5)await page.locator('#vlsm-add').click();
+    await page.getByLabel('Hôtes par réseau ligne '+(index+1)).fill(String(hosts));
+  }
+  await page.getByRole('button',{name:'Planifier les sous-réseaux'}).click();
+  await page.evaluate(()=>{ window.__printCalled=false;window.print=()=>{window.__printCalled=true;}; });
+  await page.getByRole('button',{name:'Imprimer le plan VLSM A4'}).click();
+  expect(await page.evaluate(()=>window.__printCalled)).toBe(true);
+  await expect(page).toHaveTitle('192.168.50.0_VLSM');
+  await page.evaluate(()=>window.dispatchEvent(new Event('afterprint')));
+  await expect(page).toHaveTitle('IPcalc — Adressage IPv4 et IPv6 · CyberNet');
+  await expect(page.locator('#print-summary-content')).toContainText('192.168.50.0/24');
+  await expect(page.locator('.vlsm-results-table tbody tr')).toHaveCount(6);
+  await page.emulateMedia({media:'print'});
+  await expect(page.locator('#print-summary')).toBeVisible();
+  await expect(page.locator('.input-panel')).toBeHidden();
+  await expect(page.locator('.vlsm-results-table')).toBeHidden();
+  await expect(page.locator('.vlsm-print-table')).toBeVisible();
+  await expect(page.locator('.vlsm-print-table tbody tr')).toHaveCount(6);
+  await page.emulateMedia({media:'screen'});
+  await page.getByRole('radio',{name:'Aucun découpage',exact:true}).check();
+  await page.getByRole('button',{name:'Calculer le réseau'}).click();
+  await expect(page.getByRole('button',{name:'Télécharger une fiche pédagogique PDF'})).toBeEnabled();
+});
+
+test('VLSM 140 réseaux : pagination écran à 100 et impression complète', async ({ page }) => {
+  await page.getByLabel('Adresse IP').fill('10.0.0.0/7');
+  await page.getByRole('radio',{name:'VLSM',exact:true}).check();
+  const groups=[[30,50],[20,25],[40,13],[50,8]];
+  for(let i=0;i<groups.length;i++){
+    await page.getByLabel('Quantité ligne '+(i+1)).fill(String(groups[i][0]));
+    await page.getByLabel('Hôtes par réseau ligne '+(i+1)).fill(String(groups[i][1]));
+  }
+  await expect(page.locator('#vlsm-base-content')).toContainText('4 000 adresses nécessaires');
+  await page.getByRole('button',{name:'Planifier les sous-réseaux'}).click();
+  await expect(page.locator('.vlsm-results-table tbody tr')).toHaveCount(100);
+  await expect(page.locator('.vlsm-pagination')).toContainText('140');
+  await page.getByRole('button',{name:'Suivant'}).click();
+  await expect(page.locator('.vlsm-results-table tbody tr')).toHaveCount(40);
+  await expect(page.locator('.vlsm-results-table tbody tr').first()).toContainText('100');
+  await page.evaluate(()=>{window.print=()=>{};});
+  await page.getByRole('button',{name:'Imprimer le plan VLSM A4'}).click();
+  await expect(page.locator('.vlsm-print-table tbody tr')).toHaveCount(140);
 });

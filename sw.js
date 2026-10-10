@@ -1,23 +1,38 @@
 // Incrémenter VERSION à chaque livraison modifiant une ressource de l’application.
-const VERSION = '1.0.0';
+const VERSION = '2.0.0-step3.5';
 const CACHE_PREFIX = `ipcalc:${self.registration.scope}:`;
 const CACHE_NAME = `${CACHE_PREFIX}${VERSION}`;
 const ASSETS = [
-  './', './index.html', './styles.css', './manifest.webmanifest',
-  './js/ipv4.js', './js/exports.js', './js/app.js', './js/pwa.js',
+  './', './index.html', './styles.css', './print.css', './manifest.webmanifest',
+  './js/vlsm.js', './js/ipv6.js', './js/pdf-a4.js', './js/pdf-a3-flsm.js', './js/ipv4.js', './js/exports.js', './js/app.js', './js/pwa.js', './js/report-profiles.js',
+  './icons/Logo_CyberNet_blanc_transparent.svg', './icons/Logo_CyberNet_bleu_marine_transparent.svg',
   './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png',
 ];
 const assetURLs = new Set(ASSETS.map(path => new URL(path, self.registration.scope).href));
 
+// Précharger atomiquement tous les fichiers de la version, sans réutiliser
+// le cache HTTP du navigateur. Une installation incomplète ne remplace pas l'ancienne.
 self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS)));
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    await cache.addAll(ASSETS.map(path => new Request(new URL(path, self.registration.scope), { cache: 'reload' })));
+    await self.skipWaiting();
+  })());
 });
 
 self.addEventListener('activate', event => {
   event.waitUntil((async () => {
     const names = await caches.keys();
-    await Promise.all(names.filter(name => name.startsWith(CACHE_PREFIX) && name !== CACHE_NAME).map(name => caches.delete(name)));
+    const previous=names.filter(name => name.startsWith(CACHE_PREFIX) && name !== CACHE_NAME);
+    await Promise.all(previous.map(name => caches.delete(name)));
     await self.clients.claim();
+    // Pont de migration depuis les anciennes versions : leur pwa.js ne savait
+    // pas toujours rafraîchir après une activation automatique.
+    if(previous.length){
+      const windows=await self.clients.matchAll({type:'window',includeUncontrolled:true});
+      await Promise.all(windows.filter(client=>client.url.startsWith(self.registration.scope))
+        .map(client=>client.navigate(client.url).catch(()=>{})));
+    }
   })());
 });
 
