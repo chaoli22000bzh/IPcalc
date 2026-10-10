@@ -250,7 +250,7 @@ function detectedProtocol(){
 }
 function syncProtocol(){
   const ipv6=detectedProtocol()==='ipv6';
-  $('protocol-indicator').textContent=ipv6?'IPv6 détecté':'IPv4 détecté';
+  $('protocol').value=ipv6?'ipv6':'ipv4';
   $('address-help').textContent=ipv6?'Adresse IPv6 abrégée ou complète. Sans préfixe, analyse de l’adresse seule (/128).':'IPv4 avec ou sans CIDR. Une adresse d’hôte est ramenée à son réseau.';
   $('mask').placeholder=ipv6?'/64':'255.255.255.192 ou /26';
   $('mask').inputMode=ipv6?'numeric':'decimal';
