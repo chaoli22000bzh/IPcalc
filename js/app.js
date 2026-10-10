@@ -496,7 +496,7 @@ function updatePdfAvailability(){
   print.disabled=!vlsm&&!legacy;
   print.setAttribute('aria-label',vlsm?'Imprimer le plan VLSM A4':legacy?'Télécharger une fiche pédagogique PDF':'Impression indisponible');
   print.title=vlsm?'Imprimer le plan VLSM A4 ou enregistrer en PDF':legacy?'Télécharger une fiche pédagogique PDF':'Impression indisponible';
-  $('print-help').textContent=vlsm?'Impression VLSM A4':legacy?(current.plan?'PDF A3':'PDF A4'):'À venir';
+  $('print-help').textContent=vlsm?'Impression VLSM A4':legacy?(current.plan?'PDF A3 / A4 Pro':'PDF A4'):'À venir';
 }
 $('print-results').addEventListener('click',()=>{
   if(!current||current.protocol!=='ipv4')return;
@@ -532,7 +532,10 @@ $('print-results').addEventListener('click',()=>{
   const flsm=Boolean(current.plan);
   $('pdf-a4-error').hidden=true;
   $('pdf-a4-title').textContent=flsm?'Fiche IPv4 et sous-réseaux FLSM':'Fiche d’adressage IPv4';
-  $('pdf-a4-description').textContent=flsm?'Choisir un PDF A3 paysage à télécharger :':'Choisir un PDF A4 portrait à télécharger :';
+  $('pdf-a4-description').hidden=flsm;
+  if(!flsm)$('pdf-a4-description').textContent='Choisir le document A4 portrait à télécharger :';
+  $('pdf-a4-student').textContent=flsm?'Exercice A3 · Énoncé':'Fiche élève · Énoncé';
+  $('pdf-a4-corrected').textContent=flsm?'Exercice A3 · Corrigé':'Corrigé';
   $('pdf-a4-professional').hidden=!flsm;
   $('pdf-a4-dialog').showModal();
 });
