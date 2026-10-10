@@ -168,6 +168,62 @@
   body.print-vlsm-professional .professional-vlsm-summary h2 {
     font-size: 14pt; margin: 0 0 2mm; color: #111;
   }
+  /* Styles embarquables dans C² : aucune dépendance à styles.css. */
+  body.print-vlsm-professional #professional-report .print-summary-network {
+    display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 2mm 6mm;
+    border: 1px solid #aaa; padding: 3mm; margin: 0;
+  }
+  body.print-vlsm-professional #professional-report .print-summary-network > div {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 3mm;
+  }
+  body.print-vlsm-professional #professional-report .print-summary-network dt {
+    font-size: 8pt; color: #444;
+  }
+  body.print-vlsm-professional #professional-report .print-summary-network dd {
+    font-size: 8pt; font-weight: 600; text-align: right; margin: 0;
+  }
+  body.print-vlsm-professional #professional-report .vlsm-results-intro {
+    padding: 2mm 0; margin: 0; background: white; border: 0; color: #111;
+  }
+  body.print-vlsm-professional #professional-report .vlsm-allocation-panel {
+    padding: 2mm 0 4mm; break-inside: avoid;
+  }
+  body.print-vlsm-professional #professional-report .vlsm-allocation-panel h3 {
+    font-size: 10pt; margin: 0 0 2mm;
+  }
+  body.print-vlsm-professional #professional-report .vlsm-allocation-bar {
+    display: flex; width: 100%; height: 8mm; overflow: hidden;
+    border: 1px solid #888; border-radius: 0;
+    print-color-adjust: exact; -webkit-print-color-adjust: exact;
+  }
+  body.print-vlsm-professional #professional-report .vlsm-bar-segment {
+    display: block; flex: 0 0 auto; min-width: 0; border-right: 1px solid #0002;
+    print-color-adjust: exact; -webkit-print-color-adjust: exact;
+  }
+  body.print-vlsm-professional #professional-report .vlsm-bar-free {
+    display: block; flex: 0 0 auto; background: #87918f55;
+  }
+  body.print-vlsm-professional #professional-report .vlsm-allocation-legend {
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 2mm;
+    font-size: 8pt; margin-top: 1mm; color: #444;
+  }
+  body.print-vlsm-professional #professional-report .vlsm-print-table {
+    font: 8pt/1.35 Arial,Helvetica,sans-serif; color: #111;
+  }
+  body.print-vlsm-professional #professional-report .vlsm-print-table thead {
+    display: table-header-group;
+  }
+  body.print-vlsm-professional #professional-report .vlsm-print-table tr {
+    break-inside: avoid; page-break-inside: avoid;
+  }
+  body.print-vlsm-professional #professional-report .vlsm-print-table th,
+  body.print-vlsm-professional #professional-report .vlsm-print-table td {
+    border: 1px solid #aaa; padding: 1.6mm 1mm; text-align: left;
+    white-space: nowrap; overflow: visible;
+  }
+  body.print-vlsm-professional #professional-report .vlsm-print-table th {
+    background: #eee; font-weight: 700;
+  }
   body.print-vlsm-professional .vlsm-print-table-wrapper {
     display: block !important; margin-top: 3mm; overflow: visible !important;
   }
