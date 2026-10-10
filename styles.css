@@ -277,3 +277,38 @@ input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--primary)
 .ipv6-data { grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr)); }
 .ipv6-data > div { min-width:0; }
 .ipv6-data dd { line-height:1.5; }
+
+/* Vue IPv6 : une seule zone, adresses superposées à gauche, propriétés à droite. */
+.ipv6-detail-layout {
+  display:grid;
+  grid-template-columns:minmax(0, 1.8fr) minmax(240px, 1fr);
+  column-gap:28px;
+  padding:22px 23px;
+  align-items:start;
+}
+.ipv6-address-details, .ipv6-summary-data {margin:0;min-width:0;}
+.ipv6-address-row + .ipv6-address-row,
+.ipv6-summary-data > div + div {margin-top:17px;}
+.ipv6-detail-layout dt {color:var(--muted);font-size:11px;margin-bottom:5px;}
+.ipv6-detail-layout dd {
+  margin:0;
+  font:500 15px/1.5 ui-monospace,"Cascadia Code","Consolas",monospace;
+}
+.ipv6-address-details dd {
+  white-space:nowrap;
+  overflow-x:auto;
+  max-width:100%;
+  scrollbar-width:thin;
+}
+.ipv6-summary-data dd {overflow-wrap:anywhere;}
+@media (max-width:750px) {
+  .ipv6-detail-layout {grid-template-columns:minmax(0,1fr);row-gap:22px;}
+  .ipv6-summary-data {
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));
+    gap:16px;
+    border-top:1px solid var(--line);
+    padding-top:18px;
+  }
+  .ipv6-summary-data > div + div {margin-top:0;}
+}
