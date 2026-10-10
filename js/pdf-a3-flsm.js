@@ -177,7 +177,7 @@ function buildA3(base,plan,corrected) {
   }
 
   // B : le guide des octets et chaque bloc ont EXACTEMENT la même origine bitX.
-  text('Découpage demandé : '+count.toLocaleString('fr-FR')+
+  text('Découpage demandé : '+count.toLocaleString('fr-FR').replace(/[\u00a0\u202f]/g,' ')+
     ' sous-réseaux ('+ids.length+' affichés)',R.x+5,38,11.2,true);
   fill(R.x,45,R.w,29);box(R.x,45,R.w,29,5);
   text('B. Découpage en sous-réseaux FLSM',R.x+10,64,11.5,true);
@@ -280,14 +280,14 @@ function buildA3(base,plan,corrected) {
   text('2',L.x+15,bottomY+47,16,true);
   text('(32 - CIDR)',L.x+28,bottomY+35,7,true);
   text('- 2 =',L.x+71,bottomY+47,12,true);
-  if(corrected)text(base.usableHosts.toLocaleString('fr-FR'),L.x+119,bottomY+47,12.5,true);
+  if(corrected)text(base.usableHosts.toLocaleString('fr-FR').replace(/[\u00a0\u202f]/g,' '),L.x+119,bottomY+47,12.5,true);
   fill(R.x,bottomY,R.w,bottomH,ink);box(R.x,bottomY,R.w,bottomH,7);
   text("C. Nombre d'hôtes utilisables par sous-réseau",R.x+10,bottomY+20,10,true);
   text('/1',R.x+R.w-25,bottomY+20,10,true);
   text('2',R.x+15,bottomY+47,16,true);
   text('(32 - préfixe SR)',R.x+28,bottomY+35,7,true);
   text('- 2 =',R.x+97,bottomY+47,12,true);
-  if(corrected)text(plan.usableHosts.toLocaleString('fr-FR'),R.x+151,bottomY+47,12.5,true);
+  if(corrected)text(plan.usableHosts.toLocaleString('fr-FR').replace(/[\u00a0\u202f]/g,' '),R.x+151,bottomY+47,12.5,true);
   return pdfDocument(c);
 }
 
