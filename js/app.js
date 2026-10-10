@@ -469,7 +469,19 @@ $('print-results').addEventListener('click',()=>{
   if(!current||current.protocol!=='ipv4')return;
   if(current.vlsm){
     refreshPrintSummary();
-    window.print();
+    // Firefox utilise le titre HTML comme nom proposé pour « Enregistrer en PDF ».
+    // Le CIDR /24 reste visible dans le document, mais pas dans le nom de fichier.
+    const normalTitle=document.title;
+    document.title=current.base.address+'_VLSM';
+    window.addEventListener('afterprint',()=>{
+      document.title=normalTitle;
+    },{once:true});
+    try {
+      window.print();
+    } catch(error) {
+      document.title=normalTitle;
+      throw error;
+    }
     return;
   }
   const flsm=Boolean(current.plan);
