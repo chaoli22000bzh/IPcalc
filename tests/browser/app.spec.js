@@ -421,7 +421,9 @@ test('impression A4 VLSM : résumé textuel et tableau, bouton PDF historique pr
   await page.emulateMedia({media:'print'});
   await expect(page.locator('#print-summary')).toBeVisible();
   await expect(page.locator('.input-panel')).toBeHidden();
-  await expect(page.locator('.vlsm-results-table')).toBeVisible();
+  await expect(page.locator('.vlsm-results-table')).toBeHidden();
+  await expect(page.locator('.vlsm-print-table')).toBeVisible();
+  await expect(page.locator('.vlsm-print-table tbody tr')).toHaveCount(6);
   await page.emulateMedia({media:'screen'});
   await page.getByRole('radio',{name:'Aucun découpage',exact:true}).check();
   await page.getByRole('button',{name:'Calculer le réseau'}).click();
