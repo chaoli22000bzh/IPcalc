@@ -134,3 +134,44 @@
   body.print-professional .professional-report-table,
   body.print-professional .professional-report-table tbody { height: auto !important; min-height: 0 !important; break-after: auto !important; page-break-after: auto !important; }
 }
+
+/* VLSM Pro autonome : réutilise les dimensions du rapport VLSM validé,
+   sans imprimer les panneaux, tableaux paginés ni menus d'IPcalc. */
+@media screen {
+  #professional-report.professional-vlsm-report { display: none !important; }
+}
+@media print {
+  body.print-vlsm-professional .site-header,
+  body.print-vlsm-professional .workspace,
+  body.print-vlsm-professional #print-summary,
+  body.print-vlsm-professional #pdf-a4-dialog { display: none !important; }
+  body.print-vlsm-professional main {
+    display: block !important; width: auto; max-width: none; margin: 0; padding: 0;
+  }
+  body.print-vlsm-professional #professional-report {
+    display: block !important; height: auto !important; min-height: 0 !important;
+    margin: 0; padding: 0; color: #111; background: #fff;
+  }
+  body.print-vlsm-professional .professional-vlsm-header {
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid #aaa; padding-bottom: 3mm; margin-bottom: 5mm;
+  }
+  body.print-vlsm-professional .professional-vlsm-header img {
+    order: 2; display: block; max-width: 32mm; height: 12mm; object-fit: contain;
+  }
+  body.print-vlsm-professional .professional-vlsm-header h1 {
+    order: 1; font: 700 17pt/1.2 Arial,Helvetica,sans-serif; margin: 0;
+  }
+  body.print-vlsm-professional .professional-vlsm-summary {
+    display: block; margin-bottom: 4mm; break-inside: avoid;
+  }
+  body.print-vlsm-professional .professional-vlsm-summary h2 {
+    font-size: 14pt; margin: 0 0 2mm; color: #111;
+  }
+  body.print-vlsm-professional .vlsm-print-table-wrapper {
+    display: block !important; margin-top: 3mm; overflow: visible !important;
+  }
+  body.print-vlsm-professional .vlsm-print-table {
+    width: 100%; border-collapse: collapse; table-layout: fixed;
+  }
+}
