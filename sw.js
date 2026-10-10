@@ -1,5 +1,5 @@
 // Incrémenter VERSION à chaque livraison modifiant une ressource de l’application.
-const VERSION = '2.0.0-step2.5';
+const VERSION = '2.0.0-step2.6';
 const CACHE_PREFIX = `ipcalc:${self.registration.scope}:`;
 const CACHE_NAME = `${CACHE_PREFIX}${VERSION}`;
 const ASSETS = [
@@ -10,8 +10,14 @@ const ASSETS = [
 ];
 const assetURLs = new Set(ASSETS.map(path => new URL(path, self.registration.scope).href));
 
+// Précharger atomiquement tous les fichiers de la version, sans réutiliser
+// le cache HTTP du navigateur. Une installation incomplète ne remplace pas l'ancienne.
 self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS)));
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    await cache.addAll(ASSETS.map(path => new Request(new URL(path, self.registration.scope), { cache: 'reload' })));
+    await self.skipWaiting();
+  })());
 });
 
 self.addEventListener('activate', event => {
