@@ -352,6 +352,7 @@ function calculate(focus = true) {
     pages = { middle: { open: false, page: 0 }, extra: { open: false, page: 0 } };
     $('stale-notice').hidden = true;
     render();
+    refreshPrintSummary();
     $('result-announcement').textContent = protocol==='ipv6' ? `Adresse IPv6 ${base.address}, préfixe ${base.network}/${base.prefix}.` : vlsm ? `Plan VLSM : ${vlsm.rows.length} sous-réseaux calculés.` : `Réseau ${base.address}/${base.prefix} calculé.${plan ? ` ${format(plan.concernedCount)} sous-réseaux /${plan.prefix}.` : ''}`;
     if (focus) $('result-title').focus({ preventScroll: true });
   } catch (error) {
@@ -407,6 +408,8 @@ function invalidateResults() {
   $('subnet-result').hidden = true;
   $('result-title').textContent = 'Résultat du calcul';
   $('result-announcement').textContent = '';
+  $('print-summary').hidden=true;
+  $('print-summary-content').replaceChildren();
 }
 
 function markStale() {
@@ -429,17 +432,51 @@ $('vlsm-add').addEventListener('click',()=>{
 syncSettings();
 calculate(false);
 
+function refreshPrintSummary(){
+  const box=$('print-summary'),content=$('print-summary-content');
+  content.replaceChildren();
+  if(!current || current.protocol==='ipv6'){box.hidden=true;return;}
+  const {base,plan,vlsm}=current;
+  box.hidden=false;
+  $('print-summary-title').textContent=vlsm?'Plan VLSM':plan?'Plan FLSM':'Réseau IPv4';
+  const dl=element('dl','print-summary-network');
+  const fields=[
+    ['Réseau initial',base.address+'/'+base.prefix],
+    ['Masque décimal',base.mask],
+    ['Adresse de diffusion',base.broadcast??'Sans broadcast'],
+    ['Adresses totales',format(base.blockSize)],
+    ['Hôtes utilisables',format(base.usableHosts)]
+  ];
+  for(const [label,value] of fields){
+    const cell=element('div');
+    cell.append(element('dt','',label),element('dd','',value));
+    dl.append(cell);
+  }
+  content.append(dl);
+  if(vlsm)content.append(element('p','print-summary-line',
+    format(vlsm.rows.length)+' sous-réseaux attribués, '+format(vlsm.usedAddresses)
+    +' adresses attribuées, '+format(vlsm.freeAddresses)+' adresses non attribuées.'));
+  else if(plan)content.append(element('p','print-summary-line',
+    format(plan.concernedCount)+' sous-réseaux concernés, préfixe /'+plan.prefix+'.'));
+}
 function updatePdfAvailability() {
-  const button=$('print-results');
-  const available=Boolean(current) && current.protocol!=='ipv6' && !current.vlsm;
-  const flsm=Boolean(current?.plan);
-  button.disabled=!available;
-  button.setAttribute('aria-label',available?'Télécharger une fiche pédagogique PDF':'Imprimer — calcul indisponible');
-  button.title=available?'Télécharger une fiche pédagogique PDF':'Impression indisponible';
-  $('print-help').textContent=current?.vlsm?'PDF VLSM à venir':current?.protocol==='ipv6'?'PDF IPv6 à venir':available?(flsm?'PDF A3':'PDF A4'):'À venir';
+  const available=Boolean(current)&&current.protocol!=='ipv6';
+  const simplePdf=available&&!current.vlsm;
+  const print=$('print-results'),school=$('school-pdf');
+  print.disabled=!available;
+  print.setAttribute('aria-label',available?'Imprimer le résultat A4':'Impression indisponible');
+  print.title=available?'Imprimer le résultat sur une page A4 ou enregistrer en PDF':'Impression indisponible';
+  school.hidden=!simplePdf;
+  school.disabled=!simplePdf;
+  $('print-help').textContent=current?.protocol==='ipv6'?'Impression IPv6 à venir':available?'Impression A4':'Calculez un réseau pour imprimer';
 }
 $('print-results').addEventListener('click',()=>{
-  if(!current)return;
+  if(!current||current.protocol==='ipv6')return;
+  refreshPrintSummary();
+  window.print();
+});
+$('school-pdf').addEventListener('click',()=>{
+  if(!current||current.protocol==='ipv6'||current.vlsm)return;
   const flsm=Boolean(current.plan);
   $('pdf-a4-error').hidden=true;
   $('pdf-a4-title').textContent=flsm?'Fiche IPv4 et sous-réseaux FLSM':'Fiche d’adressage IPv4';
