@@ -402,7 +402,7 @@ test('FLSM A4 Pro : troisième choix isolé, rapport complet et impression nativ
   await expect(page).toHaveTitle('192.168.10.0_FLSM_Pro');
   await expect(page.locator('body')).toHaveClass(/print-professional/);
   await expect(page.locator('.professional-report-head')).toContainText('Plan d’adressage IPv4 — FLSM');
-  await expect(page.locator('.professional-report-fields')).toContainText('255.255.255.240');
+  await expect(page.locator('.professional-report-group').last().locator('.professional-report-fields')).toContainText('255.255.255.240');
   await expect(page.locator('.professional-report-group').first()).toContainText('Masque initial');
   await expect(page.locator('.professional-report-group').last()).toContainText('Découpage FLSM');
   await expect(page.locator('.professional-report-fields')).toContainText('Hôtes utilisables non affectés');
