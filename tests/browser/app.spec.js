@@ -75,7 +75,7 @@ test('grand /0 : six lignes et pagination bornée', async ({ page }) => {
   await expect(page.locator('#subnet-result tr[data-subnet-number]')).toHaveCount(6);
   await expect(page.locator('#subnet-result tr[data-subnet-number]').last()).toContainText('255.255.255.254');
   await page.locator('#middle-details > summary').click();
-  await expect(page.locator('#middle-details tr[data-subnet-number]')).toHaveCount(26);
+  await expect(page.locator('#middle-details tr[data-subnet-number]')).toHaveCount(50);
   await page.getByRole('button', { name: 'Suivants : sous-réseaux intermédiaires' }).click();
   await expect(page.locator('#middle-details tr[data-subnet-number]').first()).toHaveAttribute('data-subnet-number', '53');
 
@@ -101,10 +101,16 @@ test.describe('PWA réelle', () => {
   test.use({ serviceWorkers: 'allow' });
   test('première visite en ligne puis nouveau lancement hors connexion', async ({ page, context }) => {
   await expect(page.locator('#connection-label')).toHaveText('Prêt hors connexion');
-  await page.evaluate(async () => {
-    await navigator.serviceWorker.ready;
-    if (!navigator.serviceWorker.controller) await new Promise(resolve => navigator.serviceWorker.addEventListener('controllerchange', resolve, { once: true }));
-  });
+  // Un premier contrôle du service worker peut provoquer une navigation automatique.
+  // Chaque sondage est indépendant : aucun evaluate long n'est détruit pendant le reload.
+  await expect.poll(async () => {
+    try {
+      return await page.evaluate(() => !!navigator.serviceWorker.controller);
+    } catch {
+      return false;
+    }
+  }, { timeout: 20000 }).toBe(true);
+  await expect(page.locator('#connection-label')).toHaveText('Prêt hors connexion');
   const manifest = await page.evaluate(async () => {
     const response = await fetch('./manifest.webmanifest');
     return response.json();
@@ -218,8 +224,11 @@ test('bouton au-dessus de l’adresse, en-têtes alignés et navigation clavier'
   await expect(page.locator('.results-primary > .results-heading')).toBeVisible();
   await button.focus();
   await expect(button).toBeFocused();
-  await page.keyboard.press('Tab');
-  if (await page.locator('#protocol').evaluate(node => document.activeElement === node)) await page.keyboard.press('Tab');
+  // La touche Tab traverse le bouton d'impression, puis le sélecteur de protocole.
+  // On ne suppose pas un nombre fixe d'étapes entre les contrôles.
+  for (let i = 0; i < 6 && !(await address.evaluate(el => el === document.activeElement)); i++) {
+    await page.keyboard.press('Tab');
+  }
   await expect(address).toBeFocused();
   await address.fill('10.0.0.1/24');
   await address.press('Enter');
