@@ -2,9 +2,9 @@ import { describeVlsmBase, summarizeVlsmRequests, planVlsm, VLSM_MAX_SUBNETS, VL
 import { parseIPv6 } from './ipv6.js?v=2.0.0-step3.0';
 import { downloadFlsmA3 } from './pdf-a3-flsm.js?v=2.0.0-step3.0';
 import { downloadAddressingA4 } from './pdf-a4.js?v=2.0.0-step3.0';
-import { printFlsmProfessional } from './professional-flsm.js?v=2.0.0-step3.8';
-import { printIPv4Professional } from './professional-ipv4.js?v=2.0.0-step3.8';
-import { printIPv6Professional } from './professional-ipv6.js?v=2.0.0-step3.8';
+import { printFlsmProfessional } from './professional-flsm.js?v=2.0.0-step3.9';
+import { printIPv4Professional } from './professional-ipv4.js?v=2.0.0-step3.9';
+import { printIPv6Professional } from './professional-ipv6.js?v=2.0.0-step3.9';
 import { printVlsmProfessional } from './professional-vlsm.js?v=2.0.0-step3.9';
 import { parseNetwork, planSubnets, subnetAt, summaryIndices, subnetPage } from './ipv4.js?v=2.0.0-step3.0';
 import { EXPORT_COLUMNS } from './exports.js?v=2.0.0-step3.0';
