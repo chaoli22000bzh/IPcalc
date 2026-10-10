@@ -12,6 +12,9 @@ export default defineConfig({
   use: {
     baseURL: 'http://127.0.0.1:4173/IPcalc/',
     locale: 'fr-FR',
+    // Les tests fonctionnels ne doivent pas être interrompus par une activation PWA.
+    // Le scénario hors connexion réactive explicitement le service worker.
+    serviceWorkers: 'block',
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     launchOptions: systemChromium ? { executablePath: systemChromium } : {},
