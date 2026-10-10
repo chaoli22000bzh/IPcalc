@@ -197,7 +197,18 @@ test('modifier un calcul avec pagination ouverte ne conserve aucun sous-réseau'
   await subdivide(page);
   await page.locator('#middle-details > summary').click();
   await page.locator('#extra-details > summary').click();
+  // Mémoriser les accordéons pour simuler des événements arrivant après leur retrait.
+  await page.evaluate(() => {
+    window.__staleDetails = [
+      document.querySelector('#middle-details'),
+      document.querySelector('#extra-details'),
+    ];
+  });
   await page.getByLabel('Adresse IP').fill('10.0.0.0/16');
+  await page.evaluate(() => {
+    window.__staleDetails.forEach(details => details.dispatchEvent(new Event('toggle')));
+    delete window.__staleDetails;
+  });
   await expect(page.locator('#subnet-result')).toBeEmpty();
   await expect(page.locator('#network-result')).toBeEmpty();
   await page.getByRole('button', { name: 'Calculer le réseau' }).click();
