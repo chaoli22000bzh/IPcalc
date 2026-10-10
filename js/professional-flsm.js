@@ -92,7 +92,8 @@ export function buildFlsmProfessionalReport(base, plan) {
   const usedLegend = node('span', 'professional-report-legend-used',
     number(plan.concernedCount) + ' sous-réseaux attribués · ' + number(assignedHosts) + ' hôtes utilisables');
   const freeLegend = node('span', 'professional-report-legend-free',
-    number(remaining) + ' sous-réseaux restants · ' + number(remainingHosts) + ' hôtes utilisables non affectés');
+    number(remaining) + (remaining > 1 ? ' sous-réseaux restants · ' : ' sous-réseau restant · ') +
+    number(remainingHosts) + ' hôtes utilisables non affectés');
   legend.append(usedLegend, freeLegend);
   visual.append(bar, legend);
   summary.append(visual);
