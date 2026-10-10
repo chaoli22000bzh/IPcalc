@@ -81,13 +81,8 @@ test('grand /0 : six lignes et pagination bornée', async ({ page }) => {
 
 });
 
-test('binaire facultatif : 32 bits et séparation réseau / hôte', async ({ page }) => {
-  await page.getByLabel('Afficher le binaire').check();
-  const address = page.locator('#network-result .binary').first();
-  await expect(address.locator('.network-bit')).toHaveCount(26);
-  await expect(address.locator('.host-bit')).toHaveCount(6);
-  await expect(address.locator('.binary-octet')).toHaveCount(4);
-  await page.getByLabel('Afficher le binaire').uncheck();
+test('la case binaire a disparu de l’interface', async ({ page }) => {
+  await expect(page.locator('#show-binary, .binary-toggle')).toHaveCount(0);
   await expect(page.locator('.binary')).toHaveCount(0);
 });
 
@@ -97,7 +92,6 @@ test('protection des résultats devenus obsolètes sans ancienne interface d’e
   await expect(page.locator('#stale-notice')).toBeVisible();
   await expect(page.locator('#network-result')).toBeEmpty();
   await expect(page.locator('#subnet-result')).toBeEmpty();
-  await page.getByLabel('Afficher le binaire').check();
   await expect(page.locator('#network-result')).toBeEmpty();
   await page.getByRole('button', { name: 'Calculer le réseau' }).click();
   await expect(page.locator('#network-result')).toContainText('10.0.0.0');
@@ -148,7 +142,6 @@ test('ressources locales, thème automatique, portrait / paysage sans débordeme
   });
   await page.reload();
   await subdivide(page);
-  await page.getByLabel('Afficher le binaire').check();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await page.emulateMedia({ colorScheme: 'dark' });
   expect(await page.evaluate(() => getComputedStyle(document.body).backgroundColor)).toBe('rgb(21, 29, 27)');
@@ -161,8 +154,8 @@ test('ressources locales, thème automatique, portrait / paysage sans débordeme
 
 
 test('modes disponibles, emplacements futurs et disposition verticale', async ({ page }) => {
-  await expect(page.getByRole('radio', { name: 'VLSM — indisponible' })).toBeDisabled();
-  await expect(page.locator('#protocol option[value="ipv6"]')).toBeDisabled();
+  await expect(page.getByRole('radio', { name: 'VLSM', exact: true })).toBeEnabled();
+  await expect(page.locator('#protocol option[value="ipv6"]')).toBeEnabled();
   await expect(page.getByRole('button', { name: 'Imprimer — à venir' })).toBeDisabled();
   await expect(page.locator('.intro')).toHaveCount(0);
   const input = await page.locator('.input-panel').boundingBox();
@@ -197,7 +190,6 @@ test('modifier un calcul avec pagination ouverte ne conserve aucun sous-réseau'
   await page.locator('#extra-details > summary').click();
   await page.getByLabel('Adresse IP').fill('10.0.0.0/16');
   await expect(page.locator('#subnet-result')).toBeEmpty();
-  await page.getByLabel('Afficher le binaire').check();
   await expect(page.locator('#network-result')).toBeEmpty();
   await page.getByRole('button', { name: 'Calculer le réseau' }).click();
   await expect(page.locator('#network-result')).toContainText('10.0.0.0');
@@ -352,9 +344,7 @@ test('FLSM lisible : 4, 8, 16 réseaux, tailles réelles et aucune valeur tronqu
         await expect(page.locator('#middle-details tr[data-subnet-number]')).toHaveCount(Number(count) - 6);
       }
     }
-    await page.getByLabel('Afficher le binaire').check();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-    await page.getByLabel('Afficher le binaire').uncheck();
   }
 });
 
@@ -374,4 +364,40 @@ test('numéros 48 et 128 sans dièse, adresses et pagination inchangées', async
   await expect(page.locator('.brand img')).toHaveCount(0);
   await expect(page.locator('.brand')).toHaveText('IPcalc');
   await expect(page.getByRole('img', { name: 'CyberNet', exact: true })).toHaveCount(1);
+});
+
+test('VLSM : cinq lignes compactes et fiche réseau initial automatique', async ({ page }) => {
+  await page.getByRole('radio',{name:'VLSM',exact:true}).check();
+  await expect(page.locator('#vlsm-settings')).toBeVisible();
+  await expect(page.locator('.vlsm-request-row')).toHaveCount(5);
+  await expect(page.locator('.vlsm-request-row input[aria-label^="Quantité"]')).toHaveValues(['1','1','1','1','1']);
+  await expect(page.locator('#vlsm-base-content')).toContainText('192.168.10.64/26');
+  await expect(page.locator('#vlsm-base-content')).toContainText('255.255.255.192');
+  await expect(page.locator('#show-binary')).toHaveCount(0);
+});
+
+test('VLSM : saisir des quantités, classer et afficher le plan coloré', async ({ page }) => {
+  await page.getByLabel('Adresse IP').fill('192.168.10.0/24');
+  await page.getByRole('radio',{name:'VLSM',exact:true}).check();
+  await page.getByLabel('Hôtes par réseau ligne 1').fill('12');
+  await page.getByLabel('Hôtes par réseau ligne 2').fill('50');
+  await page.getByLabel('Hôtes par réseau ligne 3').fill('25');
+  await page.getByLabel('Hôtes par réseau ligne 4').fill('5');
+  await page.getByRole('button',{name:'Planifier les sous-réseaux'}).click();
+  await expect(page.locator('.vlsm-results-table tbody tr')).toHaveCount(4);
+  await expect(page.locator('.vlsm-results-table tbody tr').first()).toContainText('192.168.10.0/26');
+  await expect(page.locator('.vlsm-results-table tbody tr').last()).toContainText('192.168.10.112/29');
+  await expect(page.locator('.vlsm-allocation-bar .vlsm-bar-segment')).toHaveCount(4);
+  await expect(page.locator('.vlsm-allocation-legend')).toContainText('136 adresses non attribuées');
+});
+
+test('VLSM : refus d’un réseau trop petit et mise à jour de la fiche avant calcul', async ({ page }) => {
+  await page.getByRole('radio',{name:'VLSM',exact:true}).check();
+  await page.getByLabel('Adresse IP').fill('192.168.10.0/24');
+  await page.getByLabel('Quantité ligne 1').fill('30');
+  await page.getByLabel('Hôtes par réseau ligne 1').fill('64');
+  await expect(page.locator('#vlsm-base-content')).toContainText('capacité insuffisante');
+  await page.getByRole('button',{name:'Planifier les sous-réseaux'}).click();
+  await expect(page.getByRole('alert')).toContainText('Capacité insuffisante');
+  await expect(page.locator('.vlsm-results-table')).toHaveCount(0);
 });
