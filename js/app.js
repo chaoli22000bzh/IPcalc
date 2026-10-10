@@ -2,6 +2,7 @@ import { describeVlsmBase, summarizeVlsmRequests, planVlsm, VLSM_MAX_SUBNETS, VL
 import { parseIPv6 } from './ipv6.js?v=2.0.0-step3.0';
 import { downloadFlsmA3 } from './pdf-a3-flsm.js?v=2.0.0-step3.0';
 import { downloadAddressingA4 } from './pdf-a4.js?v=2.0.0-step3.0';
+import { printFlsmProfessional } from './professional-flsm.js?v=2.0.0-step3.6';
 import { parseNetwork, planSubnets, subnetAt, summaryIndices, subnetPage } from './ipv4.js?v=2.0.0-step3.0';
 import { EXPORT_COLUMNS } from './exports.js?v=2.0.0-step3.0';
 
@@ -532,6 +533,7 @@ $('print-results').addEventListener('click',()=>{
   $('pdf-a4-error').hidden=true;
   $('pdf-a4-title').textContent=flsm?'Fiche IPv4 et sous-réseaux FLSM':'Fiche d’adressage IPv4';
   $('pdf-a4-description').textContent=flsm?'Choisir un PDF A3 paysage à télécharger :':'Choisir un PDF A4 portrait à télécharger :';
+  $('pdf-a4-professional').hidden=!flsm;
   $('pdf-a4-dialog').showModal();
 });
 function exportDocument(corrected) {
@@ -547,4 +549,16 @@ function exportDocument(corrected) {
 }
 $('pdf-a4-student').addEventListener('click',()=>exportDocument(false));
 $('pdf-a4-corrected').addEventListener('click',()=>exportDocument(true));
+$('pdf-a4-professional').addEventListener('click',()=>{
+  if(!current?.plan || current.protocol!=='ipv4')return;
+  try {
+    $('pdf-a4-error').hidden=true;
+    $('pdf-a4-dialog').close();
+    printFlsmProfessional(current.base,current.plan);
+  }catch(error){
+    $('pdf-a4-error').textContent='Impossible de préparer le rapport professionnel : '+error.message;
+    $('pdf-a4-error').hidden=false;
+    $('pdf-a4-dialog').showModal();
+  }
+});
 updatePdfAvailability();
