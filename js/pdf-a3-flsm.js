@@ -86,12 +86,18 @@ function buildA3(base,plan,corrected) {
   }
   const {c,text,line,fill,box}=draw();
 
-  // A3 asymétrique : 40 % gauche / 60 % droite, marges d'impression 17-20 pt.
-  // Toutes les tables binaires de droite partagent strictement la même grille.
-  const L={x:17,w:462}, R={x:490,w:681}, bottomY=752, bottomH=62;
+  // A3 : chaque bit de droite a la largeur suffisante pour "128" (Helvetica-Bold 6,9 pt).
+  // 128 occupe ~11,5 pt ; case de 14,5 pt pour conserver de l'air.
+  // La largeur récupérée revient intégralement à la partie A, sans toucher au contenu.
+  const pageLeft=17,pageRight=1171,gutter=12;
+  const labelW=116,minBitWidth=14.5;
+  const rightWidth=labelW+32*minBitWidth;
+  const leftWidth=pageRight-pageLeft-gutter-rightWidth;
+  const L={x:pageLeft,w:leftWidth},R={x:pageLeft+leftWidth+gutter,w:rightWidth};
+  const bottomY=752,bottomH=62;
   const count=plan.concernedCount,ids=summaryIndices(count);
   const leftCol=112,leftBitX=L.x+leftCol,leftBitW=(L.w-leftCol)/32;
-  const labelW=116,bitX=R.x+labelW,bitWidth=(R.w-labelW)/32;
+  const bitX=R.x+labelW,bitWidth=(R.w-labelW)/32;
   const gridRight=bitX+32*bitWidth;
   const octetX=oct=>bitX+oct*8*bitWidth;
   const centerBit=j=>bitX+(j+0.5)*bitWidth;
