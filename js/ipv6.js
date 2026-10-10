@@ -42,7 +42,7 @@ function classify(n){
   if(n>>120n===255n)return ['Multicast (ff00::/8)','Groupe multicast (pas de broadcast IPv6)'];
   if(n>>118n===0x3fan)return ['Lien local (fe80::/10)','Uniquement sur le lien local'];
   if(n>>121n===0x7en)return ['Locale unique (fc00::/7)','Réseau privé, non routable sur Internet'];
-  if(n>>96n===65535n)return ['IPv4 mappée (::ffff:0:0/96)','Représentation IPv6 d’une IPv4'];
+  if(n>>32n===65535n)return ['IPv4 mappée (::ffff:0:0/96)','Représentation IPv6 d’une IPv4'];
   if(n>>125n===1n)return ['Unicast globale (2000::/3)','Potentiellement routable sur Internet'];
   return ['Adresse spéciale ou réservée','Portée dépendant du préfixe et de l’usage'];
 }
