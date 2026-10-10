@@ -5,6 +5,7 @@ import { downloadAddressingA4 } from './pdf-a4.js?v=2.0.0-step3.0';
 import { printFlsmProfessional } from './professional-flsm.js?v=2.0.0-step3.8';
 import { printIPv4Professional } from './professional-ipv4.js?v=2.0.0-step3.8';
 import { printIPv6Professional } from './professional-ipv6.js?v=2.0.0-step3.8';
+import { printVlsmProfessional } from './professional-vlsm.js?v=2.0.0-step3.9';
 import { parseNetwork, planSubnets, subnetAt, summaryIndices, subnetPage } from './ipv4.js?v=2.0.0-step3.0';
 import { EXPORT_COLUMNS } from './exports.js?v=2.0.0-step3.0';
 
@@ -331,19 +332,6 @@ function renderVlsm(plan){
     });tbody.append(tr);
   });
   table.append(tbody);wrapper.append(table);other.append(wrapper);
-  // Version complète réservée à l'impression A4, indépendante de la pagination.
-  const printWrapper=element('div','vlsm-print-table-wrapper');
-  const printTable=element('table','vlsm-print-table');
-  const printHead=element('thead'),printHeader=element('tr');
-  ['Nº','Hôtes demandés','Hôtes disponibles','Adresse réseau / CIDR','Broadcast','Masque décimal'].forEach(label=>{
-    const th=element('th','',label);printHeader.append(th);
-  });
-  printHead.append(printHeader);printTable.append(printHead);
-  const printBody=element('tbody');
-  // Construit lors de l'impression, pour ne pas créer plusieurs milliers de nœuds en consultation.
-  printWrapper.append(printTable);other.append(printWrapper);
-  printWrapper.dataset.ready='false';
-
   if(pageCount>1){
     const nav=element('nav','vlsm-pagination');
     nav.setAttribute('aria-label','Pages du plan VLSM');
@@ -515,32 +503,7 @@ $('print-results').addEventListener('click',()=>{
   }
   if(current.protocol!=='ipv4')return;
   if(current.vlsm){
-    refreshPrintSummary();
-    const printWrapper=$('subnet-result').querySelector('.vlsm-print-table-wrapper');
-    if(printWrapper && printWrapper.dataset.ready!=='true'){
-      const table=printWrapper.querySelector('table');
-      const tbody=element('tbody');
-      current.vlsm.rows.forEach(row=>{
-        const tr=element('tr');
-        [row.index,row.requestedHosts,row.usableHosts,row.cidr,row.broadcast??'Sans broadcast (/31)',row.mask].forEach(value=>
-          tr.append(element('td','',String(value))));
-        tbody.append(tr);
-      });
-      table.append(tbody);printWrapper.dataset.ready='true';
-    }
-    // Firefox utilise le titre HTML comme nom proposé pour « Enregistrer en PDF ».
-    // Le CIDR /24 reste visible dans le document, mais pas dans le nom de fichier.
-    const normalTitle=document.title;
-    document.title=current.base.address+'_VLSM';
-    window.addEventListener('afterprint',()=>{
-      document.title=normalTitle;
-    },{once:true});
-    try {
-      window.print();
-    } catch(error) {
-      document.title=normalTitle;
-      throw error;
-    }
+    printVlsmProfessional(current.base,current.vlsm);
     return;
   }
   const flsm=Boolean(current.plan);
