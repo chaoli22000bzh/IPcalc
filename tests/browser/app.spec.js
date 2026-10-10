@@ -573,3 +573,40 @@ test('VLSM 140 réseaux : pagination écran à 100 et impression complète', asy
   await page.getByRole('button',{name:'Imprimer le plan VLSM A4'}).click();
   await expect(page.locator('.vlsm-print-table tbody tr')).toHaveCount(140);
 });
+
+test('IPv6 Pro A4 : rapport autonome /64, impression Firefox et restauration', async ({ page }) => {
+  await page.getByLabel('Adresse IP', { exact: true }).fill('2001:db8:abcd:12::42/64');
+  await page.getByRole('button', { name: 'Afficher les informations' }).click();
+  const button = page.getByRole('button', { name: 'Imprimer la fiche professionnelle IPv6 A4' });
+  await expect(button).toBeEnabled();
+  await expect(page.locator('#print-help')).toHaveText('PDF A4 Pro');
+  await page.evaluate(() => { window.__printed = 0; window.print = () => window.__printed++; });
+  await button.click();
+  expect(await page.evaluate(() => window.__printed)).toBe(1);
+  await expect(page.locator('.professional-ipv6-report')).toContainText('Fiche d’adressage IPv6');
+  await expect(page.locator('.professional-ipv6-report')).toContainText('2001:db8:abcd:12::/64');
+  await expect(page.locator('.professional-ipv6-report')).toContainText('2001:db8:abcd:12:ffff:ffff:ffff:ffff');
+  await expect(page.locator('.professional-ipv6-report')).toContainText('Documentation IPv6');
+  await expect(page.locator('.professional-ipv6-interface')).toContainText('0000:0000:0000:0042');
+  await expect(page.locator('.professional-ipv6-report')).toContainText('IPv6 ne possède pas de broadcast');
+  await expect(page.locator('#pdf-a4-dialog')).not.toBeVisible();
+  await expect(page.locator('#professional-report')).toBeHidden();
+  await page.emulateMedia({ media: 'print' });
+  await expect(page.locator('#professional-report')).toBeVisible();
+  await expect(page.locator('.workspace')).toBeHidden();
+  await page.emulateMedia({ media: 'screen' });
+  await page.evaluate(() => window.dispatchEvent(new Event('afterprint')));
+  await expect(page.locator('#professional-report')).toHaveCount(0);
+  await expect(page).toHaveTitle('IPcalc — Adressage IPv4 et IPv6 · CyberNet');
+});
+
+test('IPv6 Pro A4 : /128 ne propose aucun sous-réseau /64 et aucun identifiant /64', async ({ page }) => {
+  await page.getByLabel('Adresse IP', { exact: true }).fill('2001:db8::1/128');
+  await page.getByRole('button', { name: 'Afficher les informations' }).click();
+  await page.evaluate(() => { window.print = () => {}; });
+  await page.getByRole('button', { name: 'Imprimer la fiche professionnelle IPv6 A4' }).click();
+  await expect(page.locator('.professional-ipv6-report')).toContainText('0 (préfixe plus long que /64)');
+  await expect(page.locator('.professional-ipv6-interface')).toHaveCount(0);
+  await expect(page.locator('.professional-ipv6-report')).toContainText('2^0 = 1');
+  await page.evaluate(() => window.dispatchEvent(new Event('afterprint')));
+});
