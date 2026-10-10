@@ -89,6 +89,41 @@
   body.print-professional .professional-report-table td:nth-child(5) { width: 23%; }
   body.print-professional .professional-report-table th:nth-child(6),
   body.print-professional .professional-report-table td:nth-child(6) { width: 10%; text-align: right; }
+  /* IPv6 : adresses de 39 caractères et capacités très longues sur une seule page A4. */
+  body.print-professional .professional-ipv6-groups {
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4mm;
+    align-items: stretch;
+  }
+  body.print-professional .professional-ipv6-group { min-width: 0; }
+  body.print-professional .professional-ipv6-group .professional-report-fields > div {
+    display: block; padding: 1.6mm 0;
+  }
+  body.print-professional .professional-ipv6-group .professional-report-fields dt {
+    font-size: 7.2pt; margin-bottom: .5mm;
+  }
+  body.print-professional .professional-ipv6-group .professional-report-fields dd {
+    font-size: 8.1pt; white-space: normal; text-align: left;
+    overflow-wrap: anywhere; word-break: normal; line-height: 1.4;
+  }
+  body.print-professional .professional-ipv6-group .professional-ipv6-long-field dd {
+    font-family: Consolas, 'Courier New', monospace;
+    font-size: 7.5pt; overflow-wrap: anywhere;
+  }
+  body.print-professional .professional-ipv6-interface {
+    margin-top: 4mm; break-inside: avoid;
+  }
+  body.print-professional .professional-ipv6-interface .professional-report-fields > div {
+    display: flex; justify-content: space-between; gap: 3mm;
+  }
+  body.print-professional .professional-ipv6-interface dd {
+    white-space: normal; overflow-wrap: anywhere;
+  }
+  body.print-professional .professional-ipv6-report .professional-report-summary {
+    break-inside: auto;
+  }
+  body.print-professional .professional-ipv6-report .professional-ipv6-groups {
+    break-inside: avoid;
+  }
   body.print-professional .professional-report-footer {
     margin-top: 4mm; border-top: 1px solid #ccc; padding-top: 2mm;
     font-size: 7pt; color: #555; break-inside: avoid;
