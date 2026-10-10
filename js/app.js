@@ -1,4 +1,4 @@
-import { describeVlsmBase, summarizeVlsmRequests, planVlsm, VLSM_MAX_SUBNETS } from './vlsm.js?v=2.0.0-step3.0';
+import { describeVlsmBase, summarizeVlsmRequests, planVlsm, VLSM_MAX_SUBNETS, VLSM_PAGE_SIZE } from './vlsm.js?v=2.0.0-step3.0';
 import { parseIPv6 } from './ipv6.js?v=2.0.0-step3.0';
 import { downloadFlsmA3 } from './pdf-a3-flsm.js?v=2.0.0-step3.0';
 import { downloadAddressingA4 } from './pdf-a4.js?v=2.0.0-step3.0';
@@ -202,6 +202,7 @@ function renderIPv6(info) {
 // Une ligne de besoin correspond à plusieurs réseaux de taille identique.
 let vlsmRequests=Array.from({length:5},(_,i)=>({id:i+1,quantity:'1',hosts:''}));
 let nextVlsmId=6;
+let vlsmPage=0;
 const vlsmColors=['#28699c','#218e81','#d39737','#8976ba','#d46f77','#4c96b0','#a28b67','#5d9a72'];
 function readVlsmRequests(){
   const filled=vlsmRequests.filter(r=>r.hosts.trim()!=='');
@@ -257,13 +258,13 @@ function refreshVlsmPreview(){
   try{
     const requests=readVlsmRequests();
     const summary=summarizeVlsmRequests(base,requests);
-    $('vlsm-count').textContent=format(summary.subnetCount)+' sous-réseaux demandés sur '+VLSM_MAX_SUBNETS+'.';
+    $('vlsm-count').textContent=format(summary.subnetCount)+' sous-réseaux demandés.';
     const status=element('p','vlsm-preview-status'+(summary.fits?'':' vlsm-preview-error'),
       format(summary.requiredAddresses)+' adresses nécessaires sur '+format(detail.totalAddresses)
       +(summary.fits?' ; '+format(summary.remainingAddresses)+' non attribuées.':' ; capacité insuffisante.'));
     content.append(status);
   }catch(error){
-    $('vlsm-count').textContent='100 sous-réseaux maximum au total.';
+    $('vlsm-count').textContent='Saisissez les besoins pour calculer le nombre de réseaux.';
     if(vlsmRequests.some(r=>r.hosts.trim()!==''))content.append(element('p','vlsm-preview-error',error.message));
   }
 }
@@ -304,7 +305,10 @@ function renderVlsm(plan){
   });
   const thead=element('thead');thead.append(header);table.append(thead);
   const tbody=element('tbody');
-  plan.rows.forEach(row=>{
+  const pageCount=Math.ceil(plan.rows.length/VLSM_PAGE_SIZE);
+  vlsmPage=Math.min(vlsmPage,pageCount-1);
+  const first=vlsmPage*VLSM_PAGE_SIZE;
+  plan.rows.slice(first,first+VLSM_PAGE_SIZE).forEach(row=>{
     const tr=element('tr');tr.dataset.subnetNumber=String(row.index);
     const cells=[row.index,row.requestedHosts,row.usableHosts,row.cidr,row.broadcast??'Sans broadcast (/31)',row.mask];
     cells.forEach((value,i)=>{
@@ -318,6 +322,20 @@ function renderVlsm(plan){
     });tbody.append(tr);
   });
   table.append(tbody);wrapper.append(table);other.append(wrapper);
+  if(pageCount>1){
+    const nav=element('nav','vlsm-pagination');
+    nav.setAttribute('aria-label','Pages du plan VLSM');
+    const previous=element('button','button button-small button-outline','Précédent');
+    previous.type='button';previous.disabled=vlsmPage===0;
+    previous.addEventListener('click',()=>{vlsmPage--;renderVlsm(plan);});
+    const following=element('button','button button-small button-outline','Suivant');
+    following.type='button';following.disabled=vlsmPage===pageCount-1;
+    following.addEventListener('click',()=>{vlsmPage++;renderVlsm(plan);});
+    nav.append(previous,element('span','',
+      'Réseaux '+format(first)+' à '+format(Math.min(first+VLSM_PAGE_SIZE,plan.rows.length)-1)
+      +' sur '+format(plan.rows.length)+'  |  Page '+format(vlsmPage+1)+' / '+format(pageCount)),following);
+    other.append(nav);
+  }
 }
 
 function render() {
@@ -347,6 +365,7 @@ function calculate(focus = true) {
     const mode=form.elements.mode.value;
     const plan = protocol==='ipv4' && mode === 'subnets' ? planSubnets(base, { method: $('method').value, count: $('count').value, hosts: $('hosts').value }) : null;
     const vlsm=protocol==='ipv4' && mode==='vlsm' ? planVlsm(base,readVlsmRequests()) : null;
+    vlsmPage=0;
     current = { protocol,base,plan,vlsm };
     updatePdfAvailability();
     pages = { middle: { open: false, page: 0 }, extra: { open: false, page: 0 } };
