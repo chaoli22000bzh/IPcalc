@@ -1,11 +1,12 @@
-import { parseIPv6 } from './ipv6.js?v=2.0.0-step2.6';
-import { downloadFlsmA3 } from './pdf-a3-flsm.js?v=2.0.0-step2.6';
-import { downloadAddressingA4 } from './pdf-a4.js?v=2.0.0-step2.6';
-import { parseNetwork, planSubnets, subnetAt, summaryIndices, subnetPage, binaryOctets } from './ipv4.js?v=2.0.0-step2.6';
-import { EXPORT_COLUMNS } from './exports.js?v=2.0.0-step2.6';
+import { parseIPv6 } from './ipv6.js?v=2.0.0-step2.7';
+import { downloadFlsmA3 } from './pdf-a3-flsm.js?v=2.0.0-step2.7';
+import { downloadAddressingA4 } from './pdf-a4.js?v=2.0.0-step2.7';
+import { parseNetwork, planSubnets, subnetAt, summaryIndices, subnetPage, binaryOctets } from './ipv4.js?v=2.0.0-step2.7';
+import { EXPORT_COLUMNS } from './exports.js?v=2.0.0-step2.7';
 
 const $ = id => document.getElementById(id);
 const format = value => value.toLocaleString('fr-FR');
+const exponent = value => '2'+String(value).replace(/[0-9]/g, digit => '⁰¹²³⁴⁵⁶⁷⁸⁹'[Number(digit)]);
 const form = $('calculator-form');
 let current = null;
 let pages = { middle: { open: false, page: 0 }, extra: { open: false, page: 0 } };
@@ -200,10 +201,10 @@ function renderIPv6(info) {
     ['Préfixe CIDR','/'+info.prefix+(info.assumedPrefix?' (adresse seule, par défaut)':'')],
     ['Type d’adresse',info.type],
     ['Portée',info.scope],
-    ['Adresses du bloc',`2^${info.addressExponent} — ${BigInt(info.addressCount).toLocaleString('fr-FR')}`],
+    ['Adresses du bloc',`${exponent(info.addressExponent)} — ${BigInt(info.addressCount).toLocaleString('fr-FR')}`],
     ['Sous-réseaux /64 possibles',info.subnets64Exponent===null
       ? '0 (préfixe plus long que /64)'
-      : `2^${info.subnets64Exponent} — ${BigInt(info.subnets64).toLocaleString('fr-FR')}`]
+      : `${exponent(info.subnets64Exponent)} — ${BigInt(info.subnets64).toLocaleString('fr-FR')}`]
   ];
   for(const [label,value] of fields){
     const group=element('div');
