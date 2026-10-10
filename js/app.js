@@ -184,7 +184,7 @@ function renderIPv6(info) {
   const fields=[
     ['Adresse abrégée',info.address],
     ['Adresse développée',info.expanded],
-    ['Préfixe CIDR','/'+info.prefix],
+    ['Préfixe CIDR','/'+info.prefix+(info.assumedPrefix?' (adresse seule, par défaut)':'')],
     ['Préfixe réseau',info.network+'/'+info.prefix],
     ['Type d’adresse',info.type],
     ['Portée',info.scope]
@@ -202,7 +202,7 @@ function renderIPv6(info) {
 function render() {
   $('results').hidden = false;
   $('network-result').hidden = false;
-  $('result-title').textContent = current.plan ? 'Votre découpage FLSM' : 'Résultat du calcul';
+  $('result-title').textContent = current.protocol==='ipv6'?'Informations IPv6':current.plan ? 'Votre découpage FLSM' : 'Résultat du calcul';
   if(current.protocol==='ipv6')renderIPv6(current.base);
   else {renderNetwork(current.base);renderSubnets(current.plan);}
 }
@@ -251,10 +251,11 @@ function detectedProtocol(){
 function syncProtocol(){
   const ipv6=detectedProtocol()==='ipv6';
   $('protocol-indicator').textContent=ipv6?'IPv6 détecté':'IPv4 détecté';
-  $('address-help').textContent=ipv6?'Adresse IPv6 abrégée ou complète, avec préfixe /0 à /128.':'IPv4 avec ou sans CIDR. Une adresse d’hôte est ramenée à son réseau.';
+  $('address-help').textContent=ipv6?'Adresse IPv6 abrégée ou complète. Sans préfixe, analyse de l’adresse seule (/128).':'IPv4 avec ou sans CIDR. Une adresse d’hôte est ramenée à son réseau.';
   $('mask').placeholder=ipv6?'/64':'255.255.255.192 ou /26';
   $('mask').inputMode=ipv6?'numeric':'decimal';
   $('mode-fieldset').hidden=ipv6;
+  if(ipv6)form.elements.mode.value='simple';
   $('show-binary').closest('label').hidden=ipv6;
   $('calculate-label').textContent=ipv6?'Afficher les informations':'Calculer le réseau';
 }
