@@ -405,7 +405,7 @@ test('FLSM A4 Pro : troisième choix isolé, rapport complet et impression nativ
   await expect(page.locator('.professional-report-group').last().locator('.professional-report-fields')).toContainText('255.255.255.240');
   await expect(page.locator('.professional-report-group').first()).toContainText('Masque initial');
   await expect(page.locator('.professional-report-group').last()).toContainText('Découpage FLSM');
-  await expect(page.locator('.professional-report-fields')).toContainText('Hôtes utilisables non affectés');
+  await expect(page.locator('.professional-report-group').last().locator('.professional-report-fields')).toContainText('Hôtes utilisables non affectés');
   await expect(page.locator('.professional-report-allocation-bar')).toHaveAttribute('role', 'img');
   await expect(page.locator('.professional-report-allocation-legend')).toContainText('sous-réseaux attribués');
   await expect(page.locator('.professional-report-table tbody tr')).toHaveCount(10);
