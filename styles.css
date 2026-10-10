@@ -366,3 +366,10 @@ input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--primary)
   .vlsm-base-panel {justify-self:stretch;}
   .vlsm-request-columns,.vlsm-request-row {grid-template-columns:25px 80px minmax(100px,160px) 32px;max-width:100%;}
 }
+
+/* Le résumé d'impression ne doit jamais doubler les résultats à l'écran. */
+.print-summary {display:none !important;}
+/* Aligner le cadre Réseau initial avec la première ligne de quantités. */
+@media(min-width:791px) {
+  .vlsm-base-panel {margin-top:78px;}
+}
