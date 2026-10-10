@@ -9,7 +9,7 @@ const format = value => value.toLocaleString('fr-FR');
 function powerOfTwo(value, count) {
   const wrapper=element('span','ipv6-power-expression');
   wrapper.append(document.createTextNode('2'),element('sup','ipv6-power-exponent',String(value)));
-  wrapper.append(document.createTextNode(' — '+BigInt(count).toLocaleString('fr-FR')));
+  wrapper.append(document.createTextNode(' = '+BigInt(count).toLocaleString('fr-FR')));
   return wrapper;
 }
 const form = $('calculator-form');
@@ -206,7 +206,7 @@ function renderIPv6(info) {
     ['Préfixe CIDR','/'+info.prefix+(info.assumedPrefix?' (adresse seule, par défaut)':'')],
     ['Type d’adresse',info.type],
     ['Portée',info.scope],
-    ['Adresses du bloc',powerOfTwo(info.addressExponent,info.addressCount)],
+    ['Nombre total d’adresses IPv6',powerOfTwo(info.addressExponent,info.addressCount)],
     ['Sous-réseaux /64 possibles',info.subnets64Exponent===null
       ? '0 (préfixe plus long que /64)'
       : info.subnets64Exponent===0
