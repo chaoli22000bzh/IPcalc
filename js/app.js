@@ -1,13 +1,13 @@
 import { describeVlsmBase, summarizeVlsmRequests, planVlsm, VLSM_MAX_SUBNETS, VLSM_PAGE_SIZE } from './vlsm.js?v=2.0.0-step3.0';
 import { classifyIPv4 } from './address-classification.js';
-import { parseIPv6 } from './ipv6.js?v=2.0.0-step3.0';
+import { parseIPv6, classifyIPv6 } from './ipv6.js?v=2.0.0-step3.26';
 import { downloadFlsmA3 } from './pdf-a3-flsm.js?v=2.0.0-step3.0';
 import { downloadAddressingA4 } from './pdf-a4.js?v=2.0.0-step3.0';
-import { printFlsmProfessional } from './professional-flsm.js?v=2.0.0-step3.25';
-import { printIPv4Professional } from './professional-ipv4.js?v=2.0.0-step3.25';
-import { printIPv6Professional } from './professional-ipv6.js?v=2.0.0-step3.25';
-import { printVlsmProfessional } from './professional-vlsm.js?v=2.0.0-step3.25';
-import { parseNetwork, planSubnets, subnetAt, summaryIndices, subnetPage } from './ipv4.js?v=2.0.0-step3.25';
+import { printFlsmProfessional } from './professional-flsm.js?v=2.0.0-step3.26';
+import { printIPv4Professional } from './professional-ipv4.js?v=2.0.0-step3.26';
+import { printIPv6Professional } from './professional-ipv6.js?v=2.0.0-step3.26';
+import { printVlsmProfessional } from './professional-vlsm.js?v=2.0.0-step3.26';
+import { parseNetwork, planSubnets, subnetAt, summaryIndices, subnetPage } from './ipv4.js?v=2.0.0-step3.26';
 import { EXPORT_COLUMNS } from './exports.js?v=2.0.0-step3.0';
 
 const $ = id => document.getElementById(id);
@@ -30,8 +30,8 @@ function element(tag, className, text) {
   return node;
 }
 
-function showAddressDiagnostic(base, mode = 'simple') {
-  const diagnosis=classifyIPv4(mode === 'simple' ? base.inputAddress : base.address, base.prefix, base.network, mode === 'simple' ? 'host' : 'network');
+function showAddressDiagnostic(base, mode = 'simple', protocol = 'ipv4') {
+  const diagnosis=protocol === 'ipv6' ? classifyIPv6(base) : classifyIPv4(mode === 'simple' ? base.inputAddress : base.address, base.prefix, base.network, mode === 'simple' ? 'host' : 'network');
   const anchor=$('address-diagnostic-anchor');
   const button=$('address-diagnostic'),detail=$('address-diagnostic-detail');
   button.textContent=diagnosis.label;
@@ -431,8 +431,7 @@ function calculate(focus = true) {
     const vlsm=protocol==='ipv4' && mode==='vlsm' ? planVlsm(base,readVlsmRequests()) : null;
     vlsmPage=0;
     current = { protocol,base,plan,vlsm };
-    if(protocol==='ipv4')showAddressDiagnostic(base,mode);
-    else hideAddressDiagnostic();
+    showAddressDiagnostic(base,mode,protocol);
     updatePdfAvailability();
     pages = { middle: { open: false, page: 0 }, extra: { open: false, page: 0 } };
     $('stale-notice').hidden = true;
