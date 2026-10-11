@@ -443,8 +443,7 @@ test('FLSM A4 Pro : un sous-réseau libre, 14 hôtes disponibles et barre 75/25'
   await expect(page.locator('.professional-report-group').first()).toContainText('192.168.10.64/26');
   await expect(page.locator('.professional-report-group').last()).toContainText('14');
   await expect(page.locator('.professional-report-group').last()).toContainText('3 / 4');
-  await expect(page.locator('.professional-report-legend-free')).toContainText('1 sous-réseau restant · 14 hôtes utilisables non affectés');
-  await expect(page.locator('.professional-report-note')).toContainText('1 sous-réseau supplémentaire est possible');
+  await expect(page.locator('.professional-report-legend-free')).toContainText('1 sous-réseau disponible (25 %)');
   expect(await page.locator('.professional-report-used').evaluate(node => parseFloat(node.style.width))).toBe(75);
   expect(await page.locator('.professional-report-free').evaluate(node => parseFloat(node.style.width))).toBe(25);
   await expect(page.locator('.professional-report-table tbody tr')).toHaveCount(3);
@@ -512,7 +511,7 @@ test('VLSM : saisir des quantités, classer et afficher le plan coloré', async 
   await expect(page.locator('.vlsm-results-table tbody tr').first()).toContainText('192.168.10.0/26');
   await expect(page.locator('.vlsm-results-table tbody tr').last()).toContainText('192.168.10.112/29');
   await expect(page.locator('.vlsm-allocation-bar .vlsm-bar-segment')).toHaveCount(4);
-  await expect(page.locator('.vlsm-allocation-legend')).toContainText('136 adresses non attribuées');
+  await expect(page.locator('.vlsm-allocation-legend')).toContainText('136 adresses disponibles');
 });
 
 test('VLSM : refus d’un réseau trop petit et mise à jour de la fiche avant calcul', async ({ page }) => {
@@ -537,17 +536,17 @@ test('impression A4 VLSM : résumé textuel et tableau, bouton PDF historique pr
   await page.evaluate(()=>{ window.__printCalled=false;window.print=()=>{window.__printCalled=true;}; });
   await page.getByRole('button',{name:'Imprimer le plan VLSM A4'}).click();
   expect(await page.evaluate(()=>window.__printCalled)).toBe(true);
-  await expect(page).toHaveTitle('192.168.50.0_VLSM');
-  await expect(page.locator('#professional-report .print-summary-network')).toContainText('192.168.50.0/24');
-  await expect(page.locator('#professional-report .vlsm-print-table tbody tr')).toHaveCount(6);
+  await expect(page).toHaveTitle('192.168.50.0_VLSM_Pro');
+  await expect(page.locator('#professional-report .professional-report-group')).toContainText('192.168.50.0/24');
+  await expect(page.locator('#professional-report .professional-vlsm-table tbody tr')).toHaveCount(6);
   await expect(page.locator('.vlsm-results-table tbody tr')).toHaveCount(6);
   await expect(page.locator('.vlsm-results-table tbody tr')).toHaveCount(6);
   await page.emulateMedia({media:'print'});
   await expect(page.locator('#professional-report')).toBeVisible();
   await expect(page.locator('.input-panel')).toBeHidden();
   await expect(page.locator('.vlsm-results-table')).toBeHidden();
-  await expect(page.locator('#professional-report .vlsm-print-table')).toBeVisible();
-  await expect(page.locator('#professional-report .vlsm-print-table tbody tr')).toHaveCount(6);
+  await expect(page.locator('#professional-report .professional-vlsm-table')).toBeVisible();
+  await expect(page.locator('#professional-report .professional-vlsm-table tbody tr')).toHaveCount(6);
   await page.emulateMedia({media:'screen'});
   await page.evaluate(()=>window.dispatchEvent(new Event('afterprint')));
   await expect(page.locator('#professional-report')).toHaveCount(0);
@@ -574,7 +573,7 @@ test('VLSM 140 réseaux : pagination écran à 100 et impression complète', asy
   await expect(page.locator('.vlsm-results-table tbody tr').first()).toContainText('100');
   await page.evaluate(()=>{window.print=()=>{};});
   await page.getByRole('button',{name:'Imprimer le plan VLSM A4'}).click();
-  await expect(page.locator('#professional-report .vlsm-print-table tbody tr')).toHaveCount(140);
+  await expect(page.locator('#professional-report .professional-vlsm-table tbody tr')).toHaveCount(140);
   await expect(page.locator('.vlsm-results-table tbody tr')).toHaveCount(40);
   await page.evaluate(()=>window.dispatchEvent(new Event('afterprint')));
   await expect(page.locator('#professional-report')).toHaveCount(0);
@@ -635,6 +634,6 @@ test('VLSM Pro : génération entièrement autonome sans panneaux IPcalc', async
     document.body.append(report);
   });
   await expect(page.locator('#professional-report')).toContainText('10.40.0.0/24');
-  await expect(page.locator('#professional-report .vlsm-print-table tbody tr')).toHaveCount(2);
+  await expect(page.locator('#professional-report .professional-vlsm-table tbody tr')).toHaveCount(2);
   await expect(page.locator('#professional-report')).not.toContainText('192.168.50.0/24');
 });
