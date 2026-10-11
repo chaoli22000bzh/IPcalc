@@ -31,7 +31,7 @@ function element(tag, className, text) {
 }
 
 function showAddressDiagnostic(base) {
-  const diagnosis=classifyIPv4(base.inputAddress, base.prefix);
+  const diagnosis=classifyIPv4(base.inputAddress, base.prefix, base.network);
   const anchor=$('address-diagnostic-anchor');
   const button=$('address-diagnostic'),detail=$('address-diagnostic-detail');
   button.textContent=diagnosis.label;
