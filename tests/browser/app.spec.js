@@ -12,7 +12,7 @@ test.afterEach(async ({ page }) => {
 });
 
 async function subdivide(page, { address = '192.168.10.75/24', method = 'count', count = '10', hosts = '30' } = {}) {
-  await page.getByLabel('Adresse IP').fill(address);
+  await page.getByLabel('Adresse IP', { exact: true }).fill(address);
   await page.getByRole('radio', { name: 'FLSM', exact: true }).check();
   await page.getByLabel('Méthode de découpage FLSM').selectOption(method);
   if (method !== 'hosts') await page.getByLabel('Sous-réseaux demandés', { exact: true }).fill(count);
@@ -29,12 +29,12 @@ test('réseau simple, cinq champs exacts et normalisation de l’hôte', async (
 });
 
 test('adresse et masque invalides : erreur annoncée, champ ciblé, résultats masqués', async ({ page }) => {
-  await page.getByLabel('Adresse IP').fill('256.1.2.3/24');
+  await page.getByLabel('Adresse IP', { exact: true }).fill('256.1.2.3/24');
   await page.getByRole('button', { name: 'Calculer le réseau' }).click();
   await expect(page.getByRole('alert')).toContainText('0 et 255');
-  await expect(page.getByLabel('Adresse IP')).toHaveAttribute('aria-invalid', 'true');
+  await expect(page.getByLabel('Adresse IP', { exact: true })).toHaveAttribute('aria-invalid', 'true');
   await expect(page.locator('#results')).toBeHidden();
-  await page.getByLabel('Adresse IP').fill('192.168.1.1');
+  await page.getByLabel('Adresse IP', { exact: true }).fill('192.168.1.1');
   await page.getByLabel('Masque ou préfixe').fill('255.0.255.0');
   await page.getByRole('button', { name: 'Calculer le réseau' }).click();
   await expect(page.getByRole('alert')).toContainText('contigu');
@@ -134,7 +134,7 @@ test.describe('PWA réelle', () => {
   expect(await offline.evaluate(async () => {
     try { await fetch('./offline-network-probe'); return false; } catch { return true; }
   })).toBe(true);
-  await offline.getByLabel('Adresse IP').fill('10.0.0.1/31');
+  await offline.getByLabel('Adresse IP', { exact: true }).fill('10.0.0.1/31');
   await offline.getByRole('button', { name: 'Calculer le réseau' }).click();
   await expect(offline.locator('#network-result dd')).toHaveText(['10.0.0.0', '255.255.255.254', '/31', 'Sans broadcast', '2']);
   await subdivide(offline, { method: 'combined', count: '3', hosts: '50' });
@@ -204,7 +204,7 @@ test('modifier un calcul avec pagination ouverte ne conserve aucun sous-réseau'
       document.querySelector('#extra-details'),
     ];
   });
-  await page.getByLabel('Adresse IP').fill('10.0.0.0/16');
+  await page.getByLabel('Adresse IP', { exact: true }).fill('10.0.0.0/16');
   await page.evaluate(() => {
     window.__staleDetails.forEach(details => details.dispatchEvent(new Event('toggle')));
     delete window.__staleDetails;
@@ -219,7 +219,7 @@ test('modifier un calcul avec pagination ouverte ne conserve aucun sous-réseau'
 
 test('bouton au-dessus de l’adresse, en-têtes alignés et navigation clavier', async ({ page }) => {
   const button = page.getByRole('button', { name: 'Calculer le réseau' });
-  const address = page.getByLabel('Adresse IP');
+  const address = page.getByLabel('Adresse IP', { exact: true });
   const initialButton = await button.boundingBox();
   const field = await address.boundingBox();
   expect(initialButton.y + initialButton.height).toBeLessThan(field.y);
@@ -259,7 +259,7 @@ test('bouton au-dessus de l’adresse, en-têtes alignés et navigation clavier'
   await expect(page.locator('#result-title')).toHaveText('Votre découpage FLSM');
   await expect(page.locator('.help-panel, .site-footer')).toHaveCount(0);
   await expect(page.locator('.version')).toBeVisible();
-  await expect(page.getByRole('img', { name: 'CyberNet Los Angeles', exact: true })).toBeVisible();
+  await expect(page.getByRole('img', { name: 'Logo IPcalc', exact: true })).toBeVisible();
 });
 
 test('numérotation à zéro : huit réseaux, intermédiaires et tous les réseaux', async ({ page }) => {
@@ -298,9 +298,9 @@ test('interface compacte, saisie longue et logos locaux sur plusieurs largeurs',
       expect((await page.locator('.panel-heading').boundingBox()).y).toBe(calculate.y);
     }
   }
-  for (const [theme, filename] of [['dark', 'Logo_CyberNet_blanc_transparent.svg'], ['light', 'Logo_CyberNet_bleu_marine_transparent.svg']]) {
+  for (const [theme, filename] of [['dark', 'ipcalc-subnets.svg'], ['light', 'ipcalc-subnets.svg']]) {
     await page.emulateMedia({ colorScheme: theme });
-    const logo = page.getByRole('img', { name: 'CyberNet Los Angeles', exact: true });
+    const logo = page.getByRole('img', { name: 'Logo IPcalc', exact: true });
     await expect.poll(() => logo.evaluate(img => img.currentSrc)).toContain(filename);
     await expect.poll(() => logo.evaluate(img => img.complete && img.naturalWidth > 0)).toBe(true);
     expect(new URL(await logo.evaluate(img => img.currentSrc)).origin).toBe(new URL(page.url()).origin);
@@ -391,7 +391,7 @@ test('numéros 48 et 128 sans dièse, adresses et pagination inchangées', async
   await expect(page.locator('#middle-details tr[data-subnet-number]').first().locator('td').first()).toHaveText('53');
   await expect(page.locator('.brand img')).toHaveCount(0);
   await expect(page.locator('.brand')).toHaveText('IPcalc');
-  await expect(page.getByRole('img', { name: 'CyberNet Los Angeles', exact: true })).toHaveCount(1);
+  await expect(page.getByRole('img', { name: 'Logo IPcalc', exact: true })).toHaveCount(1);
 });
 
 test('FLSM A4 Pro : troisième choix isolé, rapport complet et impression native', async ({ page }) => {
@@ -414,7 +414,7 @@ test('FLSM A4 Pro : troisième choix isolé, rapport complet et impression nativ
   expect(await page.evaluate(() => window.__professionalPrints)).toBe(1);
   await expect(page).toHaveTitle('192.168.10.0_FLSM_Pro');
   await expect(page.locator('body')).toHaveClass(/print-professional/);
-  await expect(page.locator('.professional-report-head')).toContainText('Plan d’adressage IPv4 — FLSM');
+  await expect(page.locator('.professional-report-head')).toContainText('Plan d’adressage IPv4 FLSM');
   await expect(page.locator('.professional-report-group').last().locator('.professional-report-fields')).toContainText('255.255.255.240');
   await expect(page.locator('.professional-report-group').first()).toContainText('Masque initial');
   await expect(page.locator('.professional-report-group').last()).toContainText('Découpage FLSM');
@@ -424,13 +424,13 @@ test('FLSM A4 Pro : troisième choix isolé, rapport complet et impression nativ
   await expect(page.locator('.professional-report-table tbody tr')).toHaveCount(10);
   await expect(page.locator('.professional-report-table tbody tr').first()).toContainText('192.168.10.0/28');
   await expect(page.locator('.professional-report-table tbody tr').last()).toContainText('192.168.10.144/28');
-  await expect(page.locator('.professional-report-logo')).toHaveAttribute('src', /Logo_CyberNet_bleu_marine_transparent\.svg/);
+  await expect(page.locator('.professional-report-head h1')).toContainText('Plan d’adressage IPv4 FLSM');
   await page.emulateMedia({ media: 'print' });
   await expect(page.locator('#professional-report')).toBeVisible();
   await expect(page.locator('.workspace')).toBeHidden();
   await page.emulateMedia({ media: 'screen' });
   await page.evaluate(() => window.dispatchEvent(new Event('afterprint')));
-  await expect(page).toHaveTitle('IPcalc — Adressage IPv4 et IPv6 · CyberNet');
+  await expect(page).toHaveTitle('IPcalc - Adressage IPv4 et IPv6');
   await expect(page.locator('#professional-report')).toHaveCount(0);
   await expect(page.locator('body')).not.toHaveClass(/print-professional/);
 });
@@ -474,11 +474,11 @@ test('IPv4 simple : fiche Pro A4, plage utilisable et deux fiches scolaires pré
   await page.emulateMedia({ media: 'screen' });
   await page.evaluate(() => window.dispatchEvent(new Event('afterprint')));
   await expect(page.locator('#professional-report')).toHaveCount(0);
-  await expect(page).toHaveTitle('IPcalc — Adressage IPv4 et IPv6 · CyberNet');
+  await expect(page).toHaveTitle('IPcalc - Adressage IPv4 et IPv6');
 });
 
 test('IPv4 /31 Pro : deux adresses utilisables sans broadcast', async ({ page }) => {
-  await page.getByLabel('Adresse IP').fill('10.0.0.1/31');
+  await page.getByLabel('Adresse IP', { exact: true }).fill('10.0.0.1/31');
   await page.getByRole('button', { name: 'Calculer le réseau' }).click();
   await page.getByRole('button', { name: 'Télécharger une fiche pédagogique PDF' }).click();
   await page.evaluate(() => { window.print = () => {}; });
@@ -501,7 +501,7 @@ test('VLSM : cinq lignes compactes et fiche réseau initial automatique', async 
 });
 
 test('VLSM : saisir des quantités, classer et afficher le plan coloré', async ({ page }) => {
-  await page.getByLabel('Adresse IP').fill('192.168.10.0/24');
+  await page.getByLabel('Adresse IP', { exact: true }).fill('192.168.10.0/24');
   await page.getByRole('radio',{name:'VLSM',exact:true}).check();
   await page.getByLabel('Hôtes par réseau ligne 1').fill('12');
   await page.getByLabel('Hôtes par réseau ligne 2').fill('50');
@@ -517,7 +517,7 @@ test('VLSM : saisir des quantités, classer et afficher le plan coloré', async 
 
 test('VLSM : refus d’un réseau trop petit et mise à jour de la fiche avant calcul', async ({ page }) => {
   await page.getByRole('radio',{name:'VLSM',exact:true}).check();
-  await page.getByLabel('Adresse IP').fill('192.168.10.0/24');
+  await page.getByLabel('Adresse IP', { exact: true }).fill('192.168.10.0/24');
   await page.getByLabel('Quantité ligne 1').fill('30');
   await page.getByLabel('Hôtes par réseau ligne 1').fill('64');
   await expect(page.locator('#vlsm-base-content')).toContainText('capacité insuffisante');
@@ -527,7 +527,7 @@ test('VLSM : refus d’un réseau trop petit et mise à jour de la fiche avant c
 });
 
 test('impression A4 VLSM : résumé textuel et tableau, bouton PDF historique préservé', async ({ page }) => {
-  await page.getByLabel('Adresse IP').fill('192.168.50.0/24');
+  await page.getByLabel('Adresse IP', { exact: true }).fill('192.168.50.0/24');
   await page.getByRole('radio',{name:'VLSM',exact:true}).check();
   for(const [index,hosts] of [50,25,12,5,2,10].entries()){
     if(index===5)await page.locator('#vlsm-add').click();
@@ -551,14 +551,14 @@ test('impression A4 VLSM : résumé textuel et tableau, bouton PDF historique pr
   await page.emulateMedia({media:'screen'});
   await page.evaluate(()=>window.dispatchEvent(new Event('afterprint')));
   await expect(page.locator('#professional-report')).toHaveCount(0);
-  await expect(page).toHaveTitle('IPcalc — Adressage IPv4 et IPv6 · CyberNet');
+  await expect(page).toHaveTitle('IPcalc - Adressage IPv4 et IPv6');
   await page.getByRole('radio',{name:'Aucun découpage',exact:true}).check();
   await page.getByRole('button',{name:'Calculer le réseau'}).click();
   await expect(page.getByRole('button',{name:'Télécharger une fiche pédagogique PDF'})).toBeEnabled();
 });
 
 test('VLSM 140 réseaux : pagination écran à 100 et impression complète', async ({ page }) => {
-  await page.getByLabel('Adresse IP').fill('10.0.0.0/7');
+  await page.getByLabel('Adresse IP', { exact: true }).fill('10.0.0.0/7');
   await page.getByRole('radio',{name:'VLSM',exact:true}).check();
   const groups=[[30,50],[20,25],[40,13],[50,8]];
   for(let i=0;i<groups.length;i++){
@@ -603,7 +603,7 @@ test('IPv6 Pro A4 : rapport autonome /64, impression Firefox et restauration', a
   await page.emulateMedia({ media: 'screen' });
   await page.evaluate(() => window.dispatchEvent(new Event('afterprint')));
   await expect(page.locator('#professional-report')).toHaveCount(0);
-  await expect(page).toHaveTitle('IPcalc — Adressage IPv4 et IPv6 · CyberNet');
+  await expect(page).toHaveTitle('IPcalc - Adressage IPv4 et IPv6');
 });
 
 test('IPv6 Pro A4 : /128 ne propose aucun sous-réseau /64 et aucun identifiant /64', async ({ page }) => {
@@ -618,7 +618,7 @@ test('IPv6 Pro A4 : /128 ne propose aucun sous-réseau /64 et aucun identifiant 
 });
 
 test('VLSM Pro : génération entièrement autonome sans panneaux IPcalc', async ({ page }) => {
-  await page.getByLabel('Adresse IP').fill('192.168.50.0/24');
+  await page.getByLabel('Adresse IP', { exact: true }).fill('192.168.50.0/24');
   await page.getByRole('radio', { name: 'VLSM', exact: true }).check();
   await page.getByLabel('Hôtes par réseau ligne 1').fill('50');
   await page.getByLabel('Hôtes par réseau ligne 2').fill('20');
