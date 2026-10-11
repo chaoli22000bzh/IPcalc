@@ -168,7 +168,7 @@
   body.print-professional .professional-ipv6-subnet-reading {margin:3mm 0 4mm;break-inside:avoid;}
   body.print-professional .professional-ipv6-subnet-reading h3 {font-size:9pt;margin:0 0 2mm;}
   body.print-professional .professional-ipv6-subnet-bar {display:flex;height:13mm;border:1px solid #607078;border-radius:2mm;overflow:hidden;}
-  body.print-professional .professional-ipv6-subnet-bar>div {display:flex;flex-direction:column;justify-content:center;align-items:center;min-width:0;color:#fff;font-size:7pt;line-height:1.25;text-align:center;padding:1mm;}
+  body.print-professional .professional-ipv6-subnet-bar>div {display:block;min-width:0;padding:0;}\n  body.print-professional .professional-ipv6-subnet-legend {display:flex;flex-wrap:wrap;gap:2mm 6mm;margin-top:2mm;font-size:7.5pt;}\n  body.print-professional .professional-ipv6-subnet-legend-item {display:flex;align-items:center;gap:1.5mm;}\n  body.print-professional .professional-ipv6-subnet-legend-swatch {display:inline-block;width:3mm;height:3mm;border:1px solid #777;flex:none;}
   body.print-professional .professional-ipv6-subnet-fixed {background:#17675d!important;}
   body.print-professional .professional-ipv6-subnet-borrowed {background:#b46a13!important;}
   body.print-professional .professional-ipv6-subnet-rest {background:#50616d!important;}
