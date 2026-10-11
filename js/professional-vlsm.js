@@ -84,6 +84,7 @@ export function buildVlsmProfessionalReport(base, plan) {
     node('span', '', number(plan.freeAddresses) + ' adresses disponibles (' + percent(plan.freeAddresses, plan.initial.totalAddresses) + ')')
   );
   allocation.append(legend);
+  allocation.append(node('p', 'vlsm-results-intro', 'Chaque couleur représente un groupe de sous-réseaux ayant les mêmes besoins en hôtes.'));
   report.append(allocation);
 
   const tableSection = node('section', 'professional-report-networks');
