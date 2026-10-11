@@ -3,10 +3,10 @@ import { classifyIPv4 } from './address-classification.js';
 import { parseIPv6 } from './ipv6.js?v=2.0.0-step3.0';
 import { downloadFlsmA3 } from './pdf-a3-flsm.js?v=2.0.0-step3.0';
 import { downloadAddressingA4 } from './pdf-a4.js?v=2.0.0-step3.0';
-import { printFlsmProfessional } from './professional-flsm.js?v=2.0.0-step3.21';
-import { printIPv4Professional } from './professional-ipv4.js?v=2.0.0-step3.21';
-import { printIPv6Professional } from './professional-ipv6.js?v=2.0.0-step3.21';
-import { printVlsmProfessional } from './professional-vlsm.js?v=2.0.0-step3.21';
+import { printFlsmProfessional } from './professional-flsm.js?v=2.0.0-step3.22';
+import { printIPv4Professional } from './professional-ipv4.js?v=2.0.0-step3.22';
+import { printIPv6Professional } from './professional-ipv6.js?v=2.0.0-step3.22';
+import { printVlsmProfessional } from './professional-vlsm.js?v=2.0.0-step3.22';
 import { parseNetwork, planSubnets, subnetAt, summaryIndices, subnetPage } from './ipv4.js?v=2.0.0-step3.0';
 import { EXPORT_COLUMNS } from './exports.js?v=2.0.0-step3.0';
 
@@ -555,7 +555,7 @@ function updatePdfAvailability(){
   print.disabled=!vlsm&&!legacy&&!ipv6;
   print.setAttribute('aria-label',vlsm?'Imprimer le plan VLSM A4':legacy?'Télécharger une fiche pédagogique PDF':ipv6?'Imprimer la fiche professionnelle IPv6 A4':'Impression indisponible');
   print.title=vlsm?'Imprimer le plan VLSM A4 ou enregistrer en PDF':legacy?'Télécharger une fiche pédagogique PDF':ipv6?'Imprimer la fiche professionnelle IPv6 A4':'Impression indisponible';
-  $('print-help').textContent=vlsm?'Impression VLSM A4':legacy?(current.plan?'PDF A3 / A4 Pro':'PDF A4 / A4 Pro'):ipv6?'PDF A4 Pro':'À venir';
+  $('print-help').textContent=vlsm?'Impression VLSM A4':legacy?(current.plan?'PDF A3 / A4 Pro':'PDF A4 / A4 Pro'):ipv6?'PDF A4 Pro':'PDF A4 Pro';
 }
 $('print-results').addEventListener('click',()=>{
   if(!current)return;
