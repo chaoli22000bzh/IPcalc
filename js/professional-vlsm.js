@@ -30,17 +30,18 @@ export function buildVlsmProfessionalReport(base, plan) {
   report.id = 'professional-report';
   report.setAttribute('aria-label', 'Rapport professionnel VLSM');
 
-  // Bandeau conforme à l'impression VLSM déjà validée (logo et titre IPcalc).
-  const header = node('header', 'professional-vlsm-header');
-  const logo = node('img', 'professional-vlsm-logo');
-  logo.src = new URL('../icons/Logo_CyberNet_bleu_marine_transparent.svg', import.meta.url).href;
-  logo.alt = 'CyberNet Los Angeles';
-  header.append(logo, node('h1', '', 'IPcalc'));
+  const header = node('header', 'professional-report-head');
+  const headings = node('div');
+  headings.append(node('h1', '', 'Plan d’adressage IPv4 VLSM'));
+  header.append(headings);
   report.append(header);
 
-  const summary = node('section', 'professional-vlsm-summary');
-  summary.append(node('h2', '', 'Plan VLSM'));
-  const dl = node('dl', 'print-summary-network');
+  const summary = node('section', 'professional-report-summary');
+  summary.append(node('h2', '', 'Synthèse du plan d’adressage'));
+  const group = node('div', 'professional-report-group');
+  group.append(node('h3', '', 'Réseau initial'));
+  const dl = node('dl', 'professional-report-fields');
+
   [
     ['Réseau initial', base.address + '/' + base.prefix],
     ['Masque décimal', base.mask],
@@ -48,12 +49,13 @@ export function buildVlsmProfessionalReport(base, plan) {
     ['Adresses totales', number(base.blockSize)],
     ['Hôtes utilisables', number(base.usableHosts)],
   ].forEach(([label, value]) => dl.append(info(label, value)));
-  summary.append(dl);
+  group.append(dl);
+  summary.append(group);
   report.append(summary);
 
   report.append(node('p', 'vlsm-results-intro', number(plan.subnetCount) +
     ' sous-réseaux attribués dans ' + plan.initial.cidr));
-  const allocation = node('section', 'vlsm-allocation-panel');
+  const allocation = node('section', 'professional-report-allocation');
   allocation.append(node('h3', '', 'Occupation de l’espace d’adressage'));
   const bar = node('div', 'vlsm-allocation-bar');
   bar.setAttribute('role', 'img');
@@ -83,8 +85,10 @@ export function buildVlsmProfessionalReport(base, plan) {
   allocation.append(legend);
   report.append(allocation);
 
-  const wrapper = node('div', 'vlsm-print-table-wrapper');
-  const table = node('table', 'vlsm-print-table');
+  const tableSection = node('section', 'professional-report-networks');
+  tableSection.append(node('h2', '', 'Tableau complet des sous-réseaux'));
+  const wrapper = node('div', 'professional-report-table-wrap');
+  const table = node('table', 'professional-report-table professional-vlsm-table');
   const thead = node('thead');
   const heading = node('tr');
   ['Nº','Hôtes demandés','Hôtes disponibles','Adresse réseau / CIDR','Broadcast','Masque décimal']
@@ -101,7 +105,8 @@ export function buildVlsmProfessionalReport(base, plan) {
   }
   table.append(body);
   wrapper.append(table);
-  report.append(wrapper);
+  tableSection.append(wrapper);
+  report.append(tableSection);
   return report;
 }
 
@@ -113,12 +118,12 @@ export function printVlsmProfessional(base, plan) {
   destination.append(report);
   const title = document.title;
   document.title = base.address + '_VLSM_Pro';
-  document.body.classList.add('print-vlsm-professional');
+  document.body.classList.add('print-professional');
   let finished = false;
   const restore = () => {
     if (finished) return;
     finished = true;
-    document.body.classList.remove('print-vlsm-professional');
+    document.body.classList.remove('print-professional');
     document.title = title;
     report.remove();
     window.removeEventListener('afterprint', restore);
