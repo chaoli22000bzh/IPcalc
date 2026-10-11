@@ -90,7 +90,7 @@ export function buildFlsmProfessionalReport(base, plan) {
   if (remaining > 0) {
     const free = node('span', 'professional-report-free');
     free.style.width = (remaining / plan.capacity * 100) + '%';
-    free.title = number(remaining) + ' sous-réseaux disponibles';
+    free.title = number(remaining) + (remaining === 1 ? ' sous-réseau disponible' : ' sous-réseaux disponibles');
     bar.append(free);
   }
   visual.append(bar);
@@ -98,7 +98,7 @@ export function buildFlsmProfessionalReport(base, plan) {
   const usedLegend = node('span', 'professional-report-legend-used',
     number(plan.concernedCount) + ' sous-réseaux attribués (' + percent(plan.concernedCount, plan.capacity) + ')');
   const freeLegend = node('span', 'professional-report-legend-free',
-    number(remaining) + ' sous-réseaux disponibles (' + percent(remaining, plan.capacity) + ')');
+    number(remaining) + (remaining === 1 ? ' sous-réseau disponible (' : ' sous-réseaux disponibles (') + percent(remaining, plan.capacity) + ')');
   legend.append(usedLegend, freeLegend);
   visual.append(bar, legend);
   summary.append(visual);
