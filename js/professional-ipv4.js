@@ -26,10 +26,11 @@ export function buildIPv4ProfessionalReport(base) {
   report.setAttribute('aria-label', 'Rapport professionnel IPv4');
   const head = el('header', 'professional-report-head');
   const headings = el('div');
-  headings.append(el('p', 'professional-report-kicker', 'CYBERNET · RAPPORT TECHNIQUE'),
-    el('h1', '', 'Fiche d’adressage IPv4'),
-    el('p', 'professional-report-subtitle', 'Adresse IPv4 analysée :'),
-    el('p', 'professional-ipv4-input', (base.inputAddress ?? base.address) + '/' + base.prefix));
+  headings.append(el('h1', '', 'Fiche d’adressage IPv4'));
+  const analyzed = el('p', 'professional-ipv4-analyzed');
+  analyzed.append(el('span', '', 'Adresse IPv4 analysée : '),
+    el('strong', '', (base.inputAddress ?? base.address) + '/' + base.prefix));
+  headings.append(analyzed);
   const logo = el('img', 'professional-report-logo');
   logo.src = new URL('../icons/Logo_CyberNet_bleu_marine_transparent.svg', import.meta.url).href;
   logo.alt = 'CyberNet Los Angeles';
