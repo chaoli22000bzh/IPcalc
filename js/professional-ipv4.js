@@ -31,10 +31,7 @@ export function buildIPv4ProfessionalReport(base) {
   analyzed.append(el('span', '', 'Adresse IPv4 analysée : '),
     el('strong', '', (base.inputAddress ?? base.address) + '/' + base.prefix));
   headings.append(analyzed);
-  const logo = el('img', 'professional-report-logo');
-  logo.src = new URL('../icons/Logo_CyberNet_bleu_marine_transparent.svg', import.meta.url).href;
-  logo.alt = 'CyberNet Los Angeles';
-  head.append(headings, logo);
+  head.append(headings);
   report.append(head);
 
   const section = el('section', 'professional-report-summary');
@@ -63,8 +60,6 @@ export function buildIPv4ProfessionalReport(base) {
       'Liaison point à point /31 : les deux adresses sont utilisables. Pas de broadcast conventionnel.'));
   }
   report.append(section);
-  report.append(el('footer', 'professional-report-footer',
-    'CyberNet · IPcalc — Fiche d’adressage IPv4 · Rapport professionnel'));
   return report;
 }
 
