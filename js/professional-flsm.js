@@ -70,19 +70,26 @@ export function buildFlsmProfessionalReport(base, plan) {
   sections.append(initial, allocation);
   summary.append(sections);
 
-  // Une barre unique, deux segments : sous-réseaux attribués et non affectés.
-  // La proportion porte sur les adresses, sans confondre hôtes et capacité brute.
+  // Visualisation monochrome des sous-réseaux attribués et de l'espace restant.
   const visual = node('div', 'professional-report-allocation');
   visual.append(node('h3', '', 'Répartition du réseau initial'));
   const bar = node('div', 'professional-report-allocation-bar');
   bar.setAttribute('role', 'img');
   bar.setAttribute('aria-label', number(plan.concernedCount) + ' sous-réseaux attribués sur ' + number(plan.capacity) +
     ', ' + number(remaining) + ' restants');
-  const used = node('span', 'professional-report-used');
-  used.style.width = (plan.concernedCount / plan.capacity * 100) + '%';
-  const free = node('span', 'professional-report-free');
-  free.style.width = (remaining / plan.capacity * 100) + '%';
-  bar.append(used, free);
+  const visibleSegments = Math.min(plan.concernedCount, 64);
+  for (let index = 0; index < visibleSegments; index++) {
+    const segment = node('span', 'professional-report-used');
+    segment.style.width = (plan.concernedCount / plan.capacity / visibleSegments * 100) + '%';
+    segment.classList.add(index % 2 ? 'professional-report-used-even' : 'professional-report-used-odd');
+    bar.append(segment);
+  }
+  if (remaining > 0) {
+    const free = node('span', 'professional-report-free');
+    free.style.width = (remaining / plan.capacity * 100) + '%';
+    bar.append(free);
+  }
+  visual.append(bar);
   const legend = node('div', 'professional-report-allocation-legend');
   const usedLegend = node('span', 'professional-report-legend-used',
     number(plan.concernedCount) + ' sous-réseaux attribués : ' + number(assignedHosts) + ' hôtes utilisables');
