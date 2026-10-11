@@ -1,4 +1,5 @@
 /** Fiche professionnelle IPv4 simple A4, sans découpage ni dépendance serveur. */
+import { classifyIPv4 } from './address-classification.js';
 import { numberToIPv4 } from './ipv4.js';
 
 const format = value => Number(value).toLocaleString('fr-FR');
@@ -51,6 +52,8 @@ export function buildIPv4ProfessionalReport(base) {
     ['Nombre total d’adresses', format(base.blockSize)],
     ['Hôtes utilisables', format(base.usableHosts)],
   ].forEach(([label, value]) => fields.append(pair(label, value)));
+  const classification=classifyIPv4(base.inputAddress??base.address);
+  fields.append(pair('Nature de l’adresse saisie',classification.label+' — '+classification.description));
   group.append(fields);
   section.append(group);
   if (base.inputAddress && base.inputAddress !== base.address) {
