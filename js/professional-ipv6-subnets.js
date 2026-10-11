@@ -6,7 +6,7 @@ const MAX_ROWS=12;
 export function buildIPv6SubnetProfessionalReport(info,plan){
   if(!info||!plan||!Number.isInteger(info.prefix)||!Number.isInteger(plan.target)||
     plan.target<info.prefix||plan.target>64||typeof plan.at!=='function'||
-    !/^\\d+$/.test(String(plan.count))||BigInt(plan.count)<1n||
+    !/^[0-9]+$/.test(String(plan.count))||BigInt(plan.count)<1n||
     plan.borrowedBits!==plan.target-info.prefix){
     throw new Error('Calculez un découpage IPv6 valide avant de préparer le rapport.');
   }
