@@ -60,9 +60,7 @@
     print-color-adjust: exact; -webkit-print-color-adjust: exact;
   }
   body.print-professional .professional-report-used { display: block; flex: 0 0 auto; box-sizing: border-box; border-right: 1px solid #333; }
-  body.print-professional .professional-report-used-odd { background: #777 !important; }
-  body.print-professional .professional-report-used-even { background: #bbb !important; }
-  body.print-professional .professional-report-free { display: block; flex: 0 0 auto; box-sizing: border-box; background: #fff !important; border-left: 2px solid #111; }
+  body.print-professional .professional-report-free { display: block; flex: 0 0 auto; box-sizing: border-box; background: #e3e9e7 !important; border-left: 1px solid #555; }
   body.print-professional .professional-report-allocation-legend {
     display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2mm 5mm;
     margin-top: 1.5mm; font-size: 7.5pt; color: #333;
@@ -103,8 +101,8 @@
   body.print-professional .professional-vlsm-report .vlsm-allocation-panel { break-inside: avoid; }
   body.print-professional .professional-vlsm-report .vlsm-allocation-panel h3 { font-size: 8.5pt; margin: 0 0 1.5mm; }
   body.print-professional .professional-vlsm-report .vlsm-allocation-bar { display: flex; width: 100%; height: 8mm; border: 1px solid #777; box-sizing: border-box; overflow: hidden; }
-  body.print-professional .professional-vlsm-report .vlsm-bar-segment { display: block; flex: 0 0 auto; box-sizing: border-box; border-right: 1px solid #555; background: #999 !important; }
-  body.print-professional .professional-vlsm-report .vlsm-bar-free { display: block; flex: 0 0 auto; background: #fff !important; }
+  body.print-professional .professional-vlsm-report .vlsm-bar-segment { display: block; flex: 0 0 auto; box-sizing: border-box; border-right: 1px solid #555; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  body.print-professional .professional-vlsm-report .vlsm-bar-free { display: block; flex: 0 0 auto; background: #e3e9e7 !important; }
   body.print-professional .professional-vlsm-report .vlsm-allocation-legend { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 2mm; font-size: 7.5pt; margin-top: 1.5mm; }
   body.print-professional .professional-vlsm-table th:nth-child(1), body.print-professional .professional-vlsm-table td:nth-child(1) { width: 6%; }
   body.print-professional .professional-vlsm-table th:nth-child(2), body.print-professional .professional-vlsm-table td:nth-child(2) { width: 16%; }
@@ -112,6 +110,8 @@
   body.print-professional .professional-vlsm-table th:nth-child(4), body.print-professional .professional-vlsm-table td:nth-child(4) { width: 24%; }
   body.print-professional .professional-vlsm-table th:nth-child(5), body.print-professional .professional-vlsm-table td:nth-child(5) { width: 19%; }
   body.print-professional .professional-vlsm-table th:nth-child(6), body.print-professional .professional-vlsm-table td:nth-child(6) { width: 17%; text-align: left; }
+  body.print-professional .professional-report-row-dot { display: inline-block; width: 2mm; height: 2mm; border: 1px solid #555; margin-right: 1.5mm; vertical-align: middle; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  body.print-professional .professional-report-used { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
   /* IPv6 : adresses de 39 caractères et capacités très longues sur une seule page A4. */
   body.print-professional .professional-ipv6-groups {
     display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4mm;
