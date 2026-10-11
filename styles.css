@@ -422,8 +422,8 @@ input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--primary)
 
 /* Nom IPcalc bicolore, adapté automatiquement au thème du système. */
 .site-header .brand { color: #202c29; }
-.site-header .brand-light { color: #237e68; }
+.site-header .brand .brand-light { color: #16835e; font-weight: 600; }
 @media (prefers-color-scheme: dark) {
   .site-header .brand { color: #ffffff; }
-  .site-header .brand-light { color: #83d9b5; }
+  .site-header .brand .brand-light { color: #54e5a1; }
 }
