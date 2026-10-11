@@ -1,14 +1,14 @@
 import { describeVlsmBase, summarizeVlsmRequests, planVlsm, VLSM_MAX_SUBNETS, VLSM_PAGE_SIZE } from './vlsm.js?v=2.0.0-step3.0';
 import { classifyIPv4 } from './address-classification.js';
-import { parseIPv6, classifyIPv6, planIPv6Subnets } from './ipv6.js?v=2.0.0-step3.31';
+import { parseIPv6, classifyIPv6, planIPv6Subnets } from './ipv6.js?v=2.0.0-step3.32';
 import { downloadFlsmA3 } from './pdf-a3-flsm.js?v=2.0.0-step3.0';
 import { downloadAddressingA4 } from './pdf-a4.js?v=2.0.0-step3.0';
-import { printFlsmProfessional } from './professional-flsm.js?v=2.0.0-step3.31';
-import { printIPv4Professional } from './professional-ipv4.js?v=2.0.0-step3.31';
-import { printIPv6Professional } from './professional-ipv6.js?v=2.0.0-step3.31';
-import { printIPv6SubnetProfessional } from './professional-ipv6-subnets.js?v=2.0.0-step3.31';
-import { printVlsmProfessional } from './professional-vlsm.js?v=2.0.0-step3.31';
-import { parseNetwork, planSubnets, subnetAt, summaryIndices, subnetPage } from './ipv4.js?v=2.0.0-step3.31';
+import { printFlsmProfessional } from './professional-flsm.js?v=2.0.0-step3.32';
+import { printIPv4Professional } from './professional-ipv4.js?v=2.0.0-step3.32';
+import { printIPv6Professional } from './professional-ipv6.js?v=2.0.0-step3.32';
+import { printIPv6SubnetProfessional } from './professional-ipv6-subnets.js?v=2.0.0-step3.32';
+import { printVlsmProfessional } from './professional-vlsm.js?v=2.0.0-step3.32';
+import { parseNetwork, planSubnets, subnetAt, summaryIndices, subnetPage } from './ipv4.js?v=2.0.0-step3.32';
 import { EXPORT_COLUMNS } from './exports.js?v=2.0.0-step3.0';
 
 const $ = id => document.getElementById(id);
