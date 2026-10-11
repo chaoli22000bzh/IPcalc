@@ -704,3 +704,12 @@ test('IPv6 : diagnostic LAN Internet Spécial accessible au clic', async ({ page
     await page.locator('#address-diagnostic').click();
   }
 });
+
+test('Découpage IPv6 /56 vers /64 : préfixes et tableau',async({page})=>{
+  await page.locator('#address').fill('2001:db8:1234:ab00::/56');
+  await page.locator('#ipv6-target').selectOption('64');
+  await page.getByRole('button',{name:'Découper le réseau IPv6'}).click();
+  await expect(page.locator('#subnet-result')).toContainText('256');
+  await expect(page.locator('#subnet-result')).toContainText('2001:db8:1234:ab01::/64');
+  await expect(page.locator('#subnet-result')).toContainText('2001:db8:1234:abff::/64');
+});
