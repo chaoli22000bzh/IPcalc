@@ -685,3 +685,61 @@ test('FLSM et VLSM : diagnostic du réseau initial, sans faux positif adresse r�
   await page.getByRole('button', { name: 'Planifier les sous-réseaux' }).click();
   await expect(page.locator('#address-diagnostic')).toHaveText('Spécial');
 });
+
+test('IPv6 : diagnostic LAN Internet Spécial accessible au clic', async ({ page }) => {
+  for (const [address,category,label] of [
+    ['fd12:3456::10/64','lan','LAN'],
+    ['2001:4860:4860::8888/128','internet','Internet'],
+    ['fe80::1234/64','special','Spécial'],
+    ['::1/128','special','Spécial'],
+    ['ff02::1/128','special','Spécial'],
+    ['2001:db8::1/64','special','Spécial']
+  ]) {
+    await page.locator('#address').fill(address);
+    await page.getByRole('button',{name:'Afficher les informations'}).click();
+    await expect(page.locator('#address-diagnostic')).toHaveAttribute('data-category',category);
+    await expect(page.locator('#address-diagnostic')).toHaveText(label);
+    await page.locator('#address-diagnostic').click();
+    await expect(page.locator('#address-diagnostic-detail')).toBeVisible();
+    await page.locator('#address-diagnostic').click();
+  }
+});
+
+test('Découpage IPv6 /56 vers /64 : préfixes et tableau',async({page})=>{
+  await page.locator('#address').fill('2001:db8:1234:ab00::/56');
+  await page.locator('#ipv6-target').selectOption('64');
+  await page.getByRole('button',{name:'Découper le réseau IPv6'}).click();
+  await expect(page.locator('#subnet-result')).toContainText('256');
+  await expect(page.locator('#subnet-result')).toContainText('2001:db8:1234:ab01::/64');
+  await expect(page.locator('#subnet-result')).toContainText('2001:db8:1234:abff::/64');
+});
+
+test('IPv6 : coloration exacte des chiffres hexadécimaux et des bits empruntés',async({page})=>{
+  for(const [address,target,expectedFixed,expectedBorrowed] of [
+    ['2001:db8:1234:ab00::/56','64',2,2],
+    ['2001:db8:1234:abc0::/60','64',3,1],
+    ['2001:db8:1234::/48','56',0,2]
+  ]){
+    await page.locator('#address').fill(address);
+    await page.locator('#ipv6-target').selectOption(target);
+    await page.getByRole('button',{name:'Découper le réseau IPv6'}).click();
+    const fourth=page.locator('.ipv6-bit-sample').first().locator('.ipv6-prefix-example span').nth(12);
+    await expect(fourth).toBeVisible();
+    const digits=page.locator('.ipv6-bit-sample').first().locator('.ipv6-prefix-example span');
+    for(let i=0;i<4;i++){
+      await expect(digits.nth(12+i)).toHaveClass(i<expectedFixed?'ipv6-hextet-fixed':i<expectedFixed+expectedBorrowed?'ipv6-hextet-subnet':'ipv6-hextet-interface');
+    }
+    await expect(page.locator('.ipv6-bit-sample').first().locator('.ipv6-bit-sequence span')).toHaveCount(16);
+  }
+});
+
+test('IPv6 : deux premiers sous-réseaux comparés en binaire',async({page})=>{
+  await page.locator('#address').fill('2001:db8:1234:ab00::/56');
+  await page.locator('#ipv6-target').selectOption('64');
+  await page.getByRole('button',{name:'Découper le réseau IPv6'}).click();
+  await expect(page.locator('.ipv6-bit-sample')).toHaveCount(2);
+  await expect(page.locator('.ipv6-bit-sample').nth(0)).toContainText('ab00');
+  await expect(page.locator('.ipv6-bit-sample').nth(1)).toContainText('ab01');
+  await expect(page.locator('.ipv6-bit-sample').nth(0).locator('.ipv6-bit-sequence')).toHaveText('1010 1011 0000 0000');
+  await expect(page.locator('.ipv6-bit-sample').nth(1).locator('.ipv6-bit-sequence')).toHaveText('1010 1011 0000 0001');
+});

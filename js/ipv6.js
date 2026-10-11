@@ -50,6 +50,26 @@ function classify(n){
   if(n>>125n===1n)return ['Unicast globale (2000::/3)','Potentiellement routable sur Internet'];
   return ['Adresse spéciale ou réservée','Portée dépendant du préfixe et de l’usage'];
 }
+/** Diagnostic de portée IPv6, indépendant du découpage. */
+export function classifyIPv6(info) {
+  const type=info.type;
+  if (type.startsWith('Locale unique')) return {
+    category:'lan', label:'LAN',
+    description:'Adresse locale unique (ULA, fc00::/7) : destinée aux réseaux internes et non routable sur Internet public. Elle peut être utilisée sur plusieurs sous-réseaux internes.'
+  };
+  if (type.startsWith('Unicast globale')) return {
+    category:'internet', label:'Internet',
+    description:'Adresse unicast globale (2000::/3) : potentiellement routable sur Internet. Cela ne garantit ni son attribution effective ni son accessibilité.'
+  };
+  const details={
+    'Adresse non spécifiée':'Adresse non spécifiée (::) : utilisée notamment avant l’attribution d’une adresse. Elle ne peut pas identifier une interface comme adresse source ordinaire.',
+    'Bouclage (::1)':'Adresse de bouclage (::1) : communication avec la machine elle-même, sans transmission sur le réseau.',
+    'Documentation IPv6':'Adresse réservée à la documentation : utilisée pour les exemples, non routable sur Internet public.',
+    'IPv4 mappée (::ffff:0:0/96)':'Adresse IPv4 mappée : représentation d’une adresse IPv4 dans un format IPv6.',
+  };
+  return {category:'special',label:'Spécial',
+    description:details[type] || type+' : '+info.scope+'.'};
+}
 export function parseIPv6(addressInput,maskInput=''){
   const parts=String(addressInput).trim().split('/');
   if(parts.length>2)throw new IPv6Error('Un seul préfixe CIDR est autorisé.');
@@ -74,4 +94,23 @@ export function parseIPv6(addressInput,maskInput=''){
     subnets64:subnets64.toString(),subnets64Exponent:prefix<=64?64-prefix:null,
     type,scope,
     interfaceId:prefix===64?groupsOf(number).slice(4).map(g=>g.toString(16).padStart(4,'0')).join(':'):null};
+}
+
+/** Découpage IPv6 par longueur de préfixe, sans notion de broadcast ni d’hôtes utilisables. */
+export function planIPv6Subnets(info,targetInput) {
+  const text=String(targetInput).trim().replace(/^\//,'');
+  if(!/^\d{1,3}$/.test(text))throw new IPv6Error('Indiquez un préfixe cible entre le préfixe initial et /64.','ipv6-target');
+  const target=Number(text);
+  if(target<info.prefix||target>64)throw new IPv6Error('Le préfixe cible doit être compris entre /'+info.prefix+' et /64.','ipv6-target');
+  const count=1n<<BigInt(target-info.prefix);
+  const base=parse128(info.network);
+  const step=1n<<BigInt(128-target);
+  return {initial:info.network+'/'+info.prefix,target,count:count.toString(),borrowedBits:target-info.prefix,
+    at(index) {
+      const i=BigInt(index);
+      if(i<0n||i>=count)throw new RangeError('Indice de sous-réseau hors limites.');
+      const n=base+i*step;
+      return {index:i.toString(),cidr:compressIPv6(n)+'/'+target,expanded:expandIPv6(n)};
+    }
+  };
 }
