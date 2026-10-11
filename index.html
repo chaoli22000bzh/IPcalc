@@ -75,7 +75,13 @@
               </div>
               <div class="field address-field">
                 <label for="address">Adresse IP</label>
-                <input id="address" name="address" type="text" value="192.168.10.75/26" placeholder="192.168.10.75/26" spellcheck="false" autocomplete="off" autocapitalize="off" enterkeyhint="go" aria-describedby="address-help">
+                <div class="address-with-diagnostic">
+                  <input id="address" name="address" type="text" value="192.168.10.75/26" placeholder="192.168.10.75/26" spellcheck="false" autocomplete="off" autocapitalize="off" enterkeyhint="go" aria-describedby="address-help">
+                  <span class="address-diagnostic-anchor" id="address-diagnostic-anchor" hidden>
+                    <button id="address-diagnostic" type="button" class="address-diagnostic" aria-expanded="false" aria-controls="address-diagnostic-detail"></button>
+                    <span id="address-diagnostic-detail" class="address-diagnostic-detail" role="status" hidden></span>
+                  </span>
+                </div>
                 <p id="address-help" class="field-help">IPv4 avec ou sans CIDR. Une adresse d’hôte est ramenée à son réseau.</p>
               </div>
               <div class="field">
