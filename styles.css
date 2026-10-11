@@ -426,3 +426,25 @@ input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--primary)
 .mode-switch label > span { flex-direction: column; gap: 5px; }
 .mode-switch .mode-diagram { display: block; width: min(132px, 92%); height: 12px; flex: none; fill: currentColor; opacity: .8; }
 .mode-switch input:checked + span .mode-diagram { opacity: 1; }
+
+
+/* IPv6 subnet planner: presentation aligned with other IPcalc result panels. */
+.ipv6-subnet-result { border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--surface); }
+.ipv6-subnet-header {background:var(--surface-soft);border-bottom:1px solid var(--line);}
+.ipv6-subnet-header .network-kicker {margin:0 0 8px;font-size:11px;letter-spacing:.08em;color:var(--primary);}
+.ipv6-subnet-header .subnet-metrics {margin-top:14px;}
+.ipv6-prefix-panel {padding:20px 23px;border-bottom:1px solid var(--line);}
+.ipv6-prefix-panel h4 {margin:0 0 12px;font-size:15px;}
+.ipv6-prefix-strip {display:flex;min-height:55px;gap:3px;border-radius:8px;overflow:hidden;}
+.ipv6-prefix-strip > div {min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 3px;text-align:center;color:#fff;font-size:11px;}
+.ipv6-prefix-strip strong {font-size:12px;}
+.ipv6-prefix-fixed {background:#17675d;}
+.ipv6-prefix-borrowed {background:#b46a13;}
+.ipv6-prefix-interface {background:#50616d;}
+.ipv6-prefix-example {font:600 14px/1.8 ui-monospace,Consolas,monospace;overflow-wrap:anywhere;margin:14px 0 8px;}
+.ipv6-hextet-fixed {color:var(--primary);}
+.ipv6-hextet-subnet {color:#e7a34a;}
+.ipv6-hextet-interface {color:var(--muted);}
+.ipv6-prefix-panel .subnet-note {margin:10px 0 0;}
+.ipv6-subnet-footer {padding:14px 23px;margin:0;}
+@media(max-width:640px){.ipv6-prefix-panel{padding:16px}.ipv6-prefix-strip strong{font-size:10px}.ipv6-prefix-strip>div{font-size:10px}.ipv6-prefix-example{font-size:12px}}
