@@ -3,6 +3,8 @@ import { subnetAt } from './ipv4.js';
 
 export const FLSM_PRO_MAX_ROWS = 10000;
 const number = value => Number(value).toLocaleString('fr-FR');
+const colors = ['#28699c','#218e81','#d39737','#8976ba','#d46f77','#4c96b0','#a28b67','#5d9a72'];
+const percent = (value, total) => (100 * value / total).toLocaleString('fr-FR', { maximumFractionDigits: 1 }) + ' %';
 
 function node(tag, className = '', text) {
   const item = document.createElement(tag);
@@ -81,7 +83,7 @@ export function buildFlsmProfessionalReport(base, plan) {
   for (let index = 0; index < visibleSegments; index++) {
     const segment = node('span', 'professional-report-used');
     segment.style.width = (plan.concernedCount / plan.capacity / visibleSegments * 100) + '%';
-    segment.classList.add(index % 2 ? 'professional-report-used-even' : 'professional-report-used-odd');
+    segment.style.backgroundColor = colors[index % colors.length];
     segment.title = 'Sous-réseau attribué';
     bar.append(segment);
   }
@@ -94,10 +96,9 @@ export function buildFlsmProfessionalReport(base, plan) {
   visual.append(bar);
   const legend = node('div', 'professional-report-allocation-legend');
   const usedLegend = node('span', 'professional-report-legend-used',
-    number(plan.concernedCount) + ' sous-réseaux attribués : ' + number(assignedHosts) + ' hôtes utilisables');
+    number(plan.concernedCount) + ' sous-réseaux attribués (' + percent(plan.concernedCount, plan.capacity) + ')');
   const freeLegend = node('span', 'professional-report-legend-free',
-    number(remaining) + (remaining > 1 ? ' sous-réseaux restants : ' : ' sous-réseau restant : ') +
-    number(remainingHosts) + ' hôtes utilisables non affectés');
+    number(remaining) + ' sous-réseaux disponibles (' + percent(remaining, plan.capacity) + ')');
   legend.append(usedLegend, freeLegend);
   visual.append(bar, legend);
   summary.append(visual);
@@ -107,12 +108,6 @@ export function buildFlsmProfessionalReport(base, plan) {
       ? 'Méthode combinée : ' + number(plan.requestedCount) + ' réseaux et ' + number(plan.minimumHosts) + ' hôtes minimum par réseau'
       : 'Méthode A : découpage selon le nombre de sous-réseaux demandés : ' + number(plan.requestedCount);
   summary.append(node('p', 'professional-report-method', description));
-  if (remaining > 0) {
-    summary.append(node('p', 'professional-report-note',
-      number(remaining) + ' sous-réseau' + (remaining > 1 ? 'x' : '') +
-      ' supplémentaire' + (remaining > 1 ? 's sont possibles, mais ne font pas partie' : ' est possible, mais ne fait pas partie') +
-      ' de la demande.'));
-  }
   report.append(summary);
 
   const tableSection = node('section', 'professional-report-networks');
@@ -142,7 +137,15 @@ export function buildFlsmProfessionalReport(base, plan) {
         : numberToAddress(subnet.network + subnet.blockSize - 2);
       const row = node('tr');
       [index, subnet.address + '/' + subnet.prefix, first, last,
-        subnet.broadcast ?? '—', number(subnet.usableHosts)].forEach(value => row.append(node('td', '', value)));
+        subnet.broadcast ?? '—', number(subnet.usableHosts)].forEach((value, column) => {
+          const cell = node('td', '', value);
+          if (column === 0 && plan.concernedCount <= 16) {
+            const dot = node('span', 'professional-report-row-dot');
+            dot.style.backgroundColor = colors[index % colors.length];
+            cell.prepend(dot);
+          }
+          row.append(cell);
+        });
       fragment.append(row);
     }
     tbody.append(fragment);
