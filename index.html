@@ -10,11 +10,11 @@
     <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="./icons/icon-192.png">
     <link rel="manifest" href="./manifest.webmanifest">
-    <link rel="stylesheet" href="./styles.css?v=2.0.0-step3.21">
-    <link rel="stylesheet" href="./print.css?v=2.0.0-step3.21" media="print">
-    <link rel="stylesheet" href="./professional-report.css?v=2.0.0-step3.21">
-    <script type="module" src="./js/app.js?v=2.0.0-step3.21"></script>
-    <script type="module" src="./js/pwa.js?v=2.0.0-step3.21"></script>
+    <link rel="stylesheet" href="./styles.css?v=2.0.0-step3.22">
+    <link rel="stylesheet" href="./print.css?v=2.0.0-step3.22" media="print">
+    <link rel="stylesheet" href="./professional-report.css?v=2.0.0-step3.22">
+    <script type="module" src="./js/app.js?v=2.0.0-step3.22"></script>
+    <script type="module" src="./js/pwa.js?v=2.0.0-step3.22"></script>
   <style>
 #pdf-a4-dialog{border:1px solid #8b9995;border-radius:14px;max-width:min(95vw,470px);width:420px;padding:0;color:CanvasText;background:Canvas;box-shadow:0 18px 50px #0008}
 #pdf-a4-dialog::backdrop{background:#0009}
@@ -56,10 +56,10 @@
             <div class="panel-heading"><span class="step-number">01</span><h2 id="input-title">Votre réseau</h2></div>
             <div class="form-actions">
               <button type="submit" class="button calculate-button"><span id="calculate-label">Calculer le réseau</span><span aria-hidden="true">→</span></button>
-              <button id="print-results" type="button" class="button button-outline print-button" disabled aria-label="Imprimer — à venir" title="Imprimer — à venir" aria-describedby="print-help">
+              <button id="print-results" type="button" class="button button-outline print-button" disabled aria-label="Impression disponible après calcul" title="Effectuez un calcul pour activer l’impression" aria-describedby="print-help">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M7 8V3h10v5M7 17H4V8h16v9h-3M7 14h10v7H7z"/><path d="M16 11h1"/></svg>
               </button>
-              <span id="print-help" class="field-help print-status">À venir</span>
+              <span id="print-help" class="field-help print-status">PDF A4 Pro</span>
             </div>
             <div class="network-fields">
               <div class="field">
@@ -90,9 +90,9 @@
             <fieldset id="mode-fieldset" class="mode-fieldset">
               <legend>Mode de découpage</legend>
               <div class="mode-switch">
-                <label><input type="radio" name="mode" value="simple" checked><span>Aucun découpage</span></label>
-                <label><input type="radio" name="mode" value="subnets"><span>FLSM</span></label>
-                <label><input type="radio" name="mode" value="vlsm"><span>VLSM</span></label>
+                <label><input type="radio" name="mode" value="simple" checked><span>Aucun découpage<svg class="mode-diagram" viewBox="0 0 132 12" aria-hidden="true" focusable="false"><rect x="1" y="2" width="130" height="8" rx="2"/></svg></span></label>
+                <label><input type="radio" name="mode" value="subnets"><span>FLSM<svg class="mode-diagram" viewBox="0 0 132 12" aria-hidden="true" focusable="false"><rect x="1" y="2" width="24" height="8" rx="1"/><rect x="27" y="2" width="24" height="8" rx="1"/><rect x="53" y="2" width="24" height="8" rx="1"/><rect x="79" y="2" width="24" height="8" rx="1"/><rect x="105" y="2" width="26" height="8" rx="1"/></svg></span></label>
+                <label><input type="radio" name="mode" value="vlsm"><span>VLSM<svg class="mode-diagram" viewBox="0 0 132 12" aria-hidden="true" focusable="false"><rect x="1" y="2" width="49" height="8" rx="1"/><rect x="52" y="2" width="32" height="8" rx="1"/><rect x="86" y="2" width="21" height="8" rx="1"/><rect x="109" y="2" width="10" height="8" rx="1"/><rect x="121" y="2" width="10" height="8" rx="1"/></svg></span></label>
               </div>
             </fieldset>
 
