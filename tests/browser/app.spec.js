@@ -444,7 +444,9 @@ test('FLSM A4 Pro : un sous-réseau libre, 14 hôtes disponibles et barre 75/25'
   await expect(page.locator('.professional-report-group').last()).toContainText('14');
   await expect(page.locator('.professional-report-group').last()).toContainText('3 / 4');
   await expect(page.locator('.professional-report-legend-free')).toContainText('1 sous-réseau disponible (25 %)');
-  expect(await page.locator('.professional-report-used').evaluate(node => parseFloat(node.style.width))).toBe(75);
+  const usedSegments = await page.locator('.professional-report-used').evaluateAll(nodes => nodes.map(node => parseFloat(node.style.width)));
+  expect(usedSegments).toEqual([25, 25, 25]);
+  expect(usedSegments.reduce((total, width) => total + width, 0)).toBe(75);
   expect(await page.locator('.professional-report-free').evaluate(node => parseFloat(node.style.width))).toBe(25);
   await expect(page.locator('.professional-report-table tbody tr')).toHaveCount(3);
   await page.evaluate(() => window.dispatchEvent(new Event('afterprint')));
