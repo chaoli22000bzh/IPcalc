@@ -3,10 +3,10 @@ import { classifyIPv4 } from './address-classification.js';
 import { parseIPv6 } from './ipv6.js?v=2.0.0-step3.0';
 import { downloadFlsmA3 } from './pdf-a3-flsm.js?v=2.0.0-step3.0';
 import { downloadAddressingA4 } from './pdf-a4.js?v=2.0.0-step3.0';
-import { printFlsmProfessional } from './professional-flsm.js?v=2.0.0-step3.17';
-import { printIPv4Professional } from './professional-ipv4.js?v=2.0.0-step3.17';
-import { printIPv6Professional } from './professional-ipv6.js?v=2.0.0-step3.17';
-import { printVlsmProfessional } from './professional-vlsm.js?v=2.0.0-step3.17';
+import { printFlsmProfessional } from './professional-flsm.js?v=2.0.0-step3.18';
+import { printIPv4Professional } from './professional-ipv4.js?v=2.0.0-step3.18';
+import { printIPv6Professional } from './professional-ipv6.js?v=2.0.0-step3.18';
+import { printVlsmProfessional } from './professional-vlsm.js?v=2.0.0-step3.18';
 import { parseNetwork, planSubnets, subnetAt, summaryIndices, subnetPage } from './ipv4.js?v=2.0.0-step3.0';
 import { EXPORT_COLUMNS } from './exports.js?v=2.0.0-step3.0';
 
@@ -351,7 +351,7 @@ function renderVlsm(plan){
   barPanel.append(bar);
   const legend=element('div','vlsm-allocation-legend');
   legend.append(element('span','',format(plan.usedAddresses)+' adresses attribuées ('+allocationPercent(plan.usedAddresses,plan.initial.totalAddresses)+')'));
-  legend.append(element('span','',format(plan.freeAddresses)+' adresses non attribuées'));
+  legend.append(element('span','',format(plan.freeAddresses)+' adresses disponibles ('+allocationPercent(plan.freeAddresses,plan.initial.totalAddresses)+')'));
   barPanel.append(legend);network.append(barPanel);
   const other=$('subnet-result');other.replaceChildren();other.hidden=false;
   const wrapper=element('div','table-wrapper');
