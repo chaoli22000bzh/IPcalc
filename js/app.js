@@ -3,10 +3,10 @@ import { classifyIPv4 } from './address-classification.js';
 import { parseIPv6 } from './ipv6.js?v=2.0.0-step3.0';
 import { downloadFlsmA3 } from './pdf-a3-flsm.js?v=2.0.0-step3.0';
 import { downloadAddressingA4 } from './pdf-a4.js?v=2.0.0-step3.0';
-import { printFlsmProfessional } from './professional-flsm.js?v=2.0.0-step3.16';
-import { printIPv4Professional } from './professional-ipv4.js?v=2.0.0-step3.16';
-import { printIPv6Professional } from './professional-ipv6.js?v=2.0.0-step3.16';
-import { printVlsmProfessional } from './professional-vlsm.js?v=2.0.0-step3.16';
+import { printFlsmProfessional } from './professional-flsm.js?v=2.0.0-step3.17';
+import { printIPv4Professional } from './professional-ipv4.js?v=2.0.0-step3.17';
+import { printIPv6Professional } from './professional-ipv6.js?v=2.0.0-step3.17';
+import { printVlsmProfessional } from './professional-vlsm.js?v=2.0.0-step3.17';
 import { parseNetwork, planSubnets, subnetAt, summaryIndices, subnetPage } from './ipv4.js?v=2.0.0-step3.0';
 import { EXPORT_COLUMNS } from './exports.js?v=2.0.0-step3.0';
 
@@ -66,6 +66,34 @@ function renderNetwork(base) {
     data.append(group);
   });
   container.append(banner, data);
+  if (current.plan) {
+    const plan = current.plan;
+    const remaining = plan.capacity - plan.concernedCount;
+    const panel = element('div', 'flsm-allocation-panel');
+    panel.append(element('h3', '', 'Répartition du réseau initial'));
+    const bar = element('div', 'flsm-allocation-bar');
+    bar.setAttribute('role', 'img');
+    bar.setAttribute('aria-label', format(plan.concernedCount) + ' sous-réseaux attribués, ' + format(remaining) + ' disponibles');
+    const visible = Math.min(plan.concernedCount, 64);
+    for (let i = 0; i < visible; i++) {
+      const seg = element('span', 'flsm-allocation-segment');
+      seg.style.width = (100 * plan.concernedCount / plan.capacity / visible) + '%';
+      seg.style.backgroundColor = ['#28699c','#218e81','#d39737','#8976ba','#d46f77','#4c96b0','#a28b67','#5d9a72'][i % 8];
+      seg.title = visible === plan.concernedCount ? 'Sous-réseau ' + (i + 1) : 'Groupe de sous-réseaux attribués';
+      bar.append(seg);
+    }
+    if (remaining > 0) {
+      const free = element('span', 'flsm-allocation-free');
+      free.style.width = (100 * remaining / plan.capacity) + '%';
+      bar.append(free);
+    }
+    panel.append(bar);
+    const legend = element('div', 'flsm-allocation-legend');
+    legend.append(element('span', '', format(plan.concernedCount) + ' attribués (' + allocationPercent(plan.concernedCount, plan.capacity) + ')'));
+    legend.append(element('span', '', format(remaining) + ' disponibles (' + allocationPercent(remaining, plan.capacity) + ')'));
+    panel.append(legend);
+    container.append(panel);
+  }
   if (base.inputAddress !== base.address) {
     container.append(element('p', 'network-note', `${base.inputAddress}/${base.prefix} appartient au réseau ${base.address}/${base.prefix}.`));
   }
