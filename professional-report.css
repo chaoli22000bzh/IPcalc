@@ -22,7 +22,7 @@
   body.print-professional .professional-ipv4-input { margin: 1mm 0 3mm; color: #111; font-size: 14pt; font-weight: 700; }
   body.print-professional .professional-ipv4-report .professional-report-head { position: relative; display: block; min-height: 20mm; padding-top: 1mm; }
   body.print-professional .professional-ipv4-report .professional-report-head > div { width: 100%; }
-  body.print-professional .professional-ipv4-report .professional-report-head h1 { text-align: center; margin: 0 35mm 6mm; }
+  body.print-professional .professional-ipv4-report .professional-report-head h1 { text-align: center; margin: 0 0 6mm; }
   body.print-professional .professional-ipv4-report .professional-report-logo { position: absolute; right: 0; top: 0; }
   body.print-professional .professional-ipv4-analyzed { margin: 0 0 2mm; font-size: 11pt; color: #111; }
   body.print-professional .professional-ipv4-analyzed strong { font-size: 14pt; font-weight: 700; }
