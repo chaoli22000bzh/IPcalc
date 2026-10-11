@@ -69,8 +69,8 @@
     content: ''; display: inline-block; width: 2mm; height: 2mm; margin-right: 1mm;
     vertical-align: middle; border: 1px solid #777;
   }
-  body.print-professional .professional-report-legend-used::before { background: #258778; }
-  body.print-professional .professional-report-legend-free::before { background: #d9e6e2; }
+  body.print-professional .professional-report-legend-used::before { background: #28699c !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  body.print-professional .professional-report-legend-free::before { background: #e3e9e7 !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
   body.print-professional .professional-report-method,
   body.print-professional .professional-report-note { font-size: 8pt; margin: 2mm 0 0; color: #444; }
   body.print-professional .professional-report-table-wrap { overflow: visible; }
