@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parseIPv6 } from '../js/ipv6.js';
+import { parseIPv6, classifyIPv6 } from '../js/ipv6.js';
 
 test('IPv6 documentaire /64 : dernière adresse, 2^64, un seul /64', () => {
   const result=parseIPv6('2001:db8:abcd:12::1234/64');
@@ -49,4 +49,19 @@ test('Les adresses invalides restent refusées', () => {
   assert.throws(()=>parseIPv6('2001:db8::1234/129'));
   assert.throws(()=>parseIPv6('2001:db8::gg/64'));
   assert.throws(()=>parseIPv6('1:2:3:4:5:6:7:8:9/64'));
+});
+
+test('Diagnostic IPv6 : ULA, globale, lien local, bouclage, multicast et documentation', () => {
+  for (const [address,category,fragment] of [
+    ['fd12:3456::10/64','lan','locale unique'],
+    ['2001:4860:4860::8888/128','internet','unicast globale'],
+    ['fe80::1234/64','special','Lien local'],
+    ['::1/128','special','bouclage'],
+    ['ff02::1/128','special','Multicast'],
+    ['2001:db8::1/64','special','documentation']
+  ]) {
+    const diagnostic=classifyIPv6(parseIPv6(address));
+    assert.equal(diagnostic.category,category,address);
+    assert.match(diagnostic.description,new RegExp(fragment,'i'),address);
+  }
 });
