@@ -643,6 +643,7 @@ test('VLSM Pro : génération entièrement autonome sans panneaux IPcalc', async
 
 test('diagnostic des préfixes particuliers et adresse unique /32', async ({ page }) => {
   await page.goto('/');
+  await page.goto('/');
   for (const [address, category, label] of [
     ['192.168.1.10/24','lan','LAN'],
     ['8.8.8.8/24','internet','Internet'],
