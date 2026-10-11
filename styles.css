@@ -382,7 +382,7 @@ input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--primary)
 .address-with-diagnostic { position:relative; display:flex; align-items:stretch; gap:6px; min-width:0; }
 .address-with-diagnostic > input { flex:1; min-width:0; width:100%; }
 .address-diagnostic-anchor { display:flex; align-items:center; position:relative; flex:none; }
-.address-diagnostic { border:1px solid #161616; border-radius:999px; padding:0 12px; min-height:40px; color:#101010; font-weight:800; font-size:12px; cursor:pointer; white-space:nowrap; box-shadow:0 1px 2px #0002; }
+.address-diagnostic { width:92px; text-align:center; border:1px solid #161616; border-radius:999px; padding:0 12px; min-height:40px; color:#101010; font-weight:800; font-size:12px; cursor:pointer; white-space:nowrap; box-shadow:0 1px 2px #0002; }
 .address-diagnostic[data-category="lan"] { background:#00e23a; }
 .address-diagnostic[data-category="internet"] { background:#ff9800; }
 .address-diagnostic[data-category="special"] { background:#ff3333; }
@@ -392,6 +392,6 @@ input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--primary)
   .address-diagnostic-anchor:hover .address-diagnostic-detail { display:block !important; }
 }
 @media (max-width:530px) {
-  .address-diagnostic { min-height:36px; font-size:11px; padding:0 9px; }
+  .address-diagnostic { width:92px; min-height:36px; font-size:11px; padding:0 5px; }
   .address-with-diagnostic { gap:5px; }
 }
