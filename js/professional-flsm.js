@@ -137,7 +137,7 @@ export function buildFlsmProfessionalReport(base, plan) {
         : numberToAddress(subnet.network + subnet.blockSize - 2);
       const row = node('tr');
       [index, subnet.address + '/' + subnet.prefix, first, last,
-        subnet.broadcast ?? '—', number(subnet.usableHosts)].forEach((value, column) => {
+        subnet.broadcast ?? 'Sans broadcast', number(subnet.usableHosts)].forEach((value, column) => {
           const cell = node('td', '', value);
           if (column === 0 && plan.concernedCount <= 16) {
             const dot = node('span', 'professional-report-row-dot');
