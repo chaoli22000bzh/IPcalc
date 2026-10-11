@@ -94,8 +94,13 @@ function renderNetwork(base) {
     panel.append(legend);
     container.append(panel);
   }
-  if (base.inputAddress !== base.address) {
-    container.append(element('p', 'network-note', `${base.inputAddress}/${base.prefix} appartient au réseau ${base.address}/${base.prefix}.`));
+  if (base.prefix <= 30) {
+    const input = base.inputAddress;
+    if (input === base.address) {
+      container.append(element('p', 'network-note', 'Adresse réseau : '+input+' identifie le sous-réseau et ne doit pas être attribuée à un équipement.'));
+    } else if (base.broadcast !== null && input === base.broadcast) {
+      container.append(element('p', 'network-note', 'Adresse de broadcast : '+input+' est réservée à la diffusion sur ce sous-réseau et ne doit pas être attribuée à un équipement.'));
+    }
   }
   if (base.prefix === 31) container.append(element('p', 'network-note', 'Liaison point à point : les deux adresses sont utilisables. Sans broadcast conventionnel.'));
   if (base.prefix === 32) container.append(element('p', 'network-note', 'Adresse unique /32 : une seule adresse utilisable, sans broadcast.'));
