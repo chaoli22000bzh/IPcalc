@@ -159,5 +159,29 @@
   body.print-professional .professional-report-table-wrap,
   body.print-professional .professional-report-table,
   body.print-professional .professional-report-table tbody { height: auto !important; min-height: 0 !important; break-after: auto !important; page-break-after: auto !important; }
+  /* Rapport professionnel A4 de découpage IPv6, sans incidence sur les autres rapports. */
+  body.print-professional .professional-ipv6-subnet-report .professional-report-summary {break-inside:avoid;}
+  body.print-professional .professional-ipv6-subnet-summary {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2mm 6mm;margin:2mm 0 4mm;}
+  body.print-professional .professional-ipv6-subnet-summary>div {padding:2mm;border-bottom:1px solid #ccd4d8;min-width:0;}
+  body.print-professional .professional-ipv6-subnet-summary dt {font-size:7pt;color:#555;}
+  body.print-professional .professional-ipv6-subnet-summary dd {font-size:9pt;font-weight:bold;margin:1mm 0 0;overflow-wrap:anywhere;}
+  body.print-professional .professional-ipv6-subnet-reading {margin:3mm 0 4mm;break-inside:avoid;}
+  body.print-professional .professional-ipv6-subnet-reading h3 {font-size:9pt;margin:0 0 2mm;}
+  body.print-professional .professional-ipv6-subnet-bar {display:flex;height:13mm;border:1px solid #607078;border-radius:2mm;overflow:hidden;}
+  body.print-professional .professional-ipv6-subnet-bar>div {display:flex;flex-direction:column;justify-content:center;align-items:center;min-width:0;color:#fff;font-size:7pt;line-height:1.25;text-align:center;padding:1mm;}
+  body.print-professional .professional-ipv6-subnet-fixed {background:#17675d!important;}
+  body.print-professional .professional-ipv6-subnet-borrowed {background:#b46a13!important;}
+  body.print-professional .professional-ipv6-subnet-rest {background:#50616d!important;}
+  body.print-professional .professional-ipv6-subnet-allocation h2 {font-size:12pt;margin:3mm 0;}
+  body.print-professional .professional-ipv6-subnet-table {width:100%;border-collapse:collapse;table-layout:fixed;font-size:7.5pt;}
+  body.print-professional .professional-ipv6-subnet-table th {text-align:left;background:#e4edec!important;color:#152d2b;padding:2mm 1.5mm;border:1px solid #aebcba;}
+  body.print-professional .professional-ipv6-subnet-table td {padding:2mm 1.5mm;border:1px solid #aebcba;font-family:Consolas,'Courier New',monospace;overflow-wrap:anywhere;}
+  body.print-professional .professional-ipv6-subnet-table th:nth-child(1) {width:8%;}
+  body.print-professional .professional-ipv6-subnet-table th:nth-child(2) {width:38%;}
+  body.print-professional .professional-ipv6-subnet-table th:nth-child(3) {width:54%;}
+  body.print-professional .professional-ipv6-subnet-table thead {display:table-header-group;}
+  body.print-professional .professional-ipv6-subnet-table tr {break-inside:avoid;}
+  body.print-professional .professional-ipv6-subnet-ellipsis {text-align:center;}
+
 }
 
