@@ -59,7 +59,9 @@
     display: flex; height: 8mm; border: 1px solid #777; overflow: hidden; box-sizing: border-box;
     print-color-adjust: exact; -webkit-print-color-adjust: exact;
   }
-  body.print-professional .professional-report-used { background: #666 !important; }
+  body.print-professional .professional-report-used { display: block; flex: 0 0 auto; box-sizing: border-box; border-right: 1px solid #333; }
+  body.print-professional .professional-report-used-odd { background: #777 !important; }
+  body.print-professional .professional-report-used-even { background: #bbb !important; }
   body.print-professional .professional-report-free { background: #fff !important; }
   body.print-professional .professional-report-allocation-legend {
     display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2mm 5mm;
