@@ -39,19 +39,19 @@ export function buildIPv4ProfessionalReport(base) {
   const group = el('div', 'professional-report-group professional-ipv4-fields');
   group.append(el('h3', '', 'Réseau IPv4'));
   const fields = el('dl', 'professional-report-fields');
-  const first = base.network + (base.prefix === 31 ? 0 : 1);
-  const last = base.network + base.blockSize - (base.prefix === 31 ? 1 : 2);
+  const first = base.network + (base.prefix >= 31 ? 0 : 1);
+  const last = base.network + base.blockSize - (base.prefix >= 31 ? 1 : 2);
   [
     ['Adresse réseau', base.address + '/' + base.prefix],
     ['Masque décimal', base.mask],
     ['Préfixe CIDR', '/' + base.prefix],
     ['Première adresse utilisable', numberToIPv4(first)],
     ['Dernière adresse utilisable', numberToIPv4(last)],
-    ['Adresse de broadcast', base.broadcast ?? 'Sans broadcast (/31)'],
+    ['Adresse de broadcast', base.broadcast ?? 'Sans broadcast (/'+base.prefix+')'],
     ['Nombre total d’adresses', format(base.blockSize)],
     ['Hôtes utilisables', format(base.usableHosts)],
   ].forEach(([label, value]) => fields.append(pair(label, value)));
-  const classification=classifyIPv4(base.inputAddress??base.address);
+  const classification=classifyIPv4(base.inputAddress??base.address, base.prefix);
   fields.append(pair('Nature de l’adresse saisie',classification.label+' : '+classification.description));
   group.append(fields);
   section.append(group);
@@ -59,6 +59,10 @@ export function buildIPv4ProfessionalReport(base) {
     section.append(el('p', 'professional-report-note',
       'Liaison point à point /31 : les deux adresses sont utilisables. Pas de broadcast conventionnel.'));
   }
+  if (base.prefix === 32) section.append(el('p', 'professional-report-note',
+    'Adresse unique /32 : une seule adresse utilisable, sans broadcast.'));
+  if (base.prefix === 0) section.append(el('p', 'professional-report-note',
+    'Préfixe /0 : espace IPv4 complet, notamment utilisé pour la route par défaut.'));
   report.append(section);
   return report;
 }
