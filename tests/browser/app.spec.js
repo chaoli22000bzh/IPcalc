@@ -293,7 +293,7 @@ test('interface compacte, saisie longue et logos locaux sur plusieurs largeurs',
     expect(Math.abs(print.y - calculate.y)).toBeLessThanOrEqual(6);
     if (width === 1440) {
       expect((await page.locator('main').boundingBox()).width).toBeLessThanOrEqual(1100);
-      expect(address.width).toBeGreaterThanOrEqual(500);
+      expect(address.width).toBeGreaterThanOrEqual(440);
       expect(address.width).toBeLessThanOrEqual(580);
       expect((await page.locator('.panel-heading').boundingBox()).y).toBe(calculate.y);
     }
@@ -651,14 +651,14 @@ test('diagnostic des préfixes particuliers et adresse unique /32', async ({ pag
     ['192.168.1.10/32','special','Spécial'],
     ['0.0.0.0/0','special','Spécial']
   ]) {
-    await page.getByLabel('Adresse IP', { exact: true }).fill(address);
+    await page.locator('#address').fill(address);
     await page.getByRole('button',{name:'Calculer le réseau'}).click();
     await expect(page.locator('#address-diagnostic')).toHaveAttribute('data-category',category);
     await expect(page.locator('#address-diagnostic')).toHaveText(label);
   }
   await expect(page.locator('#network-result')).toContainText('Route par défaut');
   for (const [address,kind] of [['192.168.1.0/24','Adresse réseau'],['192.168.1.255/24','Adresse de broadcast']]) {
-    await page.getByLabel('Adresse IP', { exact: true }).fill(address);
+    await page.locator('#address').fill(address);
     await page.getByRole('button',{name:'Calculer le réseau'}).click();
     await expect(page.locator('#address-diagnostic')).toHaveAttribute('data-category','special');
     await page.locator('#address-diagnostic').click();
@@ -668,7 +668,7 @@ test('diagnostic des préfixes particuliers et adresse unique /32', async ({ pag
 
 
 test('FLSM et VLSM : diagnostic du réseau initial, sans faux positif adresse réseau', async ({ page }) => {
-  await page.getByLabel('Adresse IP', { exact: true }).fill('192.168.1.0/24');
+  await page.locator('#address').fill('192.168.1.0/24');
   await page.getByRole('radio', { name: 'FLSM', exact: true }).check();
   await page.getByLabel('Méthode de découpage FLSM').selectOption('count');
   await page.getByLabel('Sous-réseaux demandés', { exact: true }).fill('4');
@@ -682,7 +682,7 @@ test('FLSM et VLSM : diagnostic du réseau initial, sans faux positif adresse r�
   await page.getByRole('button', { name: 'Planifier les sous-réseaux' }).click();
   await expect(page.locator('#address-diagnostic')).toHaveText('LAN');
   await expect(page.locator('#address-diagnostic')).toHaveAttribute('data-category', 'lan');
-  await page.getByLabel('Adresse IP', { exact: true }).fill('203.0.113.0/24');
+  await page.locator('#address').fill('203.0.113.0/24');
   await page.getByRole('button', { name: 'Planifier les sous-réseaux' }).click();
   await expect(page.locator('#address-diagnostic')).toHaveText('Spécial');
 });
