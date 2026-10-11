@@ -95,3 +95,22 @@ export function parseIPv6(addressInput,maskInput=''){
     type,scope,
     interfaceId:prefix===64?groupsOf(number).slice(4).map(g=>g.toString(16).padStart(4,'0')).join(':'):null};
 }
+
+/** Découpage IPv6 par longueur de préfixe, sans notion de broadcast ni d’hôtes utilisables. */
+export function planIPv6Subnets(info,targetInput) {
+  const text=String(targetInput).trim().replace(/^\//,'');
+  if(!/^\d{1,3}$/.test(text))throw new IPv6Error('Indiquez un préfixe cible entre le préfixe initial et /64.','ipv6-target');
+  const target=Number(text);
+  if(target<info.prefix||target>64)throw new IPv6Error('Le préfixe cible doit être compris entre /'+info.prefix+' et /64.','ipv6-target');
+  const count=1n<<BigInt(target-info.prefix);
+  const base=parse128(info.network);
+  const step=1n<<BigInt(128-target);
+  return {initial:info.network+'/'+info.prefix,target,count:count.toString(),borrowedBits:target-info.prefix,
+    at(index) {
+      const i=BigInt(index);
+      if(i<0n||i>=count)throw new RangeError('Indice de sous-réseau hors limites.');
+      const n=base+i*step;
+      return {index:i.toString(),cidr:compressIPv6(n)+'/'+target,expanded:expandIPv6(n)};
+    }
+  };
+}
