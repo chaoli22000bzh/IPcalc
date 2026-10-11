@@ -723,13 +723,13 @@ test('IPv6 : coloration exacte des chiffres hexadécimaux et des bits empruntés
     await page.locator('#address').fill(address);
     await page.locator('#ipv6-target').selectOption(target);
     await page.getByRole('button',{name:'Découper le réseau IPv6'}).click();
-    const fourth=page.locator('.ipv6-prefix-example span').nth(12);
+    const fourth=page.locator('.ipv6-bit-sample').first().locator('.ipv6-prefix-example span').nth(12);
     await expect(fourth).toBeVisible();
-    const digits=page.locator('.ipv6-prefix-example span');
+    const digits=page.locator('.ipv6-bit-sample').first().locator('.ipv6-prefix-example span');
     for(let i=0;i<4;i++){
       await expect(digits.nth(12+i)).toHaveClass(i<expectedFixed?'ipv6-hextet-fixed':i<expectedFixed+expectedBorrowed?'ipv6-hextet-subnet':'ipv6-hextet-interface');
     }
-    await expect(page.locator('.ipv6-bit-sequence span')).toHaveCount(16);
+    await expect(page.locator('.ipv6-bit-sample').first().locator('.ipv6-bit-sequence span')).toHaveCount(16);
   }
 });
 
