@@ -3,6 +3,7 @@
  * Le DOM généré et les styles d'impression ne dépendent d'aucun composant IPcalc.
  */
 const number = value => Number(value).toLocaleString('fr-FR');
+const percent = (value, total) => (100 * value / total).toLocaleString('fr-FR', { maximumFractionDigits: 1 }) + ' %';
 const palette = ['#28699c','#218e81','#d39737','#8976ba','#d46f77','#4c96b0','#a28b67','#5d9a72'];
 const node = (tag, className = '', text) => {
   const el = document.createElement(tag);
@@ -79,8 +80,8 @@ export function buildVlsmProfessionalReport(base, plan) {
   allocation.append(bar);
   const legend = node('div', 'vlsm-allocation-legend');
   legend.append(
-    node('span', '', number(plan.usedAddresses) + ' adresses attribuées'),
-    node('span', '', number(plan.freeAddresses) + ' adresses non attribuées')
+    node('span', '', number(plan.usedAddresses) + ' adresses attribuées (' + percent(plan.usedAddresses, plan.initial.totalAddresses) + ')'),
+    node('span', '', number(plan.freeAddresses) + ' adresses disponibles (' + percent(plan.freeAddresses, plan.initial.totalAddresses) + ')')
   );
   allocation.append(legend);
   report.append(allocation);
@@ -100,7 +101,15 @@ export function buildVlsmProfessionalReport(base, plan) {
     const tr = node('tr');
     [row.index,row.requestedHosts,row.usableHosts,row.cidr,
       row.broadcast ?? 'Sans broadcast (/31)',row.mask]
-      .forEach(value => tr.append(node('td', '', String(value))));
+      .forEach((value, column) => {
+        const cell = node('td', '', String(value));
+        if (column === 0 && plan.rows.length <= 16) {
+          const dot = node('span', 'professional-report-row-dot');
+          dot.style.backgroundColor = palette[row.sourceIndex % palette.length];
+          cell.prepend(dot);
+        }
+        tr.append(cell);
+      });
     body.append(tr);
   }
   table.append(body);
