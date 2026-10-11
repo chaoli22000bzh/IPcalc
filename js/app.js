@@ -31,7 +31,7 @@ function element(tag, className, text) {
 }
 
 function showAddressDiagnostic(base) {
-  const diagnosis=classifyIPv4(base.inputAddress);
+  const diagnosis=classifyIPv4(base.inputAddress, base.prefix);
   const anchor=$('address-diagnostic-anchor');
   const button=$('address-diagnostic'),detail=$('address-diagnostic-detail');
   button.textContent=diagnosis.label;
@@ -56,7 +56,7 @@ function renderNetwork(base) {
   const address = element('p', 'network-address', base.address);
   address.append(element('span', '', ` /${base.prefix}`));
   title.append(address);
-  banner.append(title, element('span', 'network-badge', base.prefix === 31 ? 'Point à point' : 'IPv4'));
+  banner.append(title, element('span', 'network-badge', base.prefix === 31 ? 'Point à point' : base.prefix === 32 ? 'Adresse unique' : base.prefix === 0 ? 'Route par défaut' : 'IPv4'));
   const data = element('dl', 'network-data');
   const values = [base.address, base.mask, `/${base.prefix}`, base.broadcast ?? 'Sans broadcast', format(base.usableHosts)];
   EXPORT_COLUMNS.forEach((label, index) => {
@@ -98,6 +98,8 @@ function renderNetwork(base) {
     container.append(element('p', 'network-note', `${base.inputAddress}/${base.prefix} appartient au réseau ${base.address}/${base.prefix}.`));
   }
   if (base.prefix === 31) container.append(element('p', 'network-note', 'Liaison point à point : les deux adresses sont utilisables. Sans broadcast conventionnel.'));
+  if (base.prefix === 32) container.append(element('p', 'network-note', 'Adresse unique /32 : une seule adresse utilisable, sans broadcast.'));
+  if (base.prefix === 0) container.append(element('p', 'network-note', 'Préfixe /0 : espace IPv4 complet, notamment utilisé pour la route par défaut.'));
 }
 
 function networkTable(rows, omitted = 0) {
