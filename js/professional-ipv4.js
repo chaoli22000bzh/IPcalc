@@ -28,7 +28,8 @@ export function buildIPv4ProfessionalReport(base) {
   const headings = el('div');
   headings.append(el('p', 'professional-report-kicker', 'CYBERNET · RAPPORT TECHNIQUE'),
     el('h1', '', 'Fiche d’adressage IPv4'),
-    el('p', 'professional-report-subtitle', 'Caractéristiques du réseau, sans découpage'));
+    el('p', 'professional-report-subtitle', 'Adresse IPv4 analysée :'),
+    el('p', 'professional-ipv4-input', (base.inputAddress ?? base.address) + '/' + base.prefix));
   const logo = el('img', 'professional-report-logo');
   logo.src = new URL('../icons/Logo_CyberNet_bleu_marine_transparent.svg', import.meta.url).href;
   logo.alt = 'CyberNet Los Angeles';
@@ -53,13 +54,9 @@ export function buildIPv4ProfessionalReport(base) {
     ['Hôtes utilisables', format(base.usableHosts)],
   ].forEach(([label, value]) => fields.append(pair(label, value)));
   const classification=classifyIPv4(base.inputAddress??base.address);
-  fields.append(pair('Nature de l’adresse saisie',classification.label+' — '+classification.description));
+  fields.append(pair('Nature de l’adresse saisie',classification.label+' : '+classification.description));
   group.append(fields);
   section.append(group);
-  if (base.inputAddress && base.inputAddress !== base.address) {
-    section.append(el('p', 'professional-report-method',
-      'Adresse saisie : ' + base.inputAddress + ' — appartient au réseau ' + base.address + '/' + base.prefix + '.'));
-  }
   if (base.prefix === 31) {
     section.append(el('p', 'professional-report-note',
       'Liaison point à point /31 : les deux adresses sont utilisables. Pas de broadcast conventionnel.'));
