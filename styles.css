@@ -427,3 +427,8 @@ input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--primary)
   .site-header .brand { color: #ffffff; }
   .site-header .brand .brand-light { color: #54e5a1; }
 }
+
+/* Schémas pédagogiques des modes : même longueur pour les trois découpages. */
+.mode-switch label > span { flex-direction: column; gap: 5px; }
+.mode-switch .mode-diagram { display: block; width: min(132px, 92%); height: 12px; flex: none; fill: currentColor; opacity: .8; }
+.mode-switch input:checked + span .mode-diagram { opacity: 1; }
