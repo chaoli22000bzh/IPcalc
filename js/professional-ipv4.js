@@ -51,7 +51,7 @@ export function buildIPv4ProfessionalReport(base) {
     ['Nombre total d’adresses', format(base.blockSize)],
     ['Hôtes utilisables', format(base.usableHosts)],
   ].forEach(([label, value]) => fields.append(pair(label, value)));
-  const classification=classifyIPv4(base.inputAddress??base.address, base.prefix);
+  const classification=classifyIPv4(base.inputAddress??base.address, base.prefix, base.network);
   fields.append(pair('Nature de l’adresse saisie',classification.label+' : '+classification.description));
   group.append(fields);
   section.append(group);
