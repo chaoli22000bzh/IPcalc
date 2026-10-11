@@ -1,8 +1,8 @@
 /** Classification neutre de l'adresse d'une machine IPv4 (non du réseau calculé). */
-import { ipv4ToNumber } from './ipv4.js';
+import { ipv4ToNumber, numberToIPv4 } from './ipv4.js';
 const within=(n,base,bits)=>bits===0||Math.floor(n/2**(32-bits))===Math.floor(ipv4ToNumber(base)/2**(32-bits));
 const special=(type,description)=>({category:'special',type,label:'Spécial',description});
-export function classifyIPv4(address, prefix = null){
+export function classifyIPv4(address, prefix = null, network = null){
   const text=String(address).trim().split('/')[0],n=ipv4ToNumber(text);
   const nature = classifyIPv4Nature(n);
   if (prefix === 0 || prefix === 31 || prefix === 32) {
@@ -12,6 +12,13 @@ export function classifyIPv4(address, prefix = null){
       32: 'Préfixe /32 : adresse IPv4 unique, notamment utilisée pour une route d’hôte ou une interface de bouclage. Aucun broadcast.'
     };
     return special('prefix-'+prefix, descriptions[prefix]+' Nature de l’adresse : '+nature.label+'. '+nature.description);
+  }
+  if (prefix !== null && prefix <= 30 && network !== null) {
+    const size = 2 ** (32 - prefix);
+    if (n === network) return special('network-address',
+      'Adresse réseau : identifie le sous-réseau et ne doit pas être attribuée à un hôte classique. Nature de l’adresse : '+nature.label+'. '+nature.description);
+    if (n === network + size - 1) return special('broadcast-address',
+      'Adresse de broadcast : diffusion vers le sous-réseau, non attribuable à un hôte. Nature de l’adresse : '+nature.label+'. '+nature.description);
   }
   return nature;
 }
