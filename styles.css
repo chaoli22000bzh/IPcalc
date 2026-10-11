@@ -373,8 +373,9 @@ input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--primary)
 
 /* Diagnostic de l'adresse saisie : interface IPcalc uniquement, indépendant du moteur. */
 .address-with-diagnostic { position:relative; display:flex; align-items:stretch; gap:6px; min-width:0; }
-.address-with-diagnostic > input { flex:1; min-width:0; width:100%; }
-.address-diagnostic-anchor { display:flex; align-items:center; position:relative; flex:none; }
+.address-with-diagnostic > input { flex:1 1 0; min-width:0; width:0; }
+.address-diagnostic-anchor { display:flex; align-items:center; position:relative; flex:0 0 92px; }
+.address-diagnostic-anchor[hidden] { visibility:hidden; display:flex !important; pointer-events:none; }
 .address-diagnostic { width:92px; text-align:center; border:1px solid #161616; border-radius:999px; padding:0 12px; min-height:40px; color:#101010; font-weight:800; font-size:12px; cursor:pointer; white-space:nowrap; box-shadow:0 1px 2px #0002; }
 .address-diagnostic[data-category="lan"] { background:#00e23a; }
 .address-diagnostic[data-category="internet"] { background:#E53891; }
