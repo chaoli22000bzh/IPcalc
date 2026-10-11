@@ -1,7 +1,7 @@
 /** Rapport A4 professionnel de découpage IPv6, sans dépendance à l'interface IPcalc. */
 const node=(tag,className='',text)=>{const el=document.createElement(tag);if(className)el.className=className;if(text!==undefined)el.textContent=String(text);return el;};
 const number=n=>BigInt(n).toLocaleString('fr-FR');
-const MAX_ROWS=12;
+const MAX_ROWS=16;
 
 export function buildIPv6SubnetProfessionalReport(info,plan){
   if(!info||!plan||!Number.isInteger(info.prefix)||!Number.isInteger(plan.target)||
@@ -44,10 +44,18 @@ export function buildIPv6SubnetProfessionalReport(info,plan){
     if(!bits)continue;
     const segment=node('div',css);
     segment.style.flex=String(bits);
-    segment.append(node('strong','',label),node('span','',bits+' bits'));
+    segment.setAttribute('aria-label',label+' : '+bits+' bits');
     bar.append(segment);
   }
   reading.append(bar);
+  const legend=node('div','professional-ipv6-subnet-legend');
+  for(const [bits,label,css] of segments){
+    if(!bits)continue;
+    const item=node('div','professional-ipv6-subnet-legend-item');
+    item.append(node('span','professional-ipv6-subnet-legend-swatch '+css),node('span','',label+' : '+bits+' bits'));
+    legend.append(item);
+  }
+  reading.append(legend);
   reading.append(node('p','professional-report-note','Les bits empruntés identifient les sous-réseaux. IPv6 ne possède pas d’adresse de broadcast.'));
   summary.append(reading);
   report.append(summary);
