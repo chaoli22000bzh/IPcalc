@@ -34,7 +34,7 @@ export function toCSV(selection) {
 }
 
 export function toText(selection) {
-  const title = `IPcalc — CyberNet\nPérimètre : ${selection.label}\nNombre de réseaux : ${selection.rows.length}`;
+  const title = `IPcalc\nPérimètre : ${selection.label}\nNombre de réseaux : ${selection.rows.length}`;
   return title + '\n\n' + selection.rows.map(network => EXPORT_COLUMNS.map((label, index) => `${label} : ${networkValues(network)[index]}`).join('\n')).join('\n\n');
 }
 
