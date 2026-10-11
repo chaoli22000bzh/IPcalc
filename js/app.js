@@ -30,8 +30,8 @@ function element(tag, className, text) {
   return node;
 }
 
-function showAddressDiagnostic(base) {
-  const diagnosis=classifyIPv4(base.inputAddress, base.prefix, base.network);
+function showAddressDiagnostic(base, mode = 'simple') {
+  const diagnosis=classifyIPv4(mode === 'simple' ? base.inputAddress : base.address, base.prefix, base.network, mode === 'simple' ? 'host' : 'network');
   const anchor=$('address-diagnostic-anchor');
   const button=$('address-diagnostic'),detail=$('address-diagnostic-detail');
   button.textContent=diagnosis.label;
@@ -431,7 +431,7 @@ function calculate(focus = true) {
     const vlsm=protocol==='ipv4' && mode==='vlsm' ? planVlsm(base,readVlsmRequests()) : null;
     vlsmPage=0;
     current = { protocol,base,plan,vlsm };
-    if(protocol==='ipv4'&&mode==='simple')showAddressDiagnostic(base);
+    if(protocol==='ipv4')showAddressDiagnostic(base,mode);
     else hideAddressDiagnostic();
     updatePdfAvailability();
     pages = { middle: { open: false, page: 0 }, extra: { open: false, page: 0 } };
