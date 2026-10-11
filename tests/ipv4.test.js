@@ -13,6 +13,7 @@ const fixtures = [
   ['192.168.10.75/30', '192.168.10.72', '255.255.255.252', '192.168.10.75', 2],
   ['192.168.10.75/31', '192.168.10.74', '255.255.255.254', null, 2],
   ['255.255.255.255/0', '0.0.0.0', '0.0.0.0', '255.255.255.255', 4294967294],
+  ['192.168.10.75/32', '192.168.10.75', '255.255.255.255', null, 1],
   ['255.255.255.255/31', '255.255.255.254', '255.255.255.254', null, 2],
 ];
 
@@ -28,8 +29,8 @@ for (const [input, address, mask, broadcast, hosts] of fixtures) {
   });
 }
 
-test('les masques /0 à /31 sont contigus et réversibles', () => {
-  for (let prefix = 0; prefix <= 31; prefix++) {
+test('les masques /0 à /32 sont contigus et réversibles', () => {
+  for (let prefix = 0; prefix <= 32; prefix++) {
     const mask = prefixToMask(prefix);
     assert.equal(maskToPrefix(mask), prefix);
     assert.equal(parseNetwork('192.168.10.75', mask).prefix, prefix);
@@ -49,11 +50,11 @@ for (const input of ['', '192.168.1/24', '256.0.0.1/24', '-1.0.0.1/24', '1.2.3.4
   test(`adresse invalide rejetée : ${JSON.stringify(input)}`, () => assert.throws(() => parseNetwork(input)));
 }
 
-for (const prefix of ['32', '33', '-1', '2.5', '', 'Infinity', '+24', '1e1']) {
+for (const prefix of ['33', '-1', '2.5', '', 'Infinity', '+24', '1e1']) {
   test(`préfixe invalide rejeté : /${prefix}`, () => assert.throws(() => parseNetwork(`1.2.3.4/${prefix}`), /préfixe/));
 }
 
-for (const mask of ['255.0.255.0', '255.255.255.253', '128.128.0.0', '0.0.0.1', '255.255.256.0', '255.255.255.255']) {
+for (const mask of ['255.0.255.0', '255.255.255.253', '128.128.0.0', '0.0.0.1', '255.255.256.0']) {
   test(`masque invalide rejeté : ${mask}`, () => assert.throws(() => parseNetwork('1.2.3.4', mask)));
 }
 
