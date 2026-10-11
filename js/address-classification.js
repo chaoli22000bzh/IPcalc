@@ -5,7 +5,7 @@ const special=(type,description)=>({category:'special',type,label:'Spéciale',de
 export function classifyIPv4(address){
   const text=String(address).trim().split('/')[0],n=ipv4ToNumber(text);
   if(within(n,'10.0.0.0',8)||within(n,'172.16.0.0',12)||within(n,'192.168.0.0',16))
-    return {category:'lan',type:'private',label:'LAN',description:'Adresse privée RFC 1918, destinée aux réseaux locaux. Elle n’est pas directement routable sur Internet.'};
+    return {category:'lan',type:'private',label:'LAN',description:'Adresse IPv4 privée, utilisée sur un réseau local.'};
   if(within(n,'0.0.0.0',8))return special('this-network','Plage 0.0.0.0/8 réservée à des usages particuliers. Ne pas attribuer comme adresse ordinaire d’un équipement.');
   if(within(n,'127.0.0.0',8))return special('loopback','Adresse de bouclage : elle désigne la machine elle-même, et ne circule pas sur le LAN.');
   if(within(n,'169.254.0.0',16))return special('link-local','Adresse APIPA (attribution automatique). Le PC ne peut pas communiquer avec les équipements du réseau local habituel ni accéder à Internet.');
@@ -17,5 +17,5 @@ export function classifyIPv4(address){
   if(within(n,'192.88.99.0',24))return special('6to4','Plage historiquement utilisée pour les relais 6to4 et désormais dépréciée.');
   if(within(n,'224.0.0.0',4))return special('multicast','Adresse multicast : elle désigne un groupe de récepteurs, pas une machine unicast classique.');
   if(within(n,'240.0.0.0',4))return special('reserved','Adresse de l’espace réservé 240.0.0.0/4, non adaptée à l’adressage classique d’une machine.');
-  return {category:'internet',type:'global',label:'Internet',description:'Adresse IPv4 de l’espace public. Elle ne doit pas être attribuée arbitrairement à un équipement d’un LAN : utiliser un bloc légitimement attribué.'};
+  return {category:'internet',type:'global',label:'Internet',description:'Adresse IPv4 publique, utilisable sur Internet.'};
 }
