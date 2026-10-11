@@ -1,13 +1,13 @@
 import { describeVlsmBase, summarizeVlsmRequests, planVlsm, VLSM_MAX_SUBNETS, VLSM_PAGE_SIZE } from './vlsm.js?v=2.0.0-step3.0';
 import { classifyIPv4 } from './address-classification.js';
-import { parseIPv6, classifyIPv6, planIPv6Subnets } from './ipv6.js?v=2.0.0-step3.28';
+import { parseIPv6, classifyIPv6, planIPv6Subnets } from './ipv6.js?v=2.0.0-step3.29';
 import { downloadFlsmA3 } from './pdf-a3-flsm.js?v=2.0.0-step3.0';
 import { downloadAddressingA4 } from './pdf-a4.js?v=2.0.0-step3.0';
-import { printFlsmProfessional } from './professional-flsm.js?v=2.0.0-step3.28';
-import { printIPv4Professional } from './professional-ipv4.js?v=2.0.0-step3.28';
-import { printIPv6Professional } from './professional-ipv6.js?v=2.0.0-step3.28';
-import { printVlsmProfessional } from './professional-vlsm.js?v=2.0.0-step3.28';
-import { parseNetwork, planSubnets, subnetAt, summaryIndices, subnetPage } from './ipv4.js?v=2.0.0-step3.28';
+import { printFlsmProfessional } from './professional-flsm.js?v=2.0.0-step3.29';
+import { printIPv4Professional } from './professional-ipv4.js?v=2.0.0-step3.29';
+import { printIPv6Professional } from './professional-ipv6.js?v=2.0.0-step3.29';
+import { printVlsmProfessional } from './professional-vlsm.js?v=2.0.0-step3.29';
+import { parseNetwork, planSubnets, subnetAt, summaryIndices, subnetPage } from './ipv4.js?v=2.0.0-step3.29';
 import { EXPORT_COLUMNS } from './exports.js?v=2.0.0-step3.0';
 
 const $ = id => document.getElementById(id);
@@ -247,14 +247,31 @@ function renderIPv6Subnets(plan) {
   }
   illustration.append(strip);
   const example=plan.at(0).expanded.split(':');
+  const initialBits=Number(plan.initial.split('/')[1]);
   const first=element('p','ipv6-prefix-example');
   first.append(document.createTextNode('Premier réseau : '));
   for(let i=0;i<8;i++){
-    const hextet=element('span',i*16>=plan.target?'ipv6-hextet-interface':(i+1)*16<=Number(plan.initial.split('/')[1])?'ipv6-hextet-fixed':'ipv6-hextet-subnet',example[i]);
-    first.append(hextet);
+    // Une couleur par chiffre hexadécimal (4 bits), et non par hextet entier.
+    for(let digit=0;digit<4;digit++){
+      const bitStart=i*16+digit*4;
+      const kind=bitStart>=plan.target?'ipv6-hextet-interface':bitStart>=initialBits?'ipv6-hextet-subnet':'ipv6-hextet-fixed';
+      first.append(element('span',kind,example[i][digit]));
+    }
     if(i<7)first.append(document.createTextNode(':'));
   }
-  illustration.append(first,element('p','subnet-note','Les bits ajoutés au préfixe initial servent à numéroter les sous-réseaux. Un réseau local IPv6 utilise habituellement un préfixe /64.'));
+  const bitLine=element('div','ipv6-bit-reading');
+  bitLine.append(element('p','ipv6-bit-reading-label','Lecture binaire du 4e groupe (16 bits) :'));
+  const bits=Number.parseInt(example[3],16).toString(2).padStart(16,'0');
+  const binary=element('p','ipv6-bit-sequence');
+  for(let i=0;i<16;i++){
+    const position=48+i;
+    const kind=position>=plan.target?'ipv6-hextet-interface':position>=initialBits?'ipv6-hextet-subnet':'ipv6-hextet-fixed';
+    binary.append(element('span',kind,bits[i]));
+    if(i%4===3&&i!==15)binary.append(document.createTextNode(' '));
+  }
+  bitLine.append(binary);
+  bitLine.append(element('p','ipv6-bit-reading-note','Vert : préfixe initial. Orange : bits empruntés. Gris : partie restante.'));
+  illustration.append(first,bitLine,element('p','subnet-note','Les bits ajoutés au préfixe initial servent à numéroter les sous-réseaux. Un réseau local IPv6 utilise habituellement un préfixe /64.'));
   container.append(illustration);
   const total=BigInt(plan.count),indices=[];
   for(let i=0n;i<total&&i<8n;i++)indices.push(i);
