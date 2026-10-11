@@ -713,3 +713,22 @@ test('Découpage IPv6 /56 vers /64 : préfixes et tableau',async({page})=>{
   await expect(page.locator('#subnet-result')).toContainText('2001:db8:1234:ab01::/64');
   await expect(page.locator('#subnet-result')).toContainText('2001:db8:1234:abff::/64');
 });
+
+test('IPv6 : coloration exacte des chiffres hexadécimaux et des bits empruntés',async({page})=>{
+  for(const [address,target,expectedFixed,expectedBorrowed] of [
+    ['2001:db8:1234:ab00::/56','64',2,2],
+    ['2001:db8:1234:abc0::/60','64',3,1],
+    ['2001:db8:1234::/48','56',0,2]
+  ]){
+    await page.locator('#address').fill(address);
+    await page.locator('#ipv6-target').selectOption(target);
+    await page.getByRole('button',{name:'Découper le réseau IPv6'}).click();
+    const fourth=page.locator('.ipv6-prefix-example span').nth(12);
+    await expect(fourth).toBeVisible();
+    const digits=page.locator('.ipv6-prefix-example span');
+    for(let i=0;i<4;i++){
+      await expect(digits.nth(12+i)).toHaveClass(i<expectedFixed?'ipv6-hextet-fixed':i<expectedFixed+expectedBorrowed?'ipv6-hextet-subnet':'ipv6-hextet-interface');
+    }
+    await expect(page.locator('.ipv6-bit-sequence span')).toHaveCount(16);
+  }
+});
