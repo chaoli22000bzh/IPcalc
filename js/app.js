@@ -1,13 +1,13 @@
 import { describeVlsmBase, summarizeVlsmRequests, planVlsm, VLSM_MAX_SUBNETS, VLSM_PAGE_SIZE } from './vlsm.js?v=2.0.0-step3.0';
 import { classifyIPv4 } from './address-classification.js';
-import { parseIPv6, classifyIPv6, planIPv6Subnets } from './ipv6.js?v=2.0.0-step3.27';
+import { parseIPv6, classifyIPv6, planIPv6Subnets } from './ipv6.js?v=2.0.0-step3.28';
 import { downloadFlsmA3 } from './pdf-a3-flsm.js?v=2.0.0-step3.0';
 import { downloadAddressingA4 } from './pdf-a4.js?v=2.0.0-step3.0';
-import { printFlsmProfessional } from './professional-flsm.js?v=2.0.0-step3.27';
-import { printIPv4Professional } from './professional-ipv4.js?v=2.0.0-step3.27';
-import { printIPv6Professional } from './professional-ipv6.js?v=2.0.0-step3.27';
-import { printVlsmProfessional } from './professional-vlsm.js?v=2.0.0-step3.27';
-import { parseNetwork, planSubnets, subnetAt, summaryIndices, subnetPage } from './ipv4.js?v=2.0.0-step3.27';
+import { printFlsmProfessional } from './professional-flsm.js?v=2.0.0-step3.28';
+import { printIPv4Professional } from './professional-ipv4.js?v=2.0.0-step3.28';
+import { printIPv6Professional } from './professional-ipv6.js?v=2.0.0-step3.28';
+import { printVlsmProfessional } from './professional-vlsm.js?v=2.0.0-step3.28';
+import { parseNetwork, planSubnets, subnetAt, summaryIndices, subnetPage } from './ipv4.js?v=2.0.0-step3.28';
 import { EXPORT_COLUMNS } from './exports.js?v=2.0.0-step3.0';
 
 const $ = id => document.getElementById(id);
@@ -219,30 +219,65 @@ function renderIPv6Subnets(plan) {
   container.replaceChildren();
   container.hidden=!plan;
   if(!plan)return;
-  container.append(element('h3','','Découpage IPv6 : '+plan.initial+' vers /'+plan.target));
+  container.classList.add('ipv6-subnet-result');
+  const heading=element('div','subnet-header ipv6-subnet-header');
+  heading.append(element('p','network-kicker','PLAN DE SOUS-RÉSEAUX IPv6'));
+  heading.append(element('h3','','Découpage de '+plan.initial+' vers /'+plan.target));
   const metrics=element('div','subnet-metrics');
   for(const [label,value] of [['Bits empruntés',String(plan.borrowedBits)],['Sous-réseaux possibles',BigInt(plan.count).toLocaleString('fr-FR')],['Préfixe cible','/'+plan.target]]){
     const chip=element('span','metric-chip',label+' ');
     chip.append(element('strong','',value));metrics.append(chip);
   }
-  container.append(metrics,element('p','subnet-note','En IPv6, chaque sous-réseau est identifié par son préfixe. Il n’existe pas d’adresse de broadcast.'));
+  heading.append(metrics);
+  container.append(heading);
+  const illustration=element('section','ipv6-prefix-panel');
+  illustration.append(element('h4','','Lecture du préfixe IPv6'));
+  const strip=element('div','ipv6-prefix-strip');
+  const sections=[
+    ['ipv6-prefix-fixed','Préfixe initial',plan.initial.split('/')[1]+' bits'],
+    ['ipv6-prefix-borrowed','Sous-réseaux',plan.borrowedBits+' bits'],
+    ['ipv6-prefix-interface','Partie restante',(128-plan.target)+' bits']
+  ];
+  for(const [className,label,value] of sections){
+    const part=element('div',className);
+    part.style.flexGrow=String(Math.max(0,className==='ipv6-prefix-fixed'?Number(plan.initial.split('/')[1]):className==='ipv6-prefix-borrowed'?plan.borrowedBits:128-plan.target));
+    if(part.style.flexGrow==='0')part.hidden=true;
+    else part.append(element('strong','',label),element('span','',value));
+    strip.append(part);
+  }
+  illustration.append(strip);
+  const example=plan.at(0).expanded.split(':');
+  const first=element('p','ipv6-prefix-example');
+  first.append(document.createTextNode('Premier réseau : '));
+  for(let i=0;i<8;i++){
+    const hextet=element('span',i*16>=plan.target?'ipv6-hextet-interface':(i+1)*16<=Number(plan.initial.split('/')[1])?'ipv6-hextet-fixed':'ipv6-hextet-subnet',example[i]);
+    first.append(hextet);
+    if(i<7)first.append(document.createTextNode(':'));
+  }
+  illustration.append(first,element('p','subnet-note','Les bits ajoutés au préfixe initial servent à numéroter les sous-réseaux. Un réseau local IPv6 utilise habituellement un préfixe /64.'));
+  container.append(illustration);
   const total=BigInt(plan.count),indices=[];
   for(let i=0n;i<total&&i<8n;i++)indices.push(i);
   if(total>12n){indices.push(null);for(let i=total-4n;i<total;i++)indices.push(i);}
   else for(let i=8n;i<total;i++)indices.push(i);
-  const wrapper=element('div','table-wrapper'),table=element('table','subnet-table');
+  const wrapper=element('div','table-wrapper'),table=element('table','subnet-table ipv6-subnet-table');
   const thead=element('thead'),head=element('tr');
   for(const label of ['Nº','Préfixe IPv6','Adresse développée']){const th=element('th','',label);th.scope='col';head.append(th);}
   thead.append(head);table.append(thead);
   const tbody=element('tbody');
   for(const index of indices){
     const tr=element('tr');
-    if(index===null){const td=element('td','','…');td.colSpan=3;tr.append(td);}
-    else {const row=plan.at(index);for(const value of [String(index+1n),row.cidr,row.expanded])tr.append(element('td','',value));}
+    if(index===null){tr.className='ellipsis-row';const td=element('td','','…');td.colSpan=3;tr.append(td);}
+    else {
+      const row=plan.at(index);
+      for(const [i,value] of [String(index+1n),row.cidr,row.expanded].entries()){
+        const td=element('td','',value);td.dataset.label=['Nº','Préfixe IPv6','Adresse développée'][i];tr.append(td);
+      }
+    }
     tbody.append(tr);
   }
   table.append(tbody);wrapper.append(table);container.append(wrapper);
-  if(total>12n)container.append(element('p','subnet-note','Affichage des 8 premiers et des 4 derniers sous-réseaux sur '+total.toLocaleString('fr-FR')+'.'));
+  if(total>12n)container.append(element('p','subnet-note ipv6-subnet-footer','Affichage des 8 premiers et des 4 derniers sous-réseaux sur '+total.toLocaleString('fr-FR')+'.'));
 }
 function renderIPv6(info) {
   const container=$('network-result');
