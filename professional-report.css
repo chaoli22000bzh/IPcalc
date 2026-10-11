@@ -62,7 +62,7 @@
   body.print-professional .professional-report-used { display: block; flex: 0 0 auto; box-sizing: border-box; border-right: 1px solid #333; }
   body.print-professional .professional-report-used-odd { background: #777 !important; }
   body.print-professional .professional-report-used-even { background: #bbb !important; }
-  body.print-professional .professional-report-free { background: #fff !important; }
+  body.print-professional .professional-report-free { display: block; flex: 0 0 auto; box-sizing: border-box; background: #fff !important; border-left: 2px solid #111; }
   body.print-professional .professional-report-allocation-legend {
     display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2mm 5mm;
     margin-top: 1.5mm; font-size: 7.5pt; color: #333;
@@ -151,6 +151,8 @@
     margin-top: 4mm; border-top: 1px solid #ccc; padding-top: 2mm;
     font-size: 7pt; color: #555; break-inside: avoid;
   }
+  body.print-professional .professional-report-table tbody td { border: 1px solid #aaa !important; }
+  body.print-professional .professional-report-table tbody tr { break-inside: avoid; }
   body.print-professional .professional-report-table tbody tr:last-child { break-after: auto; page-break-after: auto; }
   body.print-professional #professional-report,
   body.print-professional .professional-report-table-wrap,
