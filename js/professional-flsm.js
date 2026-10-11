@@ -82,11 +82,13 @@ export function buildFlsmProfessionalReport(base, plan) {
     const segment = node('span', 'professional-report-used');
     segment.style.width = (plan.concernedCount / plan.capacity / visibleSegments * 100) + '%';
     segment.classList.add(index % 2 ? 'professional-report-used-even' : 'professional-report-used-odd');
+    segment.title = 'Sous-réseau attribué';
     bar.append(segment);
   }
   if (remaining > 0) {
     const free = node('span', 'professional-report-free');
     free.style.width = (remaining / plan.capacity * 100) + '%';
+    free.title = number(remaining) + ' sous-réseaux disponibles';
     bar.append(free);
   }
   visual.append(bar);
