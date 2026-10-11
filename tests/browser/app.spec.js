@@ -639,3 +639,22 @@ test('VLSM Pro : génération entièrement autonome sans panneaux IPcalc', async
   await expect(page.locator('#professional-report .professional-vlsm-table tbody tr')).toHaveCount(2);
   await expect(page.locator('#professional-report')).not.toContainText('192.168.50.0/24');
 });
+
+
+test('diagnostic des préfixes particuliers et adresse unique /32', async ({ page }) => {
+  await page.goto('/');
+  for (const [address, category, label] of [
+    ['192.168.1.10/24','lan','LAN'],
+    ['8.8.8.8/24','internet','Internet'],
+    ['127.0.0.1/8','special','Spécial'],
+    ['192.168.1.10/31','special','Spécial'],
+    ['192.168.1.10/32','special','Spécial'],
+    ['0.0.0.0/0','special','Spécial']
+  ]) {
+    await page.getByLabel('Adresse IP', { exact: true }).fill(address);
+    await page.getByRole('button',{name:'Calculer le réseau'}).click();
+    await expect(page.locator('#address-diagnostic')).toHaveAttribute('data-category',category);
+    await expect(page.locator('#address-diagnostic')).toHaveText(label);
+  }
+  await expect(page.locator('#network-result')).toContainText('Route par défaut');
+});
