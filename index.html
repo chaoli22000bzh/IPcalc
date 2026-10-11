@@ -96,6 +96,20 @@
               </div>
             </fieldset>
 
+            <div id="ipv6-subnet-settings" class="subnet-settings" hidden>
+              <div class="field">
+                <label for="ipv6-target">Découpage IPv6 : préfixe cible</label>
+                <select id="ipv6-target" name="ipv6-target">
+                  <option value="">Aucun découpage</option>
+                  <option value="48">/48</option>
+                  <option value="52">/52</option>
+                  <option value="56">/56</option>
+                  <option value="60">/60</option>
+                  <option value="64">/64 (réseau local habituel)</option>
+                </select>
+                <p id="ipv6-target-help" class="field-help">Le préfixe cible doit être au moins aussi long que le préfixe initial. Aucun calcul d’hôtes ou de broadcast en IPv6.</p>
+              </div>
+            </div>
             <div id="subnet-settings" class="subnet-settings" hidden>
               <div class="field">
                 <label for="method">Méthode de découpage FLSM</label>
