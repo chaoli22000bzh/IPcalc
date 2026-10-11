@@ -774,3 +774,15 @@ test('Rapport A4 IPv6 : un seul réseau /48 vers /48',async({page})=>{
   await expect(report).toContainText('Bits empruntés');
   await expect(report.locator('tbody tr')).toContainText('2001:db8:1234::/48');
 });
+
+test('IPv6 A4 displays all 16 networks',async({page})=>{
+  await page.locator('#address').fill('fd12:3456:789a:abc0::/60');
+  await page.locator('#ipv6-target').selectOption('64');
+  await page.getByRole('button',{name:'Découper le réseau IPv6'}).click();
+  await page.evaluate(()=>{window.print=()=>{};});
+  await page.locator('#print-results').click();
+  const report=page.locator('.professional-ipv6-subnet-report');
+  await expect(report.locator('tbody tr')).toHaveCount(16);
+  await expect(report.locator('tbody tr').nth(8)).toContainText('fd12:3456:789a:abc8::/64');
+  await expect(report.locator('.professional-ipv6-subnet-legend')).toContainText('Sous-réseaux : 4 bits');
+});
