@@ -19,6 +19,7 @@
   body.print-professional .professional-report-kicker { margin: 0 0 2mm; color: #254a6b; font-size: 8pt; font-weight: 700; letter-spacing: .4pt; }
   body.print-professional .professional-report-head h1 { margin: 0; color: #111; font-size: 17pt; line-height: 1.2; }
   body.print-professional .professional-report-subtitle { margin: 2mm 0 0; font-size: 9pt; color: #444; }
+  body.print-professional .professional-ipv4-input { margin: 1mm 0 3mm; color: #111; font-size: 14pt; font-weight: 700; }
   body.print-professional .professional-report-summary { margin-bottom: 5mm; break-inside: avoid; }
   body.print-professional .professional-report-summary h2,
   body.print-professional .professional-report-networks h2 {
