@@ -1,4 +1,4 @@
-/** Rapport professionnel FLSM A4 — module autonome, intégrable dans IPcalc et C². */
+/** Rapport professionnel FLSM A4 : module autonome, intégrable dans IPcalc et C². */
 import { subnetAt } from './ipv4.js';
 
 export const FLSM_PRO_MAX_ROWS = 10000;
@@ -33,14 +33,9 @@ export function buildFlsmProfessionalReport(base, plan) {
   report.id = 'professional-report';
   report.setAttribute('aria-label', 'Rapport professionnel FLSM');
   const head = node('header', 'professional-report-head');
-  const logo = node('img', 'professional-report-logo');
-  logo.src = new URL('../icons/Logo_CyberNet_bleu_marine_transparent.svg', import.meta.url).href;
-  logo.alt = 'CyberNet Los Angeles';
   const headings = node('div');
-  headings.append(node('p', 'professional-report-kicker', 'CYBERNET · RAPPORT TECHNIQUE'),
-    node('h1', '', 'Plan d’adressage IPv4 — FLSM'),
-    node('p', 'professional-report-subtitle', 'Découpage en sous-réseaux de taille fixe'));
-  head.append(headings, logo);
+  headings.append(node('h1', '', 'Plan d’adressage IPv4 FLSM'));
+  head.append(headings);
   report.append(head);
 
   const summary = node('section', 'professional-report-summary');
@@ -90,18 +85,18 @@ export function buildFlsmProfessionalReport(base, plan) {
   bar.append(used, free);
   const legend = node('div', 'professional-report-allocation-legend');
   const usedLegend = node('span', 'professional-report-legend-used',
-    number(plan.concernedCount) + ' sous-réseaux attribués · ' + number(assignedHosts) + ' hôtes utilisables');
+    number(plan.concernedCount) + ' sous-réseaux attribués : ' + number(assignedHosts) + ' hôtes utilisables');
   const freeLegend = node('span', 'professional-report-legend-free',
-    number(remaining) + (remaining > 1 ? ' sous-réseaux restants · ' : ' sous-réseau restant · ') +
+    number(remaining) + (remaining > 1 ? ' sous-réseaux restants : ' : ' sous-réseau restant : ') +
     number(remainingHosts) + ' hôtes utilisables non affectés');
   legend.append(usedLegend, freeLegend);
   visual.append(bar, legend);
   summary.append(visual);
   const description = plan.method === 'hosts'
-    ? 'Méthode B — dimensionnement selon le nombre minimal d’hôtes : ' + number(plan.minimumHosts)
+    ? 'Méthode B : dimensionnement selon le nombre minimal d’hôtes : ' + number(plan.minimumHosts)
     : plan.method === 'combined'
-      ? 'Méthode combinée — ' + number(plan.requestedCount) + ' réseaux et ' + number(plan.minimumHosts) + ' hôtes minimum par réseau'
-      : 'Méthode A — découpage selon le nombre de sous-réseaux demandés : ' + number(plan.requestedCount);
+      ? 'Méthode combinée : ' + number(plan.requestedCount) + ' réseaux et ' + number(plan.minimumHosts) + ' hôtes minimum par réseau'
+      : 'Méthode A : découpage selon le nombre de sous-réseaux demandés : ' + number(plan.requestedCount);
   summary.append(node('p', 'professional-report-method', description));
   if (remaining > 0) {
     summary.append(node('p', 'professional-report-note',
@@ -147,9 +142,6 @@ export function buildFlsmProfessionalReport(base, plan) {
   wrapper.append(table);
   tableSection.append(wrapper);
   report.append(tableSection);
-  const footer = node('footer', 'professional-report-footer',
-    'CyberNet · IPcalc — Plan d’adressage FLSM · Rapport professionnel');
-  report.append(footer);
   return report;
 }
 
