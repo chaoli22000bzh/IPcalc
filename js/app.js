@@ -3,11 +3,11 @@ import { classifyIPv4 } from './address-classification.js';
 import { parseIPv6 } from './ipv6.js?v=2.0.0-step3.0';
 import { downloadFlsmA3 } from './pdf-a3-flsm.js?v=2.0.0-step3.0';
 import { downloadAddressingA4 } from './pdf-a4.js?v=2.0.0-step3.0';
-import { printFlsmProfessional } from './professional-flsm.js?v=2.0.0-step3.23';
-import { printIPv4Professional } from './professional-ipv4.js?v=2.0.0-step3.23';
-import { printIPv6Professional } from './professional-ipv6.js?v=2.0.0-step3.23';
-import { printVlsmProfessional } from './professional-vlsm.js?v=2.0.0-step3.23';
-import { parseNetwork, planSubnets, subnetAt, summaryIndices, subnetPage } from './ipv4.js?v=2.0.0-step3.0';
+import { printFlsmProfessional } from './professional-flsm.js?v=2.0.0-step3.25';
+import { printIPv4Professional } from './professional-ipv4.js?v=2.0.0-step3.25';
+import { printIPv6Professional } from './professional-ipv6.js?v=2.0.0-step3.25';
+import { printVlsmProfessional } from './professional-vlsm.js?v=2.0.0-step3.25';
+import { parseNetwork, planSubnets, subnetAt, summaryIndices, subnetPage } from './ipv4.js?v=2.0.0-step3.25';
 import { EXPORT_COLUMNS } from './exports.js?v=2.0.0-step3.0';
 
 const $ = id => document.getElementById(id);
@@ -30,8 +30,8 @@ function element(tag, className, text) {
   return node;
 }
 
-function showAddressDiagnostic(base) {
-  const diagnosis=classifyIPv4(base.inputAddress);
+function showAddressDiagnostic(base, mode = 'simple') {
+  const diagnosis=classifyIPv4(mode === 'simple' ? base.inputAddress : base.address, base.prefix, base.network, mode === 'simple' ? 'host' : 'network');
   const anchor=$('address-diagnostic-anchor');
   const button=$('address-diagnostic'),detail=$('address-diagnostic-detail');
   button.textContent=diagnosis.label;
@@ -56,7 +56,7 @@ function renderNetwork(base) {
   const address = element('p', 'network-address', base.address);
   address.append(element('span', '', ` /${base.prefix}`));
   title.append(address);
-  banner.append(title, element('span', 'network-badge', base.prefix === 31 ? 'Point à point' : 'IPv4'));
+  banner.append(title, element('span', 'network-badge', base.prefix === 31 ? 'Point à point' : base.prefix === 32 ? 'Adresse unique' : base.prefix === 0 ? 'Route par défaut' : 'IPv4'));
   const data = element('dl', 'network-data');
   const values = [base.address, base.mask, `/${base.prefix}`, base.broadcast ?? 'Sans broadcast', format(base.usableHosts)];
   EXPORT_COLUMNS.forEach((label, index) => {
@@ -94,10 +94,17 @@ function renderNetwork(base) {
     panel.append(legend);
     container.append(panel);
   }
-  if (base.inputAddress !== base.address) {
-    container.append(element('p', 'network-note', `${base.inputAddress}/${base.prefix} appartient au réseau ${base.address}/${base.prefix}.`));
+  if (base.prefix <= 30) {
+    const input = base.inputAddress;
+    if (input === base.address) {
+      container.append(element('p', 'network-note', 'Adresse réseau : '+input+' identifie le sous-réseau et ne doit pas être attribuée à un équipement.'));
+    } else if (base.broadcast !== null && input === base.broadcast) {
+      container.append(element('p', 'network-note', 'Adresse de broadcast : '+input+' est réservée à la diffusion sur ce sous-réseau et ne doit pas être attribuée à un équipement.'));
+    }
   }
   if (base.prefix === 31) container.append(element('p', 'network-note', 'Liaison point à point : les deux adresses sont utilisables. Sans broadcast conventionnel.'));
+  if (base.prefix === 32) container.append(element('p', 'network-note', 'Adresse unique /32 : une seule adresse utilisable, sans broadcast.'));
+  if (base.prefix === 0) container.append(element('p', 'network-note', 'Préfixe /0 : espace IPv4 complet, notamment utilisé pour la route par défaut.'));
 }
 
 function networkTable(rows, omitted = 0) {
@@ -424,7 +431,7 @@ function calculate(focus = true) {
     const vlsm=protocol==='ipv4' && mode==='vlsm' ? planVlsm(base,readVlsmRequests()) : null;
     vlsmPage=0;
     current = { protocol,base,plan,vlsm };
-    if(protocol==='ipv4'&&mode==='simple')showAddressDiagnostic(base);
+    if(protocol==='ipv4')showAddressDiagnostic(base,mode);
     else hideAddressDiagnostic();
     updatePdfAvailability();
     pages = { middle: { open: false, page: 0 }, extra: { open: false, page: 0 } };

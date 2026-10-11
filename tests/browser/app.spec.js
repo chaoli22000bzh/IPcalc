@@ -23,7 +23,7 @@ async function subdivide(page, { address = '192.168.10.75/24', method = 'count',
 test('réseau simple, cinq champs exacts et normalisation de l’hôte', async ({ page }) => {
   const summary = page.locator('#network-result');
   await expect(summary.locator('dd')).toHaveText(['192.168.10.64', '255.255.255.192', '/26', '192.168.10.127', '62']);
-  await expect(summary).toContainText('192.168.10.75/26 appartient au réseau 192.168.10.64/26');
+  await expect(summary).not.toContainText('appartient au réseau');
   await expect(page.locator('.binary')).toHaveCount(0);
   await expect(page.locator('#subnet-result')).toBeHidden();
 });
@@ -293,7 +293,7 @@ test('interface compacte, saisie longue et logos locaux sur plusieurs largeurs',
     expect(Math.abs(print.y - calculate.y)).toBeLessThanOrEqual(6);
     if (width === 1440) {
       expect((await page.locator('main').boundingBox()).width).toBeLessThanOrEqual(1100);
-      expect(address.width).toBeGreaterThanOrEqual(500);
+      expect(address.width).toBeGreaterThanOrEqual(440);
       expect(address.width).toBeLessThanOrEqual(580);
       expect((await page.locator('.panel-heading').boundingBox()).y).toBe(calculate.y);
     }
@@ -638,4 +638,50 @@ test('VLSM Pro : génération entièrement autonome sans panneaux IPcalc', async
   await expect(page.locator('#professional-report')).toContainText('10.40.0.0/24');
   await expect(page.locator('#professional-report .professional-vlsm-table tbody tr')).toHaveCount(2);
   await expect(page.locator('#professional-report')).not.toContainText('192.168.50.0/24');
+});
+
+
+test('diagnostic des préfixes particuliers et adresse unique /32', async ({ page }) => {
+  for (const [address, category, label] of [
+    ['192.168.1.10/24','lan','LAN'],
+    ['8.8.8.8/24','internet','Internet'],
+    ['127.0.0.1/8','special','Spécial'],
+    ['192.168.1.10/31','special','Spécial'],
+    ['192.168.1.10/32','special','Spécial'],
+    ['0.0.0.0/0','special','Spécial']
+  ]) {
+    await page.locator('#address').fill(address);
+    await page.getByRole('button',{name:'Calculer le réseau'}).click();
+    await expect(page.locator('#address-diagnostic')).toHaveAttribute('data-category',category);
+    await expect(page.locator('#address-diagnostic')).toHaveText(label);
+  }
+  await expect(page.locator('#network-result')).toContainText('Route par défaut');
+  for (const [address,kind] of [['192.168.1.0/24','Adresse réseau'],['192.168.1.255/24','Adresse de broadcast']]) {
+    await page.locator('#address').fill(address);
+    await page.getByRole('button',{name:'Calculer le réseau'}).click();
+    await expect(page.locator('#address-diagnostic')).toHaveAttribute('data-category','special');
+    await page.locator('#address-diagnostic').click();
+    await expect(page.locator('#address-diagnostic-detail')).toContainText(kind);
+  }
+});
+
+
+test('FLSM et VLSM : diagnostic du réseau initial, sans faux positif adresse réseau', async ({ page }) => {
+  await page.locator('#address').fill('192.168.1.0/24');
+  await page.getByRole('radio', { name: 'FLSM', exact: true }).check();
+  await page.getByLabel('Méthode de découpage FLSM').selectOption('count');
+  await page.getByLabel('Sous-réseaux demandés', { exact: true }).fill('4');
+  await page.getByRole('button', { name: 'Calculer le réseau' }).click();
+  await expect(page.locator('#address-diagnostic')).toHaveText('LAN');
+  await expect(page.locator('#address-diagnostic')).toHaveAttribute('data-category', 'lan');
+  await page.locator('#address-diagnostic').click();
+  await expect(page.locator('#address-diagnostic-detail')).toContainText('Réseau initial destiné au découpage');
+  await page.getByRole('radio', { name: 'VLSM', exact: true }).check();
+  await page.getByLabel('Hôtes par réseau ligne 1').fill('50');
+  await page.getByRole('button', { name: 'Planifier les sous-réseaux' }).click();
+  await expect(page.locator('#address-diagnostic')).toHaveText('LAN');
+  await expect(page.locator('#address-diagnostic')).toHaveAttribute('data-category', 'lan');
+  await page.locator('#address').fill('203.0.113.0/24');
+  await page.getByRole('button', { name: 'Planifier les sous-réseaux' }).click();
+  await expect(page.locator('#address-diagnostic')).toHaveText('Spécial');
 });

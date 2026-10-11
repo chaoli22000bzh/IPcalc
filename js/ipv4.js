@@ -1,6 +1,6 @@
 /** Moteur IPv4 pur, sans DOM, stockage, réseau ou dépendance. */
 export const IPV4_SIZE = 2 ** 32;
-export const MAX_PREFIX = 31;
+export const MAX_PREFIX = 32;
 
 export class CalculationError extends Error {
   constructor(message, field = 'address') {
@@ -30,11 +30,8 @@ export function numberToIPv4(value) {
 }
 
 export function validatePrefix(prefix) {
-  if (prefix === 32) {
-    throw new CalculationError('Le préfixe /32 n’est pas pris en charge dans IPcalc V1. Utilisez un préfixe de /0 à /31.', 'mask');
-  }
   if (!Number.isInteger(prefix) || prefix < 0 || prefix > MAX_PREFIX) {
-    throw new CalculationError('Le préfixe CIDR doit être un entier compris entre /0 et /31.', 'mask');
+    throw new CalculationError('Le préfixe CIDR doit être un entier compris entre /0 et /32.', 'mask');
   }
   return prefix;
 }
@@ -60,7 +57,7 @@ export function maskToPrefix(value) {
 
 function parsePrefix(value) {
   if (!/^\d{1,2}$/.test(value)) {
-    throw new CalculationError('Le préfixe CIDR doit être un entier compris entre /0 et /31.', 'mask');
+    throw new CalculationError('Le préfixe CIDR doit être un entier compris entre /0 et /32.', 'mask');
   }
   return validatePrefix(Number(value));
 }
@@ -72,7 +69,7 @@ function parseMask(value) {
 
 export function usableHosts(prefix) {
   validatePrefix(prefix);
-  return prefix === 31 ? 2 : 2 ** (32 - prefix) - 2;
+  return prefix === 32 ? 1 : prefix === 31 ? 2 : 2 ** (32 - prefix) - 2;
 }
 
 export function describeNetwork(address, prefix) {
@@ -87,7 +84,7 @@ export function describeNetwork(address, prefix) {
     address: numberToIPv4(network),
     mask: prefixToMask(prefix),
     prefix,
-    broadcast: prefix === 31 ? null : numberToIPv4(network + blockSize - 1),
+    broadcast: prefix >= 31 ? null : numberToIPv4(network + blockSize - 1),
     usableHosts: usableHosts(prefix),
     blockSize,
   };
@@ -137,7 +134,7 @@ export function planSubnets(base, { method, count, hosts }) {
   let prefix;
   if (requestedCount !== null) {
     prefix = base.prefix + Math.ceil(Math.log2(requestedCount));
-    if (prefix > MAX_PREFIX) {
+    if (prefix > 31) {
       throw new CalculationError(`Le réseau /${base.prefix} permet au maximum ${2 ** (31 - base.prefix)} sous-réseaux /31. Demandez moins de sous-réseaux ou utilisez un réseau initial plus grand.`, 'count');
     }
     if (minimumHosts !== null && usableHosts(prefix) < minimumHosts) {
@@ -147,7 +144,7 @@ export function planSubnets(base, { method, count, hosts }) {
     if (minimumHosts > base.usableHosts) {
       throw new CalculationError(`Le réseau /${base.prefix} offre au maximum ${base.usableHosts} hôtes utilisables. Réduisez le nombre d’hôtes ou utilisez un réseau initial plus grand.`, 'hosts');
     }
-    prefix = MAX_PREFIX;
+    prefix = 31;
     while (usableHosts(prefix) < minimumHosts) prefix -= 1;
   }
   const blockSize = 2 ** (32 - prefix);
