@@ -1,16 +1,18 @@
 import { describeVlsmBase, summarizeVlsmRequests, planVlsm, VLSM_MAX_SUBNETS, VLSM_PAGE_SIZE } from './vlsm.js?v=2.0.0-step3.0';
+import { classifyIPv4 } from './address-classification.js';
 import { parseIPv6 } from './ipv6.js?v=2.0.0-step3.0';
 import { downloadFlsmA3 } from './pdf-a3-flsm.js?v=2.0.0-step3.0';
 import { downloadAddressingA4 } from './pdf-a4.js?v=2.0.0-step3.0';
-import { printFlsmProfessional } from './professional-flsm.js?v=2.0.0-step3.9';
-import { printIPv4Professional } from './professional-ipv4.js?v=2.0.0-step3.9';
-import { printIPv6Professional } from './professional-ipv6.js?v=2.0.0-step3.9';
-import { printVlsmProfessional } from './professional-vlsm.js?v=2.0.0-step3.9';
+import { printFlsmProfessional } from './professional-flsm.js?v=2.0.0-step3.23';
+import { printIPv4Professional } from './professional-ipv4.js?v=2.0.0-step3.23';
+import { printIPv6Professional } from './professional-ipv6.js?v=2.0.0-step3.23';
+import { printVlsmProfessional } from './professional-vlsm.js?v=2.0.0-step3.23';
 import { parseNetwork, planSubnets, subnetAt, summaryIndices, subnetPage } from './ipv4.js?v=2.0.0-step3.0';
 import { EXPORT_COLUMNS } from './exports.js?v=2.0.0-step3.0';
 
 const $ = id => document.getElementById(id);
 const format = value => value.toLocaleString('fr-FR');
+const allocationPercent = (part, total) => (100 * part / total).toLocaleString('fr-FR', {maximumFractionDigits:1}) + ' %';
 function powerOfTwo(value, count) {
   const wrapper=element('span','ipv6-power-expression');
   wrapper.append(document.createTextNode('2'),element('sup','ipv6-power-exponent',String(value)));
@@ -28,6 +30,23 @@ function element(tag, className, text) {
   return node;
 }
 
+function showAddressDiagnostic(base) {
+  const diagnosis=classifyIPv4(base.inputAddress);
+  const anchor=$('address-diagnostic-anchor');
+  const button=$('address-diagnostic'),detail=$('address-diagnostic-detail');
+  button.textContent=diagnosis.label;
+  button.dataset.category=diagnosis.category;
+  button.setAttribute('aria-label',diagnosis.label+' : '+diagnosis.description);
+  detail.textContent=diagnosis.description;
+  detail.hidden=true;
+  button.setAttribute('aria-expanded','false');
+  anchor.hidden=false;
+}
+function hideAddressDiagnostic(){
+  $('address-diagnostic-anchor').hidden=true;
+  $('address-diagnostic-detail').hidden=true;
+  $('address-diagnostic').setAttribute('aria-expanded','false');
+}
 function renderNetwork(base) {
   const container = $('network-result');
   container.replaceChildren();
@@ -47,6 +66,34 @@ function renderNetwork(base) {
     data.append(group);
   });
   container.append(banner, data);
+  if (current.plan) {
+    const plan = current.plan;
+    const remaining = plan.capacity - plan.concernedCount;
+    const panel = element('div', 'flsm-allocation-panel');
+    panel.append(element('h3', '', 'Répartition du réseau initial'));
+    const bar = element('div', 'flsm-allocation-bar');
+    bar.setAttribute('role', 'img');
+    bar.setAttribute('aria-label', format(plan.concernedCount) + ' sous-réseaux attribués, ' + format(remaining) + ' disponibles');
+    const visible = Math.min(plan.concernedCount, 64);
+    for (let i = 0; i < visible; i++) {
+      const seg = element('span', 'flsm-allocation-segment');
+      seg.style.width = (100 * plan.concernedCount / plan.capacity / visible) + '%';
+      seg.style.backgroundColor = ['#28699c','#218e81','#d39737','#8976ba','#d46f77','#4c96b0','#a28b67','#5d9a72'][i % 8];
+      seg.title = visible === plan.concernedCount ? 'Sous-réseau ' + (i + 1) : 'Groupe de sous-réseaux attribués';
+      bar.append(seg);
+    }
+    if (remaining > 0) {
+      const free = element('span', 'flsm-allocation-free');
+      free.style.width = (100 * remaining / plan.capacity) + '%';
+      bar.append(free);
+    }
+    panel.append(bar);
+    const legend = element('div', 'flsm-allocation-legend');
+    legend.append(element('span', '', format(plan.concernedCount) + ' attribués (' + allocationPercent(plan.concernedCount, plan.capacity) + ')'));
+    legend.append(element('span', '', format(remaining) + ' disponibles (' + allocationPercent(remaining, plan.capacity) + ')'));
+    panel.append(legend);
+    container.append(panel);
+  }
   if (base.inputAddress !== base.address) {
     container.append(element('p', 'network-note', `${base.inputAddress}/${base.prefix} appartient au réseau ${base.address}/${base.prefix}.`));
   }
@@ -298,13 +345,13 @@ function renderVlsm(plan){
   if(plan.freeAddresses){
     const free=element('span','vlsm-bar-free');
     free.style.width=(plan.freeAddresses/plan.initial.totalAddresses*100)+'%';
-    free.title=format(plan.freeAddresses)+' adresses non attribuées';
+    free.title=format(plan.freeAddresses)+' adresses non attribuées ('+allocationPercent(plan.freeAddresses,plan.initial.totalAddresses)+')';
     bar.append(free);
   }
   barPanel.append(bar);
   const legend=element('div','vlsm-allocation-legend');
-  legend.append(element('span','',format(plan.usedAddresses)+' adresses attribuées'));
-  legend.append(element('span','',format(plan.freeAddresses)+' adresses non attribuées'));
+  legend.append(element('span','',format(plan.usedAddresses)+' adresses attribuées ('+allocationPercent(plan.usedAddresses,plan.initial.totalAddresses)+')'));
+  legend.append(element('span','',format(plan.freeAddresses)+' adresses disponibles ('+allocationPercent(plan.freeAddresses,plan.initial.totalAddresses)+')'));
   barPanel.append(legend);network.append(barPanel);
   const other=$('subnet-result');other.replaceChildren();other.hidden=false;
   const wrapper=element('div','table-wrapper');
@@ -377,6 +424,8 @@ function calculate(focus = true) {
     const vlsm=protocol==='ipv4' && mode==='vlsm' ? planVlsm(base,readVlsmRequests()) : null;
     vlsmPage=0;
     current = { protocol,base,plan,vlsm };
+    if(protocol==='ipv4'&&mode==='simple')showAddressDiagnostic(base);
+    else hideAddressDiagnostic();
     updatePdfAvailability();
     pages = { middle: { open: false, page: 0 }, extra: { open: false, page: 0 } };
     $('stale-notice').hidden = true;
@@ -428,6 +477,7 @@ function syncSettings() {
 }
 
 function invalidateResults() {
+  hideAddressDiagnostic();
   current = null;
   updatePdfAvailability();
   pages = { middle: { open: false, page: 0 }, extra: { open: false, page: 0 } };
@@ -449,6 +499,18 @@ function markStale() {
   $('stale-notice').hidden = false;
 }
 
+$('address-diagnostic').addEventListener('click',()=>{
+  const detail=$('address-diagnostic-detail'),button=$('address-diagnostic');
+  detail.hidden=!detail.hidden;
+  button.setAttribute('aria-expanded',String(!detail.hidden));
+});
+document.addEventListener('click',event=>{
+  const anchor=$('address-diagnostic-anchor');
+  if(!anchor.hidden&&!anchor.contains(event.target)){
+    $('address-diagnostic-detail').hidden=true;
+    $('address-diagnostic').setAttribute('aria-expanded','false');
+  }
+});
 form.addEventListener('submit', event => { event.preventDefault(); calculate(); });
 form.addEventListener('input', markStale);
 form.addEventListener('change', () => { syncSettings(); markStale(); });
@@ -493,7 +555,7 @@ function updatePdfAvailability(){
   print.disabled=!vlsm&&!legacy&&!ipv6;
   print.setAttribute('aria-label',vlsm?'Imprimer le plan VLSM A4':legacy?'Télécharger une fiche pédagogique PDF':ipv6?'Imprimer la fiche professionnelle IPv6 A4':'Impression indisponible');
   print.title=vlsm?'Imprimer le plan VLSM A4 ou enregistrer en PDF':legacy?'Télécharger une fiche pédagogique PDF':ipv6?'Imprimer la fiche professionnelle IPv6 A4':'Impression indisponible';
-  $('print-help').textContent=vlsm?'Impression VLSM A4':legacy?(current.plan?'PDF A3 / A4 Pro':'PDF A4 / A4 Pro'):ipv6?'PDF A4 Pro':'À venir';
+  $('print-help').textContent=vlsm?'Impression VLSM A4':legacy?(current.plan?'PDF A3 / A4 Pro':'PDF A4 / A4 Pro'):ipv6?'PDF A4 Pro':'PDF A4 Pro';
 }
 $('print-results').addEventListener('click',()=>{
   if(!current)return;

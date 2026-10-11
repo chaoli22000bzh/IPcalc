@@ -1,4 +1,4 @@
-# IPcalc — CyberNet
+# IPcalc
 
 Calculatrice IPv4 gratuite, en français, conçue pour les enseignants et les professionnels. Application web native et PWA autonome : tous les calculs ont lieu sur l’appareil, sans API, compte ni historique.
 

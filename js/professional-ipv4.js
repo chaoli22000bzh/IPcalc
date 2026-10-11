@@ -1,4 +1,5 @@
 /** Fiche professionnelle IPv4 simple A4, sans découpage ni dépendance serveur. */
+import { classifyIPv4 } from './address-classification.js';
 import { numberToIPv4 } from './ipv4.js';
 
 const format = value => Number(value).toLocaleString('fr-FR');
@@ -25,13 +26,12 @@ export function buildIPv4ProfessionalReport(base) {
   report.setAttribute('aria-label', 'Rapport professionnel IPv4');
   const head = el('header', 'professional-report-head');
   const headings = el('div');
-  headings.append(el('p', 'professional-report-kicker', 'CYBERNET · RAPPORT TECHNIQUE'),
-    el('h1', '', 'Fiche d’adressage IPv4'),
-    el('p', 'professional-report-subtitle', 'Caractéristiques du réseau, sans découpage'));
-  const logo = el('img', 'professional-report-logo');
-  logo.src = new URL('../icons/Logo_CyberNet_bleu_marine_transparent.svg', import.meta.url).href;
-  logo.alt = 'CyberNet Los Angeles';
-  head.append(headings, logo);
+  headings.append(el('h1', '', 'Fiche d’adressage IPv4'));
+  const analyzed = el('p', 'professional-ipv4-analyzed');
+  analyzed.append(el('span', '', 'Adresse IPv4 analysée : '),
+    el('strong', '', (base.inputAddress ?? base.address) + '/' + base.prefix));
+  headings.append(analyzed);
+  head.append(headings);
   report.append(head);
 
   const section = el('section', 'professional-report-summary');
@@ -51,19 +51,15 @@ export function buildIPv4ProfessionalReport(base) {
     ['Nombre total d’adresses', format(base.blockSize)],
     ['Hôtes utilisables', format(base.usableHosts)],
   ].forEach(([label, value]) => fields.append(pair(label, value)));
+  const classification=classifyIPv4(base.inputAddress??base.address);
+  fields.append(pair('Nature de l’adresse saisie',classification.label+' : '+classification.description));
   group.append(fields);
   section.append(group);
-  if (base.inputAddress && base.inputAddress !== base.address) {
-    section.append(el('p', 'professional-report-method',
-      'Adresse saisie : ' + base.inputAddress + ' — appartient au réseau ' + base.address + '/' + base.prefix + '.'));
-  }
   if (base.prefix === 31) {
     section.append(el('p', 'professional-report-note',
       'Liaison point à point /31 : les deux adresses sont utilisables. Pas de broadcast conventionnel.'));
   }
   report.append(section);
-  report.append(el('footer', 'professional-report-footer',
-    'CyberNet · IPcalc — Fiche d’adressage IPv4 · Rapport professionnel'));
   return report;
 }
 

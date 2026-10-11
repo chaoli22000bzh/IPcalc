@@ -9,7 +9,6 @@
   main,.site-header {max-width:none;margin:0;padding:0;}
   .site-header {padding-bottom:3mm;border-bottom:1px solid #aaa;margin-bottom:5mm;}
   .site-header .brand {font-size:17pt;}
-  .site-header .cybernet-logo img {max-width:32mm;height:12mm;object-fit:contain;}
   .input-panel,.header-actions,.notice,.pages-details,.pagination,
   .skip-link,#update-banner,#pwa-message {display:none !important;}
   .workspace {display:block;}

@@ -26,5 +26,5 @@ test('catalogue non fonctionnel, paramètres contrôlés et logo professionnel l
   assert.throws(() => plannedReports({ context: 'unknown' }), RangeError);
   assert.throws(() => plannedReports({ device: 'unknown' }), RangeError);
   assert.throws(() => plannedReports({ mode: 'unknown' }), RangeError);
-  assert.ok(PROFESSIONAL_LOGO.pathname.endsWith('/icons/Logo_CyberNet_bleu_marine_transparent.svg'));
+  assert.ok(PROFESSIONAL_LOGO.pathname.endsWith('/icons/ipcalc-subnets.svg'));
 });

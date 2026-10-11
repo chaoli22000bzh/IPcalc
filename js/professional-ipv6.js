@@ -42,14 +42,10 @@ export function buildIPv6ProfessionalReport(info) {
   const head = create('header', 'professional-report-head');
   const headings = create('div');
   headings.append(
-    create('p', 'professional-report-kicker', 'CYBERNET · RAPPORT TECHNIQUE'),
     create('h1', '', 'Fiche d’adressage IPv6'),
     create('p', 'professional-report-subtitle', 'Analyse d’une adresse et de son préfixe réseau')
   );
-  const logo = create('img', 'professional-report-logo');
-  logo.src = new URL('../icons/Logo_CyberNet_bleu_marine_transparent.svg', import.meta.url).href;
-  logo.alt = 'CyberNet Los Angeles';
-  head.append(headings, logo);
+  head.append(headings);
   report.append(head);
 
   const summary = create('section', 'professional-report-summary');
@@ -85,8 +81,6 @@ export function buildIPv6ProfessionalReport(info) {
     'IPv6 ne possède pas de broadcast. Les adresses indiquées délimitent le bloc : ' +
     'la notion de premier ou dernier hôte utilisable dépend de l’affectation des adresses.'));
   report.append(summary);
-  report.append(create('footer', 'professional-report-footer',
-    'CyberNet · IPcalc — Fiche d’adressage IPv6 · Rapport professionnel'));
   return report;
 }
 
