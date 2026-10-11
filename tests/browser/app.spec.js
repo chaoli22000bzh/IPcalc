@@ -685,3 +685,22 @@ test('FLSM et VLSM : diagnostic du réseau initial, sans faux positif adresse r�
   await page.getByRole('button', { name: 'Planifier les sous-réseaux' }).click();
   await expect(page.locator('#address-diagnostic')).toHaveText('Spécial');
 });
+
+test('IPv6 : diagnostic LAN Internet Spécial accessible au clic', async ({ page }) => {
+  for (const [address,category,label] of [
+    ['fd12:3456::10/64','lan','LAN'],
+    ['2001:4860:4860::8888/128','internet','Internet'],
+    ['fe80::1234/64','special','Spécial'],
+    ['::1/128','special','Spécial'],
+    ['ff02::1/128','special','Spécial'],
+    ['2001:db8::1/64','special','Spécial']
+  ]) {
+    await page.locator('#address').fill(address);
+    await page.getByRole('button',{name:'Afficher les informations'}).click();
+    await expect(page.locator('#address-diagnostic')).toHaveAttribute('data-category',category);
+    await expect(page.locator('#address-diagnostic')).toHaveText(label);
+    await page.locator('#address-diagnostic').click();
+    await expect(page.locator('#address-diagnostic-detail')).toBeVisible();
+    await page.locator('#address-diagnostic').click();
+  }
+});
