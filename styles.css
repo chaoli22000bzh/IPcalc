@@ -377,8 +377,8 @@ input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--primary)
 .address-diagnostic-anchor { display:flex; align-items:center; position:relative; flex:none; }
 .address-diagnostic { width:92px; text-align:center; border:1px solid #161616; border-radius:999px; padding:0 12px; min-height:40px; color:#101010; font-weight:800; font-size:12px; cursor:pointer; white-space:nowrap; box-shadow:0 1px 2px #0002; }
 .address-diagnostic[data-category="lan"] { background:#00e23a; }
-.address-diagnostic[data-category="internet"] { background:#ff9800; }
-.address-diagnostic[data-category="special"] { background:#ff3333; }
+.address-diagnostic[data-category="internet"] { background:#E53891; }
+.address-diagnostic[data-category="special"] { background:#E88A19; }
 .address-diagnostic:focus-visible { outline:3px solid currentColor; outline-offset:2px; }
 .address-diagnostic-detail { position:absolute; z-index:30; top:calc(100% + 8px); right:0; width:min(310px,calc(100vw - 36px)); padding:12px 14px; border:1px solid var(--line); border-radius:10px; background:var(--surface); color:var(--ink); font-size:13px; line-height:1.5; font-weight:500; box-shadow:0 8px 24px #0003; white-space:normal; }
 @media (hover:hover) and (pointer:fine) {
