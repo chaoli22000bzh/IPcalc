@@ -23,7 +23,7 @@ async function subdivide(page, { address = '192.168.10.75/24', method = 'count',
 test('réseau simple, cinq champs exacts et normalisation de l’hôte', async ({ page }) => {
   const summary = page.locator('#network-result');
   await expect(summary.locator('dd')).toHaveText(['192.168.10.64', '255.255.255.192', '/26', '192.168.10.127', '62']);
-  await expect(summary).toContainText('192.168.10.75/26 appartient au réseau 192.168.10.64/26');
+  await expect(summary).not.toContainText('appartient au réseau');
   await expect(page.locator('.binary')).toHaveCount(0);
   await expect(page.locator('#subnet-result')).toBeHidden();
 });
@@ -664,4 +664,25 @@ test('diagnostic des préfixes particuliers et adresse unique /32', async ({ pag
     await page.locator('#address-diagnostic').click();
     await expect(page.locator('#address-diagnostic-detail')).toContainText(kind);
   }
+});
+
+
+test('FLSM et VLSM : diagnostic du réseau initial, sans faux positif adresse réseau', async ({ page }) => {
+  await page.getByLabel('Adresse IP', { exact: true }).fill('192.168.1.0/24');
+  await page.getByRole('radio', { name: 'FLSM', exact: true }).check();
+  await page.getByLabel('Méthode de découpage FLSM').selectOption('count');
+  await page.getByLabel('Sous-réseaux demandés', { exact: true }).fill('4');
+  await page.getByRole('button', { name: 'Calculer le réseau' }).click();
+  await expect(page.locator('#address-diagnostic')).toHaveText('LAN');
+  await expect(page.locator('#address-diagnostic')).toHaveAttribute('data-category', 'lan');
+  await page.locator('#address-diagnostic').click();
+  await expect(page.locator('#address-diagnostic-detail')).toContainText('Réseau initial destiné au découpage');
+  await page.getByRole('radio', { name: 'VLSM', exact: true }).check();
+  await page.getByLabel('Hôtes par réseau ligne 1').fill('50');
+  await page.getByRole('button', { name: 'Planifier les sous-réseaux' }).click();
+  await expect(page.locator('#address-diagnostic')).toHaveText('LAN');
+  await expect(page.locator('#address-diagnostic')).toHaveAttribute('data-category', 'lan');
+  await page.getByLabel('Adresse IP', { exact: true }).fill('203.0.113.0/24');
+  await page.getByRole('button', { name: 'Planifier les sous-réseaux' }).click();
+  await expect(page.locator('#address-diagnostic')).toHaveText('Spécial');
 });
