@@ -743,3 +743,46 @@ test('IPv6 : deux premiers sous-réseaux comparés en binaire',async({page})=>{
   await expect(page.locator('.ipv6-bit-sample').nth(0).locator('.ipv6-bit-sequence')).toHaveText('1010 1011 0000 0000');
   await expect(page.locator('.ipv6-bit-sample').nth(1).locator('.ipv6-bit-sequence')).toHaveText('1010 1011 0000 0001');
 });
+
+
+test('Rapport A4 IPv6 : plan /56 vers /64 et échantillonnage des réseaux',async({page})=>{
+  await page.locator('#address').fill('2001:db8:1234:ab00::/56');
+  await page.locator('#ipv6-target').selectOption('64');
+  await page.getByRole('button',{name:'Découper le réseau IPv6'}).click();
+  await expect(page.locator('#print-results')).toBeEnabled();
+  await page.evaluate(()=>{window.print=()=>{};});
+  await page.locator('#print-results').click();
+  const report=page.locator('.professional-ipv6-subnet-report');
+  await expect(report).toContainText('Plan de sous-réseaux IPv6');
+  await expect(report).toContainText('256');
+  await expect(report.locator('tbody tr')).toHaveCount(13);
+  await expect(report.locator('tbody tr').first()).toContainText('2001:db8:1234:ab00::/64');
+  await expect(report.locator('tbody tr').last()).toContainText('2001:db8:1234:abff::/64');
+  await expect(report).toContainText('8 premiers et 4 derniers');
+  await page.evaluate(()=>window.dispatchEvent(new Event('afterprint')));
+  await expect(page.locator('#professional-report')).toHaveCount(0);
+});
+
+test('Rapport A4 IPv6 : un seul réseau /48 vers /48',async({page})=>{
+  await page.locator('#address').fill('2001:db8:1234::/48');
+  await page.locator('#ipv6-target').selectOption('48');
+  await page.getByRole('button',{name:'Découper le réseau IPv6'}).click();
+  await page.evaluate(()=>{window.print=()=>{};});
+  await page.locator('#print-results').click();
+  const report=page.locator('.professional-ipv6-subnet-report');
+  await expect(report.locator('tbody tr')).toHaveCount(1);
+  await expect(report).toContainText('Bits empruntés');
+  await expect(report.locator('tbody tr')).toContainText('2001:db8:1234::/48');
+});
+
+test('IPv6 A4 displays all 16 networks',async({page})=>{
+  await page.locator('#address').fill('fd12:3456:789a:abc0::/60');
+  await page.locator('#ipv6-target').selectOption('64');
+  await page.getByRole('button',{name:'Découper le réseau IPv6'}).click();
+  await page.evaluate(()=>{window.print=()=>{};});
+  await page.locator('#print-results').click();
+  const report=page.locator('.professional-ipv6-subnet-report');
+  await expect(report.locator('tbody tr')).toHaveCount(16);
+  await expect(report.locator('tbody tr').nth(8)).toContainText('fd12:3456:789a:abc8::/64');
+  await expect(report.locator('.professional-ipv6-subnet-legend')).toContainText('Sous-réseaux : 4 bits');
+});

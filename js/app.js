@@ -1,13 +1,14 @@
 import { describeVlsmBase, summarizeVlsmRequests, planVlsm, VLSM_MAX_SUBNETS, VLSM_PAGE_SIZE } from './vlsm.js?v=2.0.0-step3.0';
 import { classifyIPv4 } from './address-classification.js';
-import { parseIPv6, classifyIPv6, planIPv6Subnets } from './ipv6.js?v=2.0.0-step3.30';
+import { parseIPv6, classifyIPv6, planIPv6Subnets } from './ipv6.js?v=2.0.0-step3.32';
 import { downloadFlsmA3 } from './pdf-a3-flsm.js?v=2.0.0-step3.0';
 import { downloadAddressingA4 } from './pdf-a4.js?v=2.0.0-step3.0';
-import { printFlsmProfessional } from './professional-flsm.js?v=2.0.0-step3.30';
-import { printIPv4Professional } from './professional-ipv4.js?v=2.0.0-step3.30';
-import { printIPv6Professional } from './professional-ipv6.js?v=2.0.0-step3.30';
-import { printVlsmProfessional } from './professional-vlsm.js?v=2.0.0-step3.30';
-import { parseNetwork, planSubnets, subnetAt, summaryIndices, subnetPage } from './ipv4.js?v=2.0.0-step3.30';
+import { printFlsmProfessional } from './professional-flsm.js?v=2.0.0-step3.32';
+import { printIPv4Professional } from './professional-ipv4.js?v=2.0.0-step3.32';
+import { printIPv6Professional } from './professional-ipv6.js?v=2.0.0-step3.32';
+import { printIPv6SubnetProfessional } from './professional-ipv6-subnets.js?v=2.0.0-step3.32';
+import { printVlsmProfessional } from './professional-vlsm.js?v=2.0.0-step3.32';
+import { parseNetwork, planSubnets, subnetAt, summaryIndices, subnetPage } from './ipv4.js?v=2.0.0-step3.32';
 import { EXPORT_COLUMNS } from './exports.js?v=2.0.0-step3.0';
 
 const $ = id => document.getElementById(id);
@@ -647,15 +648,16 @@ function updatePdfAvailability(){
   const ipv6=Boolean(current)&&current.protocol==='ipv6';
   // Le bouton historique conserve ses deux PDF scolaires en IPv4 et FLSM.
   // En mode VLSM, la même icône ouvre l'impression A4 de Firefox.
-  print.disabled=Boolean(current?.ipv6Plan)||(!vlsm&&!legacy&&!ipv6);
-  print.setAttribute('aria-label',current?.ipv6Plan?'Impression du découpage IPv6 en préparation':vlsm?'Imprimer le plan VLSM A4':legacy?'Télécharger une fiche pédagogique PDF':ipv6?'Imprimer la fiche professionnelle IPv6 A4':'Impression indisponible');
-  print.title=current?.ipv6Plan?'Impression du découpage IPv6 en préparation':vlsm?'Imprimer le plan VLSM A4 ou enregistrer en PDF':legacy?'Télécharger une fiche pédagogique PDF':ipv6?'Imprimer la fiche professionnelle IPv6 A4':'Impression indisponible';
-  $('print-help').textContent=current?.ipv6Plan?'PDF découpage IPv6 à venir':vlsm?'Impression VLSM A4':legacy?(current.plan?'PDF A3 / A4 Pro':'PDF A4 / A4 Pro'):ipv6?'PDF A4 Pro':'PDF A4 Pro';
+  print.disabled=!vlsm&&!legacy&&!ipv6;
+  print.setAttribute('aria-label',current?.ipv6Plan?'Imprimer le découpage IPv6 A4 professionnel':vlsm?'Imprimer le plan VLSM A4':legacy?'Télécharger une fiche pédagogique PDF':ipv6?'Imprimer la fiche professionnelle IPv6 A4':'Impression indisponible');
+  print.title=current?.ipv6Plan?'Imprimer le découpage IPv6 A4 professionnel':vlsm?'Imprimer le plan VLSM A4 ou enregistrer en PDF':legacy?'Télécharger une fiche pédagogique PDF':ipv6?'Imprimer la fiche professionnelle IPv6 A4':'Impression indisponible';
+  $('print-help').textContent=current?.ipv6Plan?'PDF A4 Pro - découpage IPv6':vlsm?'Impression VLSM A4':legacy?(current.plan?'PDF A3 / A4 Pro':'PDF A4 / A4 Pro'):ipv6?'PDF A4 Pro':'PDF A4 Pro';
 }
 $('print-results').addEventListener('click',()=>{
   if(!current)return;
   if(current.protocol==='ipv6'){
-    printIPv6Professional(current.base);
+    if(current.ipv6Plan)printIPv6SubnetProfessional(current.base,current.ipv6Plan);
+    else printIPv6Professional(current.base);
     return;
   }
   if(current.protocol!=='ipv4')return;

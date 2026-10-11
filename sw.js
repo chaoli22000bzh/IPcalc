@@ -1,10 +1,10 @@
 // Incrémenter VERSION à chaque livraison modifiant une ressource de l’application.
-const VERSION = '2.0.0-step3.30';
+const VERSION = '2.0.0-step3.32';
 const CACHE_PREFIX = `ipcalc:${self.registration.scope}:`;
 const CACHE_NAME = `${CACHE_PREFIX}${VERSION}`;
 const ASSETS = [
   './', './index.html', './styles.css', './print.css', './professional-report.css', './manifest.webmanifest',
-  './js/address-classification.js', './js/vlsm.js', './js/ipv6.js', './js/pdf-a4.js', './js/pdf-a3-flsm.js', './js/ipv4.js', './js/exports.js', './js/app.js', './js/pwa.js', './js/report-profiles.js', './js/professional-flsm.js', './js/professional-ipv4.js', './js/professional-ipv6.js', './js/professional-vlsm.js',
+  './js/address-classification.js', './js/vlsm.js', './js/ipv6.js', './js/pdf-a4.js', './js/pdf-a3-flsm.js', './js/ipv4.js', './js/exports.js', './js/app.js', './js/pwa.js', './js/report-profiles.js', './js/professional-flsm.js', './js/professional-ipv4.js', './js/professional-ipv6.js', './js/professional-ipv6-subnets.js', './js/professional-vlsm.js',
   './icons/ipcalc-subnets.svg', './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png',
 ];
 const assetURLs = new Set(ASSETS.map(path => new URL(path, self.registration.scope).href));
