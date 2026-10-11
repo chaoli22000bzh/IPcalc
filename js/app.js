@@ -591,10 +591,10 @@ function updatePdfAvailability(){
   const ipv6=Boolean(current)&&current.protocol==='ipv6';
   // Le bouton historique conserve ses deux PDF scolaires en IPv4 et FLSM.
   // En mode VLSM, la même icône ouvre l'impression A4 de Firefox.
-  print.disabled=!vlsm&&!legacy&&!ipv6;
-  print.setAttribute('aria-label',vlsm?'Imprimer le plan VLSM A4':legacy?'Télécharger une fiche pédagogique PDF':ipv6?'Imprimer la fiche professionnelle IPv6 A4':'Impression indisponible');
-  print.title=vlsm?'Imprimer le plan VLSM A4 ou enregistrer en PDF':legacy?'Télécharger une fiche pédagogique PDF':ipv6?'Imprimer la fiche professionnelle IPv6 A4':'Impression indisponible';
-  $('print-help').textContent=vlsm?'Impression VLSM A4':legacy?(current.plan?'PDF A3 / A4 Pro':'PDF A4 / A4 Pro'):ipv6?'PDF A4 Pro':'PDF A4 Pro';
+  print.disabled=Boolean(current?.ipv6Plan)||(!vlsm&&!legacy&&!ipv6);
+  print.setAttribute('aria-label',current?.ipv6Plan?'Impression du découpage IPv6 en préparation':vlsm?'Imprimer le plan VLSM A4':legacy?'Télécharger une fiche pédagogique PDF':ipv6?'Imprimer la fiche professionnelle IPv6 A4':'Impression indisponible');
+  print.title=current?.ipv6Plan?'Impression du découpage IPv6 en préparation':vlsm?'Imprimer le plan VLSM A4 ou enregistrer en PDF':legacy?'Télécharger une fiche pédagogique PDF':ipv6?'Imprimer la fiche professionnelle IPv6 A4':'Impression indisponible';
+  $('print-help').textContent=current?.ipv6Plan?'PDF découpage IPv6 à venir':vlsm?'Impression VLSM A4':legacy?(current.plan?'PDF A3 / A4 Pro':'PDF A4 / A4 Pro'):ipv6?'PDF A4 Pro':'PDF A4 Pro';
 }
 $('print-results').addEventListener('click',()=>{
   if(!current)return;
