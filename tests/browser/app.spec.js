@@ -657,4 +657,11 @@ test('diagnostic des préfixes particuliers et adresse unique /32', async ({ pag
     await expect(page.locator('#address-diagnostic')).toHaveText(label);
   }
   await expect(page.locator('#network-result')).toContainText('Route par défaut');
+  for (const [address,kind] of [['192.168.1.0/24','Adresse réseau'],['192.168.1.255/24','Adresse de broadcast']]) {
+    await page.getByLabel('Adresse IP', { exact: true }).fill(address);
+    await page.getByRole('button',{name:'Calculer le réseau'}).click();
+    await expect(page.locator('#address-diagnostic')).toHaveAttribute('data-category','special');
+    await page.locator('#address-diagnostic').click();
+    await expect(page.locator('#address-diagnostic-detail')).toContainText(kind);
+  }
 });
