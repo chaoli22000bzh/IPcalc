@@ -4,7 +4,8 @@
 }
 @page { size: A4 portrait; margin: 12mm 10mm 9mm; }
 @media print {
-  body.print-professional { font: 9pt/1.32 Arial, Helvetica, sans-serif; color: #151515 !important; background: #fff !important; }
+  body.print-professional { font: 9pt/1.32 Arial, Helvetica, sans-serif; color: #151515 !important; background: #fff !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  body.print-professional #professional-report, body.print-professional #professional-report * { print-color-adjust: exact !important; -webkit-print-color-adjust: exact !important; }
   body.print-professional .site-header,
   body.print-professional .workspace,
   body.print-professional #print-summary { display: none !important; }
