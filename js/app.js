@@ -1,4 +1,5 @@
 import { describeVlsmBase, summarizeVlsmRequests, planVlsm, VLSM_MAX_SUBNETS, VLSM_PAGE_SIZE } from './vlsm.js?v=2.0.0-step3.0';
+import { classifyIPv4 } from './address-classification.js';
 import { parseIPv6 } from './ipv6.js?v=2.0.0-step3.0';
 import { downloadFlsmA3 } from './pdf-a3-flsm.js?v=2.0.0-step3.0';
 import { downloadAddressingA4 } from './pdf-a4.js?v=2.0.0-step3.0';
@@ -28,6 +29,23 @@ function element(tag, className, text) {
   return node;
 }
 
+function showAddressDiagnostic(base) {
+  const diagnosis=classifyIPv4(base.inputAddress);
+  const anchor=$('address-diagnostic-anchor');
+  const button=$('address-diagnostic'),detail=$('address-diagnostic-detail');
+  button.textContent=diagnosis.label;
+  button.dataset.category=diagnosis.category;
+  button.setAttribute('aria-label',diagnosis.label+' : '+diagnosis.description);
+  detail.textContent=diagnosis.description;
+  detail.hidden=true;
+  button.setAttribute('aria-expanded','false');
+  anchor.hidden=false;
+}
+function hideAddressDiagnostic(){
+  $('address-diagnostic-anchor').hidden=true;
+  $('address-diagnostic-detail').hidden=true;
+  $('address-diagnostic').setAttribute('aria-expanded','false');
+}
 function renderNetwork(base) {
   const container = $('network-result');
   container.replaceChildren();
@@ -377,6 +395,8 @@ function calculate(focus = true) {
     const vlsm=protocol==='ipv4' && mode==='vlsm' ? planVlsm(base,readVlsmRequests()) : null;
     vlsmPage=0;
     current = { protocol,base,plan,vlsm };
+    if(protocol==='ipv4'&&mode==='simple')showAddressDiagnostic(base);
+    else hideAddressDiagnostic();
     updatePdfAvailability();
     pages = { middle: { open: false, page: 0 }, extra: { open: false, page: 0 } };
     $('stale-notice').hidden = true;
@@ -428,6 +448,7 @@ function syncSettings() {
 }
 
 function invalidateResults() {
+  hideAddressDiagnostic();
   current = null;
   updatePdfAvailability();
   pages = { middle: { open: false, page: 0 }, extra: { open: false, page: 0 } };
@@ -449,6 +470,18 @@ function markStale() {
   $('stale-notice').hidden = false;
 }
 
+$('address-diagnostic').addEventListener('click',()=>{
+  const detail=$('address-diagnostic-detail'),button=$('address-diagnostic');
+  detail.hidden=!detail.hidden;
+  button.setAttribute('aria-expanded',String(!detail.hidden));
+});
+document.addEventListener('click',event=>{
+  const anchor=$('address-diagnostic-anchor');
+  if(!anchor.hidden&&!anchor.contains(event.target)){
+    $('address-diagnostic-detail').hidden=true;
+    $('address-diagnostic').setAttribute('aria-expanded','false');
+  }
+});
 form.addEventListener('submit', event => { event.preventDefault(); calculate(); });
 form.addEventListener('input', markStale);
 form.addEventListener('change', () => { syncSettings(); markStale(); });
