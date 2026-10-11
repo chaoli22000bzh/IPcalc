@@ -112,7 +112,7 @@ export function printVlsmProfessional(base, plan) {
   const destination = document.querySelector('main') ?? document.body;
   destination.append(report);
   const title = document.title;
-  document.title = base.address + '_VLSM';
+  document.title = base.address + '_VLSM_Pro';
   document.body.classList.add('print-vlsm-professional');
   let finished = false;
   const restore = () => {
