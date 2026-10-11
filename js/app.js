@@ -12,6 +12,7 @@ import { EXPORT_COLUMNS } from './exports.js?v=2.0.0-step3.0';
 
 const $ = id => document.getElementById(id);
 const format = value => value.toLocaleString('fr-FR');
+const allocationPercent = (part, total) => (100 * part / total).toLocaleString('fr-FR', {maximumFractionDigits:1}) + ' %';
 function powerOfTwo(value, count) {
   const wrapper=element('span','ipv6-power-expression');
   wrapper.append(document.createTextNode('2'),element('sup','ipv6-power-exponent',String(value)));
@@ -316,12 +317,12 @@ function renderVlsm(plan){
   if(plan.freeAddresses){
     const free=element('span','vlsm-bar-free');
     free.style.width=(plan.freeAddresses/plan.initial.totalAddresses*100)+'%';
-    free.title=format(plan.freeAddresses)+' adresses non attribuées';
+    free.title=format(plan.freeAddresses)+' adresses non attribuées ('+allocationPercent(plan.freeAddresses,plan.initial.totalAddresses)+')';
     bar.append(free);
   }
   barPanel.append(bar);
   const legend=element('div','vlsm-allocation-legend');
-  legend.append(element('span','',format(plan.usedAddresses)+' adresses attribuées'));
+  legend.append(element('span','',format(plan.usedAddresses)+' adresses attribuées ('+allocationPercent(plan.usedAddresses,plan.initial.totalAddresses)+')'));
   legend.append(element('span','',format(plan.freeAddresses)+' adresses non attribuées'));
   barPanel.append(legend);network.append(barPanel);
   const other=$('subnet-result');other.replaceChildren();other.hidden=false;
