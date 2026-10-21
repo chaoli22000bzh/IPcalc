@@ -1,0 +1,77 @@
+name: Publier IPcalc sur ipcalc.github.io
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'styles.css'
+      - 'print.css'
+      - 'professional-report.css'
+      - 'manifest.webmanifest'
+      - 'sw.js'
+      - 'js/**'
+      - 'icons/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'scripts/build.mjs'
+      - '.github/workflows/publier-ipcalc-public.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publication-ipcalc-public
+  cancel-in-progress: false
+
+jobs:
+  publier:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le dépôt de développement
+        uses: actions/checkout@v4
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Installer les dépendances
+        run: npm ci
+      - name: Vérifier l'application
+        run: npm run check
+      - name: Construire les fichiers publics
+        run: npm run build
+      - name: Contrôler la PWA avant publication
+        run: |
+          set -euo pipefail
+          test -f dist/index.html
+          test -f dist/manifest.webmanifest
+          test -f dist/sw.js
+          test -f dist/icons/icon-192.png
+          test -f dist/icons/icon-512.png
+          node -e "const m=require('./dist/manifest.webmanifest');" 2>/dev/null && exit 1 || true
+          node --input-type=module -e "import {readFileSync} from 'node:fs'; const m=JSON.parse(readFileSync('dist/manifest.webmanifest','utf8')); for(const k of ['id','start_url','scope']) if(m[k]!=='./') throw Error(k+' doit rester relatif');"
+      - name: Publier sur le dépôt neutre
+        env:
+          DEPLOY_TOKEN: ${{ secrets.IPCALC_DEPLOY_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "$DEPLOY_TOKEN" ]; then
+            echo "::error::Le secret IPCALC_DEPLOY_TOKEN manque au dépôt de développement"
+            exit 1
+          fi
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git clone --quiet --depth 1 "https://x-access-token:${DEPLOY_TOKEN}@github.com/ipcalc/ipcalc.github.io.git" /tmp/ipcalc-public
+          rsync -a --delete --exclude='.git/' --exclude='README.md' dist/ /tmp/ipcalc-public/
+          (
+            cd /tmp/ipcalc-public
+            git add -A
+            if ! git diff --cached --quiet; then
+              git commit -m "Publier IPcalc depuis le dépôt de développement"
+              git push origin HEAD:main
+            else
+              echo 'IPcalc public est déjà à jour'
+            fi
+          )
