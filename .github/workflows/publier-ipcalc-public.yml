@@ -42,7 +42,7 @@ jobs:
         run: npm run check
       - name: Construire les fichiers publics
         run: npm run build
-      # Relance après configuration du secret de déploiement
+      # Relance après correction des droits du jeton de déploiement
       - name: Contrôler la PWA avant publication
         run: |
           set -euo pipefail
