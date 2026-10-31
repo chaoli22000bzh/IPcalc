@@ -24,7 +24,7 @@ function pdfDocument(commands, widgets=[]) {
     const id=add('<< /Type /Annot /Subtype /Widget /FT /Tx /T ('+name+') /V ('+escaped+') /Rect ['+rect+'] /F 4 /Ff 0 '+(maxLen?' /MaxLen '+maxLen:'')+' /Q '+(center?1:0)+' /DA (/Helv '+size+' Tf 0 g) /MK << /BC [0.45 0.56 0.65] /BG [1 1 1] >> /BS << /W 0.5 /S /S >> /P '+page+' 0 R >>');
     widgetIds.push(id);
   }
-  if(widgetIds.length)objects[page-1]=objects[page-1].replace(' >>',' /Annots ['+widgetIds.map(id=>id+' 0 R').join(' ')+'] >>');
+  if(widgetIds.length)objects[page-1]=objects[page-1].slice(0,-3)+' /Annots ['+widgetIds.map(id=>id+' 0 R').join(' ')+'] >>';
   objects[pages-1]='<< /Type /Pages /Kids ['+page+' 0 R] /Count 1 >>';
   const acro=widgetIds.length?add('<< /Fields ['+widgetIds.map(id=>id+' 0 R').join(' ')+'] /DR << /Font << /Helv '+regular+' 0 R >> >> /DA (/Helv 10 Tf 0 g) /NeedAppearances true >>'):null;
   const root=add('<< /Type /Catalog /Pages '+pages+' 0 R'+(acro?' /AcroForm '+acro+' 0 R':'')+' >>');
