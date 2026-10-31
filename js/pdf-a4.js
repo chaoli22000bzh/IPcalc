@@ -68,7 +68,7 @@ function build(base,corrected,fillable=false){
    // PDF AcroForm standard : champs sans script, independants de toute connexion.
    for(const [name,x,y,w,h] of [
      ['Nom',78,79,201,21],['Prenom',359,79,197,21],
-     ['Classe',90,106,189,21],['Jour',344,106,17,21],['Mois',374,106,17,21],['AnneeDeuxChiffres',419,106,17,21],
+     ['Classe',90,106,189,21],['Jour',344,106,17,21],['Mois',374,106,17,21],['AnneeDeuxChiffres',414,106,17,21],
      ['AdresseIPv4',226,151,180,29],['CIDR',429,151,62,29],
      ...Array.from({length:6},(_,row)=>Array.from({length:32},(_,i)=>[`Bit${row+1}_${String(i+1).padStart(2,'0')}`,bx+i*bw+0.3,303+row*23,bw-0.6,21])).flat(),
      ...Array.from({length:5},(_,i)=>[`Decimal${i+1}`,bx+8,499+i*49,width-lab-16,45]),
