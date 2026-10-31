@@ -22,7 +22,7 @@ function build(base,corrected,fillable=false){
  font('Nom :',37,93,9.5,true);line(77,97,280,97);
  font('Prénom :',304,93,9.5,true);line(358,97,557,97);
  font('Classe :',37,120,9.5,true);line(89,124,280,124);
- font('Date :',304,120,9.5,true);line(343,124,474,124);if(fillable){font('/',373,120,12,true);font('/',410,120,12,true);font('20',421,120,11,true);}
+ font('Date :',304,120,9.5,true);line(343,124,454,124);if(fillable){font('/',373,120,12,true);font('/',406,120,12,true);font('20',417,120,11,true); }
  tint(27,145,541,41);roundRect(27,145,541,41,8);
  font('Adresse IPv4 :',123,171,11,true);if(!fillable)font(`${base.inputAddress}/${base.prefix}`,227,171,17,true);else font('/',413,171,17,true);
  section(1,217,'Compléter le tableau en binaire ci-dessous');
@@ -68,7 +68,7 @@ function build(base,corrected,fillable=false){
    // PDF AcroForm standard : champs sans script, independants de toute connexion.
    for(const [name,x,y,w,h] of [
      ['Nom',78,79,201,21],['Prenom',359,79,197,21],
-     ['Classe',90,106,189,21],['Jour',344,106,25,21],['Mois',381,106,25,21],['AnneeDeuxChiffres',446,106,27,21],
+     ['Classe',90,106,189,21],['Jour',344,106,25,21],['Mois',381,106,21,21],['AnneeDeuxChiffres',437,106,21,21],
      ['AdresseIPv4',226,151,180,29],['CIDR',429,151,62,29],
      ...Array.from({length:6},(_,row)=>Array.from({length:32},(_,i)=>[`Bit${row+1}_${String(i+1).padStart(2,'0')}`,bx+i*bw+0.3,303+row*23,bw-0.6,21])).flat(),
      ...Array.from({length:5},(_,i)=>[`Decimal${i+1}`,bx+8,499+i*49,width-lab-16,45]),
