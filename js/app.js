@@ -1,7 +1,7 @@
 import { describeVlsmBase, summarizeVlsmRequests, planVlsm, VLSM_MAX_SUBNETS, VLSM_PAGE_SIZE } from './vlsm.js?v=2.0.0-step3.0';
 import { classifyIPv4 } from './address-classification.js';
 import { parseIPv6, classifyIPv6, planIPv6Subnets } from './ipv6.js?v=2.0.0-step3.32';
-import { downloadFlsmA3 } from './pdf-a3-flsm.js?v=2.0.0-step3.0';
+import { downloadFlsmA3, downloadFlsmA3Fillable } from './pdf-a3-flsm.js?v=2.0.0-step3.34';
 import { downloadAddressingA4, downloadAddressingA4FillableIdentity } from './pdf-a4.js?v=2.0.0-step3.33';
 import { printFlsmProfessional } from './professional-flsm.js?v=2.0.0-step3.32';
 import { printIPv4Professional } from './professional-ipv4.js?v=2.0.0-step3.32';
@@ -673,7 +673,8 @@ $('print-results').addEventListener('click',()=>{
   $('pdf-a4-student').textContent=flsm?'Exercice A3 · Énoncé':'Fiche élève · Énoncé';
   $('pdf-a4-corrected').textContent=flsm?'Exercice A3 · Corrigé':'Fiche élève · Corrigé';
   $('pdf-a4-professional').hidden=false;
-  $('pdf-a4-fillable').hidden=flsm;
+  $('pdf-a4-fillable').hidden=false;
+  $('pdf-a4-fillable').textContent=flsm?'Fiche élève - Énoncé PDF remplissable (A3 FLSM)':'Fiche élève - Énoncé PDF remplissable';
   $('pdf-a4-dialog').showModal();
 });
 function exportDocument(corrected) {
@@ -689,8 +690,8 @@ function exportDocument(corrected) {
 }
 $('pdf-a4-student').addEventListener('click',()=>exportDocument(false));
 $('pdf-a4-fillable').addEventListener('click',()=>{
- if(!current || current.protocol!=='ipv4' || current.plan || current.vlsm)return;
- try{downloadAddressingA4FillableIdentity(current.base);$('pdf-a4-dialog').close();}
+ if(!current || current.protocol!=='ipv4' || current.vlsm)return;
+ try{if(current.plan)downloadFlsmA3Fillable(current.base,current.plan);else downloadAddressingA4FillableIdentity(current.base);$('pdf-a4-dialog').close();}
  catch(error){$('pdf-a4-error').textContent=error.message;$('pdf-a4-error').hidden=false;}
 });
 $('pdf-a4-corrected').addEventListener('click',()=>exportDocument(true));
