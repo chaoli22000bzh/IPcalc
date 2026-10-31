@@ -70,12 +70,14 @@ function build(base,corrected,fillable=false){
      ['Nom',78,79,201,21],['Prenom',359,79,197,21],
      ['Classe',90,106,189,21],['Date',344,106,99,21],
      ['AdresseIPv4',226,151,180,29],['CIDR',429,151,62,29],
-     ...Array.from({length:32},(_,i)=>[`BitHote${String(i+1).padStart(2,'0')}`,bx+i*bw+0.3,303,bw-0.6,21])
+     ...Array.from({length:6},(_,row)=>Array.from({length:32},(_,i)=>[`Bit${row+1}_${String(i+1).padStart(2,'0')}`,bx+i*bw+0.3,303+row*23,bw-0.6,21])).flat(),
+     ...Array.from({length:5},(_,i)=>[`Decimal${i+1}`,bx+8,499+i*49,width-lab-16,45]),
+     ['HotesUtilisables',147,782,275,22]
    ]){
      const rect=[nb(x),nb(PH-y-h),nb(x+w),nb(PH-y)].join(' ');
      const value=name==='AdresseIPv4'?base.inputAddress:name==='CIDR'?String(base.prefix):'';
-     const size=name.startsWith('BitHote')?8:name==='AdresseIPv4'||name==='CIDR'?14:10;
-     const field=add(`<< /Type /Annot /Subtype /Widget /FT /Tx /T (${name}) /V (${value}) /Rect [${rect}] /F 4 /Ff 0${name.startsWith('BitHote')?' /MaxLen 1':''} /Q 1 /DA (/Helv ${size} Tf 0 g) /MK << /BC [0.45 0.56 0.65] /BG [1 1 1] >> /BS << /W 0.5 /S /S >> /P PAGE_REF >>`);
+     const size=name.startsWith('Bit')?8:name==='AdresseIPv4'||name==='CIDR'?14:10;
+     const field=add(`<< /Type /Annot /Subtype /Widget /FT /Tx /T (${name}) /V (${value}) /Rect [${rect}] /F 4 /Ff 0${name.startsWith('Bit')?' /MaxLen 1':''} /Q ${name.startsWith('Bit')?1:0} /DA (/Helv ${size} Tf 0 g) /MK << /BC [0.45 0.56 0.65] /BG [1 1 1] >> /BS << /W 0.5 /S /S >> /P PAGE_REF >>`);
      fields.push(field);
    }
  }
