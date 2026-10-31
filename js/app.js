@@ -1,8 +1,8 @@
 import { describeVlsmBase, summarizeVlsmRequests, planVlsm, VLSM_MAX_SUBNETS, VLSM_PAGE_SIZE } from './vlsm.js?v=2.0.0-step3.0';
 import { classifyIPv4 } from './address-classification.js';
 import { parseIPv6, classifyIPv6, planIPv6Subnets } from './ipv6.js?v=2.0.0-step3.32';
-import { downloadFlsmA3 } from './pdf-a3-flsm.js?v=2.0.0-step3.0';
-import { downloadAddressingA4 } from './pdf-a4.js?v=2.0.0-step3.0';
+import { downloadFlsmA3, downloadFlsmA3Fillable } from './pdf-a3-flsm.js?v=2.0.0-step3.34';
+import { downloadAddressingA4, downloadAddressingA4FillableIdentity } from './pdf-a4.js?v=2.0.0-step3.33';
 import { printFlsmProfessional } from './professional-flsm.js?v=2.0.0-step3.32';
 import { printIPv4Professional } from './professional-ipv4.js?v=2.0.0-step3.32';
 import { printIPv6Professional } from './professional-ipv6.js?v=2.0.0-step3.32';
@@ -673,6 +673,8 @@ $('print-results').addEventListener('click',()=>{
   $('pdf-a4-student').textContent=flsm?'Exercice A3 · Énoncé':'Fiche élève · Énoncé';
   $('pdf-a4-corrected').textContent=flsm?'Exercice A3 · Corrigé':'Fiche élève · Corrigé';
   $('pdf-a4-professional').hidden=false;
+  $('pdf-a4-fillable').hidden=false;
+  $('pdf-a4-fillable').textContent=flsm?'Fiche élève - Énoncé PDF remplissable (A3 FLSM)':'Fiche élève - Énoncé PDF remplissable';
   $('pdf-a4-dialog').showModal();
 });
 function exportDocument(corrected) {
@@ -687,6 +689,11 @@ function exportDocument(corrected) {
   }
 }
 $('pdf-a4-student').addEventListener('click',()=>exportDocument(false));
+$('pdf-a4-fillable').addEventListener('click',()=>{
+ if(!current || current.protocol!=='ipv4' || current.vlsm)return;
+ try{if(current.plan)downloadFlsmA3Fillable(current.base,current.plan);else downloadAddressingA4FillableIdentity(current.base);$('pdf-a4-dialog').close();}
+ catch(error){$('pdf-a4-error').textContent=error.message;$('pdf-a4-error').hidden=false;}
+});
 $('pdf-a4-corrected').addEventListener('click',()=>exportDocument(true));
 $('pdf-a4-professional').addEventListener('click',()=>{
   if(!current || current.protocol!=='ipv4')return;
@@ -702,3 +709,19 @@ $('pdf-a4-professional').addEventListener('click',()=>{
   }
 });
 updatePdfAvailability();
+
+// Aide intégrée : consultation hors connexion, lien externe facultatif.
+{
+ const dialog=$('help-dialog'),open=$('help-open'),close=$('help-close');
+ const tabs=[$('help-tab-guide'),$('help-tab-about')];
+ const panels=[$('help-panel-guide'),$('help-panel-about')];
+ const select=index=>{
+   tabs.forEach((tab,i)=>{tab.setAttribute('aria-selected',String(i===index));tab.tabIndex=i===index?0:-1;panels[i].hidden=i!==index;});
+   tabs[index].focus();
+ };
+ open.addEventListener('click',()=>{dialog.showModal();select(0);});
+ close.addEventListener('click',()=>dialog.close());
+ tabs.forEach((tab,i)=>tab.addEventListener('click',()=>select(i)));
+ dialog.addEventListener('click',event=>{if(event.target===dialog)dialog.close();});
+ dialog.addEventListener('close',()=>open.focus());
+}

@@ -7,7 +7,7 @@ const hex=s=>[...String(s)].map(ch=>{
   return (n===8217?146:n===8211?150:n===8230?133:n<=255?n:63).toString(16).padStart(2,'0');
 }).join('').toUpperCase();
 
-function pdfDocument(commands) {
+function pdfDocument(commands, widgets=[]) {
   const enc=new TextEncoder(),content=commands.join('\n')+'\n';
   const stream=enc.encode(content),objects=[];
   const add=x=>(objects.push(x),objects.length);
@@ -16,8 +16,18 @@ function pdfDocument(commands) {
   const streamId=add('<< /Length '+stream.length+' >>\nstream\n'+content+'endstream');
   const pages=add('');
   const page=add('<< /Type /Page /Parent '+pages+' 0 R /MediaBox [0 0 '+W+' '+H+'] /Resources << /Font << /R '+regular+' 0 R /B '+bold+' 0 R >> >> /Contents '+streamId+' 0 R >>');
+  const widgetIds=[];
+  for(const widget of widgets){
+    const {name,x,y,w,h,value='',maxLen=0,size=10,center=false}=widget;
+    const rect=[round(x),round(H-y-h),round(x+w),round(H-y)].join(' ');
+    const escaped=String(value).replaceAll('\\','\\\\').replaceAll('(','\\(').replaceAll(')','\\)');
+    const id=add('<< /Type /Annot /Subtype /Widget /FT /Tx /T ('+name+') /V ('+escaped+') /Rect ['+rect+'] /F 4 /Ff 0 '+(maxLen?' /MaxLen '+maxLen:'')+' /Q '+(center?1:0)+' /DA (/Helv '+size+' Tf 0 g) /MK << /BC [0.45 0.56 0.65] /BG [1 1 1] >> /BS << /W 0.5 /S /S >> /P '+page+' 0 R >>');
+    widgetIds.push(id);
+  }
+  if(widgetIds.length)objects[page-1]=objects[page-1].slice(0,-3)+' /Annots ['+widgetIds.map(id=>id+' 0 R').join(' ')+'] >>';
   objects[pages-1]='<< /Type /Pages /Kids ['+page+' 0 R] /Count 1 >>';
-  const root=add('<< /Type /Catalog /Pages '+pages+' 0 R >>');
+  const acro=widgetIds.length?add('<< /Fields ['+widgetIds.map(id=>id+' 0 R').join(' ')+'] /DR << /Font << /Helv '+regular+' 0 R >> >> /DA (/Helv 10 Tf 0 g) /NeedAppearances true >>'):null;
+  const root=add('<< /Type /Catalog /Pages '+pages+' 0 R'+(acro?' /AcroForm '+acro+' 0 R':'')+' >>');
   const parts=['%PDF-1.4\n'],offsets=[0];let size=enc.encode(parts[0]).length;
   for(let i=0;i<objects.length;i++){offsets.push(size);const chunk=(i+1)+' 0 obj\n'+objects[i]+'\nendobj\n';parts.push(chunk);size+=enc.encode(chunk).length}
   parts.push('xref\n0 '+offsets.length+'\n0000000000 65535 f \n'+offsets.slice(1).map(n=>String(n).padStart(10,'0')+' 00000 n \n').join('')+'trailer\n<< /Size '+offsets.length+' /Root '+root+' 0 R >>\nstartxref\n'+size+'\n%%EOF\n');
@@ -77,7 +87,7 @@ function draw() {
   return {c,text,line,fill,box,circle,section,digitsGrid};
 }
 
-function buildA3(base,plan,corrected) {
+function buildA3(base,plan,corrected,fillable=false) {
   if (!plan || plan.base.prefix!==base.prefix || plan.base.address!==base.address) {
     throw new Error('Découpage FLSM manquant ou incohérent.');
   }
@@ -85,6 +95,8 @@ function buildA3(base,plan,corrected) {
     throw new Error('La fiche pédagogique FLSM nécessite un broadcast (préfixe inférieur à /31).');
   }
   const {c,text,line,fill,box}=draw();
+  const widgets=[];
+  const field=(name,x,y,w,h,extra={})=>{if(fillable)widgets.push({name,x,y,w,h,...extra});};
 
   // A3 : chaque bit de droite a la largeur suffisante pour "128" (Helvetica-Bold 6,9 pt).
   // 128 occupe ~11,5 pt ; case de 14,5 pt pour conserver de l'air.
@@ -110,11 +122,20 @@ function buildA3(base,plan,corrected) {
   text('Nom :',L.x+10,84,9,true);line(L.x+49,88,L.x+217,88);
   text('Prénom :',L.x+237,84,9,true);line(L.x+291,88,L.x+L.w-10,88);
   text('Classe :',L.x+10,111,9,true);line(L.x+56,115,L.x+145,115);
-  text('Date :',L.x+160,111,9,true);line(L.x+198,115,L.x+283,115);
+  text('Date :',L.x+160,111,9,true);line(L.x+198,115,L.x+305,115);if(fillable){text('/',L.x+218,111,10,true);text('/',L.x+247,111,10,true);text('20',L.x+256,111,10,true);}
   text('Note : ........ /20',L.x+321,111,9,true);
   fill(L.x,145,L.w,43);box(L.x,145,L.w,43,7);
   text('Adresse IPv4 :',L.x+10,171,10,true);
-  text(base.inputAddress+'/'+base.prefix,L.x+119,171,14,true);
+  if(!fillable)text(base.inputAddress+'/'+base.prefix,L.x+119,171,14,true);
+  else text('/',L.x+302,171,14,true);
+  field('Nom',L.x+49,69,168,21);
+  field('Prenom',L.x+291,69,L.w-301,21);
+  field('Classe',L.x+56,96,89,21);
+  field('Jour',L.x+198,96,18,21,{maxLen:2,center:true});
+  field('Mois',L.x+227,96,18,21,{maxLen:2,center:true});
+  field('AnneeDeuxChiffres',L.x+275,96,18,21,{maxLen:2,center:true});
+  field('AdresseIPv4',L.x+119,150,176,30,{value:base.inputAddress,size:13});
+  field('CIDR',L.x+314,150,45,30,{value:String(base.prefix),size:13});
 
   // A : garder la lecture, les exercices, les gris Pépette et l'absence
   // de traits d'octet lourds dans les lignes de réponse.
@@ -149,6 +170,8 @@ function buildA3(base,plan,corrected) {
     text(String(p),x-2,yA+hA+12,6);
     text(v,x-v.length*1.67,yA+2*hA+12,5.7,true);
   }
+  for(let row=0;row<6;row++)for(let j=0;j<32;j++)
+    field('A_Bit'+row+'_'+j,leftBitX+j*leftBitW+.3,yA+3*hA+row*rowA+.5,leftBitW-.6,rowA-1,{maxLen:1,size:7.5,center:true});
   labelsA.forEach((label,k)=>{
     const yy=yA+3*hA+k*rowA+15;
     text(label,L.x+5,yy,k===1?7.3:8);
@@ -176,6 +199,7 @@ function buildA3(base,plan,corrected) {
     if(corrected)text(decValues[k],L.x+decLab+11,decY+k*decH+27,10.8,true);
   }
 
+  for(let row=0;row<5;row++)field('A_Decimal'+row,L.x+decLab+6,decY+row*decH+2,L.w-decLab-12,decH-4,{size:10});
   // B : le guide des octets et chaque bloc ont EXACTEMENT la même origine bitX.
   text('Découpage demandé : '+count.toLocaleString('fr-FR').replace(/[\u00a0\u202f]/g,' ')+
     ' sous-réseaux ('+ids.length+' affichés)',R.x+5,38,11.2,true);
@@ -193,6 +217,7 @@ function buildA3(base,plan,corrected) {
     text(label,x,91,8.8,true);
     box(x,97,itemWidth-13,29,4);
     if(corrected)text(value,x+12,117,11,true);
+    field('B_Param'+index,x+6,99,itemWidth-25,25,{size:10});
   });
 
   const hY=138,headH=18,headTotal=3*headH;
@@ -254,6 +279,10 @@ function buildA3(base,plan,corrected) {
         line(right,y+subHead+offset,right,y+subHead+offset+rowH,1,true);
       }
     }
+    for(const row of [0,2])for(let j=0;j<32;j++)
+      field('B_SR'+k+'_Bin'+row+'_'+j,bitX+j*bitWidth+.3,y+subHead+row*rowH+.3,bitWidth-.6,rowH-.6,{maxLen:1,size:7,center:true});
+    for(const row of [1,3])for(let oct=0;oct<4;oct++)
+      field('B_SR'+k+'_Dec'+row+'_'+oct,octetX(oct)+1,y+subHead+row*rowH+.3,bitWidth*8-2,rowH-.6,{maxLen:3,size:8.5,center:true});
     const addresses=[subnet.address,subnet.address,subnet.broadcast,subnet.broadcast];
     subLabels.forEach((label,row)=>{
       const yy=y+subHead+row*rowH+11;
@@ -288,12 +317,22 @@ function buildA3(base,plan,corrected) {
   text('(32 - préfixe SR)',R.x+28,bottomY+35,7,true);
   text('- 2 =',R.x+97,bottomY+47,12,true);
   if(corrected)text(plan.usableHosts.toLocaleString('fr-FR').replace(/[\u00a0\u202f]/g,' '),R.x+151,bottomY+47,12.5,true);
-  return pdfDocument(c);
+  field('A_Hotes',L.x+119,bottomY+30,L.w-150,26,{size:11});
+  field('C_Hotes',R.x+151,bottomY+30,R.w-175,26,{size:11});
+  return pdfDocument(c,widgets);
 }
 
 export function downloadFlsmA3(base,plan,corrected=false){
   const file=buildA3(base,plan,corrected),url=URL.createObjectURL(file),a=document.createElement('a');
   a.href=url;
   a.download='IPcalc_FLSM_'+base.inputAddress.replaceAll('.','-')+'_'+base.prefix+'_'+plan.concernedCount+'SR_'+(corrected?'corrige':'enonce')+'.pdf';
+  document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
+}
+
+/** Fiche FLSM A3 remplissable, sans recalcul automatique. */
+export function downloadFlsmA3Fillable(base,plan){
+  const file=buildA3(base,plan,false,true),url=URL.createObjectURL(file),a=document.createElement('a');
+  a.href=url;
+  a.download='IPcalc_FLSM_'+base.inputAddress.replaceAll('.','-')+'_'+base.prefix+'_'+plan.concernedCount+'SR_enonce-remplissable.pdf';
   document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
 }
