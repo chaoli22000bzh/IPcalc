@@ -24,7 +24,7 @@ function build(base,corrected,fillable=false){
  font('Classe :',37,120,9.5,true);line(89,124,280,124);
  font('Date :',304,120,9.5,true);line(343,124,443,124);
  tint(27,145,541,41);roundRect(27,145,541,41,8);
- font('Adresse IPv4 :',123,171,11,true);font(`${base.inputAddress}/${base.prefix}`,227,171,17,true);
+ font('Adresse IPv4 :',123,171,11,true);if(!fillable)font(`${base.inputAddress}/${base.prefix}`,227,171,17,true);else font('/',413,171,17,true);
  section(1,217,'Compléter le tableau en binaire ci-dessous');
  const ys=[245,264,283,302,325,348,371,394,417,440];
  tint(left,ys[0],width,ys[3]-ys[0]);
@@ -68,14 +68,17 @@ function build(base,corrected,fillable=false){
    // PDF AcroForm standard : champs sans script, independants de toute connexion.
    for(const [name,x,y,w,h] of [
      ['Nom',78,79,201,21],['Prenom',359,79,197,21],
-     ['Classe',90,106,189,21],['Date',344,106,99,21]
+     ['Classe',90,106,189,21],['Date',344,106,99,21],
+     ['AdresseIPv4',226,151,180,29],['CIDR',429,151,62,29]
    ]){
      const rect=[nb(x),nb(PH-y-h),nb(x+w),nb(PH-y)].join(' ');
-     const field=add(`<< /Type /Annot /Subtype /Widget /FT /Tx /T (${name}) /V () /Rect [${rect}] /F 4 /Ff 0 /DA (/Helv 10 Tf 0 g) /MK << /BC [0.45 0.56 0.65] /BG [1 1 1] >> /BS << /W 0.5 /S /S >> /P PAGE_REF >>`);
+     const value=name==='AdresseIPv4'?base.inputAddress:name==='CIDR'?String(base.prefix):'';
+     const size=name==='AdresseIPv4'||name==='CIDR'?14:10;
+     const field=add(`<< /Type /Annot /Subtype /Widget /FT /Tx /T (${name}) /V (${value}) /Rect [${rect}] /F 4 /Ff 0 /DA (/Helv ${size} Tf 0 g) /MK << /BC [0.45 0.56 0.65] /BG [1 1 1] >> /BS << /W 0.5 /S /S >> /P PAGE_REF >>`);
      fields.push(field);
    }
  }
- const page=add(`<< /Type /Page /Parent ${pages} 0 R /MediaBox [0 0 ${PW} ${PH}] /Resources << /Font << /R ${r} 0 R /B ${b} 0 R >> >> /Contents ${streamObj} 0 R >>${fields.length?' /Annots ['+fields.map(id=>id+' 0 R').join(' ')+']':''} >>`);
+ const page=add(`<< /Type /Page /Parent ${pages} 0 R /MediaBox [0 0 ${PW} ${PH}] /Resources << /Font << /R ${r} 0 R /B ${b} 0 R >> >> /Contents ${streamObj} 0 R${fields.length?' /Annots ['+fields.map(id=>id+' 0 R').join(' ')+']':''} >>`);
  for(const id of fields)objects[id-1]=objects[id-1].replace('PAGE_REF',page+' 0 R');
  objects[pages-1]=`<< /Type /Pages /Kids [${page} 0 R] /Count 1 >>`;
  const acro=fields.length?add(`<< /Fields [${fields.map(id=>id+' 0 R').join(' ')}] /DR << /Font << /Helv ${r} 0 R >> >> /DA (/Helv 10 Tf 0 g) /NeedAppearances true >>`):null;
@@ -89,12 +92,12 @@ export function downloadAddressingA4(base,corrected=false){
  const file=build(base,corrected);const url=URL.createObjectURL(file),a=document.createElement('a');a.href=url;a.download=`IPcalc_IPv4_${base.inputAddress.replaceAll('.','-')}_${base.prefix}_${corrected?'corrige':'enonce'}.pdf`;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
 }
 
-/** Prototype de sujet interactif : uniquement identite eleve. */
+/** Sujet interactif : identite, adresse IPv4 et CIDR. */
 export function downloadAddressingA4FillableIdentity(base){
  const file=build(base,false,true);
  const url=URL.createObjectURL(file),a=document.createElement('a');
  a.href=url;
- a.download=`IPcalc_IPv4_${base.inputAddress.replaceAll('.','-')}_${base.prefix}_sujet-remplissable-test.pdf`;
+ a.download=`IPcalc_IPv4_${base.inputAddress.replaceAll('.','-')}_${base.prefix}_sujet-remplissable.pdf`;
  document.body.append(a);a.click();a.remove();
  setTimeout(()=>URL.revokeObjectURL(url),30000);
 }
