@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="./styles.css?v=2.0.0-step3.32">
     <link rel="stylesheet" href="./print.css?v=2.0.0-step3.32" media="print">
     <link rel="stylesheet" href="./professional-report.css?v=2.0.0-step3.32">
-    <script type="module" src="./js/app.js?v=2.0.0-step3.35"></script>
+    <script type="module" src="./js/app.js?v=2.0.0-step3.36"></script>
     <script type="module" src="./js/pwa.js?v=2.0.0-step3.32"></script>
   <style>
 #pdf-a4-dialog{border:1px solid #8b9995;border-radius:14px;max-width:min(95vw,470px);width:420px;padding:0;color:CanvasText;background:Canvas;box-shadow:0 18px 50px #0008}
@@ -27,6 +27,8 @@
 #pdf-a4-error{color:#c44}
 #help-dialog{border:1px solid #8b9995;border-radius:14px;width:min(92vw,560px);max-height:85vh;padding:0;color:CanvasText;background:Canvas;box-shadow:0 18px 50px #0008}
 #help-dialog::backdrop{background:#0009}
+.help-dialog-content{max-height:85vh;overflow-y:auto}
+.help-dialog-content h4{margin:8px 0 0;font-size:1rem}
 .help-dialog-content{padding:22px;display:grid;gap:16px}
 .help-dialog-content h2,.help-dialog-content h3,.help-dialog-content p{margin:0}
 .help-dialog-content section{display:grid;gap:12px;line-height:1.55}
@@ -204,13 +206,29 @@
           <button id="help-close" type="button" class="pdf-a4-close" aria-label="Fermer l’aide">×</button>
         </div>
         <div class="help-tabs" role="tablist" aria-label="Rubriques de l’aide">
-          <button id="help-tab-guide" type="button" role="tab" aria-controls="help-panel-guide" aria-selected="true">Mode d'emploi</button>
+          <button id="help-tab-guide" type="button" role="tab" aria-controls="help-panel-guide" aria-selected="true">Présentation</button>
           <button id="help-tab-about" type="button" role="tab" aria-controls="help-panel-about" aria-selected="false" tabindex="-1">À propos</button>
         </div>
         <section id="help-panel-guide" role="tabpanel" aria-labelledby="help-tab-guide">
-          <h3>Mode d'emploi</h3>
-          <p>Le mode d'emploi détaillé sera rédigé prochainement. Il présentera les fonctions d'IPcalc, leur utilisation et leurs limites.</p>
-          <p><strong>Important :</strong> IPcalc est un outil pédagogique et non un outil professionnel. L'exactitude des résultats n'est pas garantie. Vérifiez indépendamment les valeurs avant toute utilisation sur une infrastructure réelle.</p>
+          <h3>Présentation d'IPcalc</h3>
+          <h4>1. Précautions d'utilisation</h4>
+          <p><strong>IPcalc est un outil pédagogique</strong> destiné à l'apprentissage de l'adressage IP et du découpage des réseaux. Il ne constitue pas un outil professionnel de conception ou de validation d'infrastructures.</p>
+          <p><strong>L'exactitude des calculs et des résultats n'est pas garantie.</strong> Avant toute utilisation sur un réseau réel, vérifiez indépendamment les valeurs obtenues.</p>
+          <h4>2. Fonctionnalités</h4>
+          <p><strong>IPv4 :</strong> analyse d'une adresse et de son préfixe CIDR, masque, adresse réseau, broadcast lorsqu'il existe, plage d'adresses, nombre d'hôtes et représentation binaire. Identification de certaines catégories d'adresses.</p>
+          <p><strong>FLSM :</strong> découpage d'un réseau IPv4 en sous-réseaux de taille identique, selon le nombre de sous-réseaux ou le besoin en hôtes.</p>
+          <p><strong>VLSM :</strong> découpage d'un réseau IPv4 en sous-réseaux de tailles différentes, selon les besoins en hôtes.</p>
+          <p><strong>IPv6 :</strong> analyse d'adresses et de préfixes, formes abrégée et développée, informations sur le réseau et découpage en sous-réseaux.</p>
+          <p><strong>Documents :</strong> impressions professionnelles, fiches d'exercices et corrigés ; certains exercices IPv4 sont également proposés en PDF remplissable.</p>
+          <h4>3. Limites et cas particuliers</h4>
+          <p><strong>IPv4 :</strong> l'analyse accepte les préfixes de /0 à /32. Le /0 couvre tout l'espace IPv4 ; un /1 en couvre la moitié. Un /31 comporte deux adresses utilisables pour une liaison point à point selon la RFC 3021, sans broadcast classique. Un /32 représente une adresse unique, sans plage d'hôtes classique.</p>
+          <p><strong>Découpage IPv4 :</strong> FLSM et VLSM peuvent produire des sous-réseaux /31, mais pas /32. En VLSM, une demande de 1 ou 2 hôtes utilise un /31. Le calcul VLSM est limité à 100 000 sous-réseaux.</p>
+          <p><strong>IPv6 :</strong> l'analyse accepte les préfixes de /0 à /128. Le découpage en sous-réseaux accepte un préfixe cible compris entre le préfixe initial et /64. Les identifiants de zone, comme %eth0, ne sont pas pris en charge. IPv6 n'utilise pas de broadcast.</p>
+          <p>IPcalc ne contrôle ni la configuration des équipements, ni la connectivité, ni le routage, ni les règles de sécurité d'un réseau réel.</p>
+          <h4>4. Installation et mises à jour</h4>
+          <p>IPcalc peut être utilisé dans un navigateur ou installé sur un smartphone compatible comme une application autonome, avec sa propre icône. Les possibilités d'installation dépendent de l'appareil et du navigateur.</p>
+          <p>Après une première utilisation avec une connexion Internet, IPcalc peut fonctionner sans connexion, même en mode avion.</p>
+          <p>Une connexion Internet est nécessaire pour l'installation initiale et pour récupérer les mises à jour. Lorsqu'une nouvelle version est prête, IPcalc peut proposer de l'activer. Une version déjà enregistrée reste utilisable hors connexion.</p>
         </section>
         <section id="help-panel-about" role="tabpanel" aria-labelledby="help-tab-about" hidden>
           <h3>À propos</h3>
