@@ -709,3 +709,19 @@ $('pdf-a4-professional').addEventListener('click',()=>{
   }
 });
 updatePdfAvailability();
+
+// Aide intégrée : consultation hors connexion, lien externe facultatif.
+{
+ const dialog=$('help-dialog'),open=$('help-open'),close=$('help-close');
+ const tabs=[$('help-tab-guide'),$('help-tab-about')];
+ const panels=[$('help-panel-guide'),$('help-panel-about')];
+ const select=index=>{
+   tabs.forEach((tab,i)=>{tab.setAttribute('aria-selected',String(i===index));tab.tabIndex=i===index?0:-1;panels[i].hidden=i!==index;});
+   tabs[index].focus();
+ };
+ open.addEventListener('click',()=>{dialog.showModal();select(0);});
+ close.addEventListener('click',()=>dialog.close());
+ tabs.forEach((tab,i)=>tab.addEventListener('click',()=>select(i)));
+ dialog.addEventListener('click',event=>{if(event.target===dialog)dialog.close();});
+ dialog.addEventListener('close',()=>open.focus());
+}
